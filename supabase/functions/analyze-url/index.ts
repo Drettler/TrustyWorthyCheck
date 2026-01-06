@@ -462,18 +462,40 @@ Deno.serve(async (req) => {
     const scrapeData = await scrapeResponse.json();
     console.log('Scrape response status:', scrapeResponse.status);
 
+    // Handle Firecrawl failure with fallback for known platforms
+    let scrapedContent: ScrapedData;
+    let usedFallback = false;
+    
     if (!scrapeResponse.ok) {
       console.error('Firecrawl error:', scrapeData);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Could not access website: ${scrapeData.error || 'Unknown error'}` 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      
+      // For known social media platforms, provide a fallback analysis
+      if (platformInfo.isSocialMedia && platformInfo.platform) {
+        console.log('Using fallback analysis for', platformInfo.platform);
+        usedFallback = true;
+        scrapedContent = {
+          markdown: '',
+          html: '',
+          links: [],
+          metadata: {
+            title: `${platformInfo.platform} Profile/Page`,
+            description: `Analysis of ${platformInfo.platform} URL`,
+            sourceURL: formattedUrl,
+          },
+        };
+      } else {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Could not access website: ${scrapeData.error || 'Unknown error'}` 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      scrapedContent = scrapeData.data || scrapeData;
     }
-
-    const scrapedContent: ScrapedData = scrapeData.data || scrapeData;
+    
     const markdown = scrapedContent.markdown || '';
     const html = scrapedContent.html || '';
     const links = scrapedContent.links || [];
@@ -507,6 +529,10 @@ Deno.serve(async (req) => {
     };
 
     // Step 2: Analyze with AI - Enhanced prompt with pre-analysis findings
+    const fallbackNotice = usedFallback 
+      ? `\n\n⚠️ IMPORTANT: We could not scrape this ${platformInfo.platform} page directly due to platform restrictions. Provide analysis based on URL structure, platform knowledge, and general guidance for evaluating ${platformInfo.platform} profiles/pages. Be clear about limitations.`
+      : '';
+    
     const platformContext = platformInfo.isSocialMedia 
       ? `\n\nPLATFORM CONTEXT: This is a ${platformInfo.platform} ${platformInfo.isMarketplace ? 'marketplace listing' : 'profile/page'}. Analyze it accordingly:
 - For social media profiles: Check account age indicators, follower counts, post history, verified badges, engagement authenticity
@@ -528,7 +554,7 @@ PRE-ANALYSIS FINDINGS (incorporate these into your analysis):
 `;
 
     console.log('Analyzing with AI...');
-    const analysisPrompt = `You are an expert website and social media legitimacy analyzer specializing in detecting scams, dropshippers, fake accounts, and fraudulent sellers. Analyze this URL thoroughly.${platformContext}
+    const analysisPrompt = `You are an expert website and social media legitimacy analyzer specializing in detecting scams, dropshippers, fake accounts, and fraudulent sellers. Analyze this URL thoroughly.${platformContext}${fallbackNotice}
 
 Website URL: ${formattedUrl}
 Domain: ${domain}
@@ -536,13 +562,13 @@ Page Title: ${metadata.title || 'Unknown'}
 Page Description: ${metadata.description || 'Unknown'}
 ${preAnalysisContext}
 
-Website Content (markdown):
+${usedFallback ? `Note: Content could not be scraped. Provide guidance based on URL structure and platform knowledge.` : `Website Content (markdown):
 ${markdown.substring(0, 12000)}
 
 HTML Structure Analysis (first 4000 chars):
 ${html.substring(0, 4000)}
 
-Links found on page: ${links.slice(0, 50).join(', ')}
+Links found on page: ${links.slice(0, 50).join(', ')}`}
 
 Perform a COMPREHENSIVE analysis covering ALL of the following:
 
