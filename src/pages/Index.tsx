@@ -103,7 +103,7 @@ export default function Index() {
             { step: "01", title: "Enter URL", description: "Paste the website link you want to check" },
             {
               step: "02",
-              title: "AI Analysis",
+              title: "Legitimacy Analysis",
               description: "We will scan for legitimacy, bogus reviews, website securitities and other red flags",
             },
             { step: "03", title: "Get Results", description: "Receive a detailed trust score and recommendations" },
