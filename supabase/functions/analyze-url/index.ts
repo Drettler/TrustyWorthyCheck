@@ -16,6 +16,41 @@ interface ScrapedData {
   screenshot?: string;
 }
 
+// Detect social media platforms and special sites
+const socialMediaPatterns = [
+  { pattern: /facebook\.com|fb\.com/i, name: 'Facebook' },
+  { pattern: /instagram\.com/i, name: 'Instagram' },
+  { pattern: /tiktok\.com/i, name: 'TikTok' },
+  { pattern: /pinterest\.com/i, name: 'Pinterest' },
+  { pattern: /twitter\.com|x\.com/i, name: 'Twitter/X' },
+  { pattern: /linkedin\.com/i, name: 'LinkedIn' },
+  { pattern: /youtube\.com|youtu\.be/i, name: 'YouTube' },
+  { pattern: /reddit\.com/i, name: 'Reddit' },
+  { pattern: /snapchat\.com/i, name: 'Snapchat' },
+  { pattern: /whatsapp\.com/i, name: 'WhatsApp' },
+  { pattern: /telegram\.org|t\.me/i, name: 'Telegram' },
+  { pattern: /discord\.com|discord\.gg/i, name: 'Discord' },
+  { pattern: /etsy\.com/i, name: 'Etsy' },
+  { pattern: /ebay\.com/i, name: 'eBay' },
+  { pattern: /amazon\.com|amzn\.to/i, name: 'Amazon' },
+  { pattern: /aliexpress\.com/i, name: 'AliExpress' },
+  { pattern: /shopify\.com/i, name: 'Shopify Store' },
+];
+
+function detectPlatform(url: string): { isSocialMedia: boolean; platform: string | null; isMarketplace: boolean } {
+  for (const { pattern, name } of socialMediaPatterns) {
+    if (pattern.test(url)) {
+      const marketplaces = ['Etsy', 'eBay', 'Amazon', 'AliExpress'];
+      return { 
+        isSocialMedia: true, 
+        platform: name,
+        isMarketplace: marketplaces.includes(name)
+      };
+    }
+  }
+  return { isSocialMedia: false, platform: null, isMarketplace: false };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -39,6 +74,10 @@ Deno.serve(async (req) => {
 
     console.log('Analyzing URL:', formattedUrl);
 
+    // Detect if this is a social media or marketplace URL
+    const platformInfo = detectPlatform(formattedUrl);
+    console.log('Platform detected:', platformInfo);
+
     const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
@@ -59,6 +98,9 @@ Deno.serve(async (req) => {
     }
 
     // Step 1: Scrape the website with Firecrawl
+    // Use longer wait times for social media (they load dynamically)
+    const waitTime = platformInfo.isSocialMedia ? 5000 : 3000;
+    
     console.log('Scraping website with Firecrawl...');
     const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -70,7 +112,7 @@ Deno.serve(async (req) => {
         url: formattedUrl,
         formats: ['markdown', 'html', 'links', 'screenshot'],
         onlyMainContent: false,
-        waitFor: 3000,
+        waitFor: waitTime,
       }),
     });
 
@@ -100,8 +142,16 @@ Deno.serve(async (req) => {
     const domain = urlObj.hostname;
 
     // Step 2: Analyze with AI - Enhanced prompt for deeper analysis
+    // Build platform-specific context
+    const platformContext = platformInfo.isSocialMedia 
+      ? `\n\nPLATFORM CONTEXT: This is a ${platformInfo.platform} ${platformInfo.isMarketplace ? 'marketplace listing' : 'profile/page'}. Analyze it accordingly:
+- For social media profiles: Check account age indicators, follower counts, post history, verified badges, engagement authenticity
+- For marketplace listings: Check seller ratings, review authenticity, return policies, pricing vs market rate
+- Look for signs of fake accounts, bot activity, or scam patterns specific to ${platformInfo.platform}`
+      : '';
+
     console.log('Analyzing with AI...');
-    const analysisPrompt = `You are an expert website legitimacy analyzer specializing in detecting scams, dropshippers, and fraudulent e-commerce sites. Analyze this website thoroughly.
+    const analysisPrompt = `You are an expert website and social media legitimacy analyzer specializing in detecting scams, dropshippers, fake accounts, and fraudulent sellers. Analyze this URL thoroughly.${platformContext}
 
 Website URL: ${formattedUrl}
 Domain: ${domain}
@@ -171,13 +221,26 @@ Perform a COMPREHENSIVE analysis covering:
 - External review platform mentions (Trustpilot, BBB, etc.)?
 - Real customer testimonials with names/photos?
 
+## SOCIAL MEDIA PROFILE ANALYSIS (if applicable)
+- Does the account have a verified badge?
+- Account creation date or age indicators?
+- Follower/following ratio realistic?
+- Post history consistent and authentic?
+- Engagement levels normal (not suspiciously low or artificially high)?
+- Profile picture original or stock/stolen?
+- Bio information complete and legitimate?
+- Links in bio lead to legitimate destinations?
+- Signs of bot activity or fake engagement?
+- Does selling behavior match platform norms?
+
 ## RED FLAGS TO SPECIFICALLY CHECK
 - Domain mimicking known brands?
-- Recently created domain?
+- Recently created domain or account?
 - Contact info leads to generic Gmail/Outlook?
 - No way to reach a real person?
 - Only accepts obscure payment methods?
 - Claims to be US-based but signs of overseas operation?
+- For social media: new account selling expensive items, asking for payment outside platform, refusing to use platform's buyer protection?
 
 Return ONLY valid JSON in this exact format:
 {
