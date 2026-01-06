@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch, Globe } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch, Globe, Linkedin } from "lucide-react";
 import { UrlChecker } from "@/components/UrlChecker";
 import { SocialSellerChecker } from "@/components/SocialSellerChecker";
 
@@ -164,7 +164,7 @@ export default function Index() {
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Check Social Media Sellers</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Buying from someone on Instagram, TikTok, or Facebook Marketplace? Paste their username or bio to analyze for scam patterns and red flags.
+              Buying from someone on Instagram, TikTok, Facebook Marketplace, or LinkedIn? Paste their username or bio to analyze for scam patterns and red flags.
             </p>
           </motion.div>
 
@@ -190,6 +190,10 @@ export default function Index() {
             <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
               <Facebook className="w-3.5 h-3.5" />
               Facebook
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+              <Linkedin className="w-3.5 h-3.5" />
+              LinkedIn
             </span>
             <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
               TikTok
