@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -8,14 +8,18 @@ import { AnalysisCard } from './AnalysisCard';
 import { CheckItem } from './CheckItem';
 import { FlagsList } from './FlagsList';
 import { ScanningAnimation } from './ScanningAnimation';
+import { HistoryPanel } from './HistoryPanel';
 import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
+import { useUrlHistory, type HistoryEntry } from '@/hooks/use-url-history';
 
 export function UrlChecker() {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [scanStage, setScanStage] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const { history, addToHistory, removeFromHistory, clearHistory } = useUrlHistory();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,6 +43,7 @@ export function UrlChecker() {
     try {
       const analysisResult = await analyzeUrl(url);
       setResult(analysisResult);
+      addToHistory(url, analysisResult);
     } catch (error) {
       console.error('Analysis error:', error);
       toast({
@@ -57,12 +62,18 @@ export function UrlChecker() {
     setUrl('');
   };
 
+  const handleHistorySelect = (entry: HistoryEntry) => {
+    setUrl(entry.url);
+    setResult(entry.result);
+    setShowHistory(false);
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Search Form */}
       <motion.form
         onSubmit={handleSubmit}
-        className="mb-8"
+        className="mb-4"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -107,6 +118,43 @@ export function UrlChecker() {
           </div>
         </div>
       </motion.form>
+
+      {/* History Toggle */}
+      {!isLoading && !result && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-8"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <History className="w-4 h-4 mr-2" />
+            {showHistory ? 'Hide History' : `View History (${history.length})`}
+          </Button>
+
+          <AnimatePresence>
+            {showHistory && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 overflow-hidden"
+              >
+                <HistoryPanel
+                  history={history}
+                  onSelect={handleHistorySelect}
+                  onRemove={removeFromHistory}
+                  onClear={clearHistory}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* Loading State */}
       <AnimatePresence mode="wait">
