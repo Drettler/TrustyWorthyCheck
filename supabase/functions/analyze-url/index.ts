@@ -6,6 +6,7 @@ const corsHeaders = {
 interface ScrapedData {
   markdown?: string;
   html?: string;
+  links?: string[];
   metadata?: {
     title?: string;
     description?: string;
@@ -89,6 +90,8 @@ Deno.serve(async (req) => {
 
     const scrapedContent: ScrapedData = scrapeData.data || scrapeData;
     const markdown = scrapedContent.markdown || '';
+    const html = scrapedContent.html || '';
+    const links = scrapedContent.links || [];
     const metadata = scrapedContent.metadata || {};
     const screenshot = scrapedContent.screenshot;
 
@@ -96,9 +99,9 @@ Deno.serve(async (req) => {
     const urlObj = new URL(formattedUrl);
     const domain = urlObj.hostname;
 
-    // Step 2: Analyze with AI
+    // Step 2: Analyze with AI - Enhanced prompt for deeper analysis
     console.log('Analyzing with AI...');
-    const analysisPrompt = `You are a website legitimacy analyzer. Analyze this e-commerce/retail website and provide a detailed trust assessment.
+    const analysisPrompt = `You are an expert website legitimacy analyzer specializing in detecting scams, dropshippers, and fraudulent e-commerce sites. Analyze this website thoroughly.
 
 Website URL: ${formattedUrl}
 Domain: ${domain}
@@ -106,44 +109,75 @@ Page Title: ${metadata.title || 'Unknown'}
 Page Description: ${metadata.description || 'Unknown'}
 
 Website Content (markdown):
-${markdown.substring(0, 8000)}
+${markdown.substring(0, 10000)}
 
-Analyze this website for the following criteria and return a JSON response:
+HTML Structure Analysis (first 3000 chars):
+${html.substring(0, 3000)}
 
+Links found on page: ${links.slice(0, 50).join(', ')}
+
+Perform a COMPREHENSIVE analysis covering:
+
+## CORE ANALYSIS
 1. **Trust Score (0-100)**: Overall legitimacy score
 2. **Verdict**: "safe", "caution", or "danger"
-3. **Summary**: 1-2 sentence summary of findings
-4. **Domain Analysis**:
-   - Is this a well-known domain or suspicious?
-   - Does it use HTTPS?
-   - Any domain-related red flags?
-5. **Business Legitimacy**:
-   - Does it have contact information (phone, email, address)?
-   - Is there an About page?
-   - Privacy policy present?
-   - Terms of service present?
-   - Return/refund policy visible?
-6. **Red Flags** (list any found):
-   - Prices too good to be true
-   - Poor grammar/spelling
-   - No contact info
-   - Missing policies
-   - Suspicious payment methods only
-   - Fake reviews or testimonials
-   - Pressure tactics (limited time, countdown timers)
-   - No social media presence
-   - Copied content from other sites
-   - Domain mimicking known brands
-7. **Positive Signals** (list any found):
-   - Professional design
-   - Clear contact info
-   - Verified reviews
-   - Social media presence
-   - Secure checkout
-   - Multiple payment options
-   - Physical address listed
-8. **Pricing Analysis**: Are prices suspiciously low?
-9. **Social Proof**: Evidence of real customers/reviews?
+3. **Summary**: 2-3 sentence summary of key findings
+
+## BUSINESS VERIFICATION
+- Physical address present and appears legitimate (not a PO Box or fake address)?
+- Business registration/company info mentioned?
+- How long has this business likely been operating (based on copyright dates, domain age mentions, "established since" claims)?
+- Contact methods: phone, email, live chat, contact form?
+- About page with real team/company info?
+
+## LEGITIMACY INDICATORS
+- Privacy policy present and comprehensive?
+- Terms of service present?
+- Return/refund policy clear and reasonable?
+- Shipping information transparent?
+- Clear business hours or response time mentioned?
+
+## SCAM/DROPSHIPPER DETECTION
+- Are prices suspiciously low (50%+ below market)?
+- Stock photos or generic product images?
+- Product descriptions copied or generic?
+- Unrealistic delivery promises?
+- Too-good-to-be-true offers?
+- Pressure tactics (countdown timers, "only X left")?
+- Signs of AliExpress/DHGate dropshipping?
+
+## IMAGE ANALYSIS
+- Are product images professional or stock photos?
+- Any signs images are stolen from other sites?
+- Watermarks or low-quality images suggesting dropshipping?
+
+## WEBSITE QUALITY
+- Professional design or templated/cheap looking?
+- Grammar and spelling quality?
+- Consistent branding throughout?
+- Mobile-responsive design mentioned?
+- Page load issues or broken elements?
+
+## PAYMENT & SECURITY
+- Multiple payment options (cards, PayPal, etc.)?
+- Secure checkout mentioned?
+- SSL certificate present (https)?
+- Trust badges legitimate or fake-looking?
+
+## SOCIAL PROOF
+- Customer reviews present?
+- Do reviews seem authentic or fake?
+- Social media links present and active?
+- External review platform mentions (Trustpilot, BBB, etc.)?
+- Real customer testimonials with names/photos?
+
+## RED FLAGS TO SPECIFICALLY CHECK
+- Domain mimicking known brands?
+- Recently created domain?
+- Contact info leads to generic Gmail/Outlook?
+- No way to reach a real person?
+- Only accepts obscure payment methods?
+- Claims to be US-based but signs of overseas operation?
 
 Return ONLY valid JSON in this exact format:
 {
@@ -153,27 +187,49 @@ Return ONLY valid JSON in this exact format:
   "details": {
     "domain": {
       "name": "<domain name>",
-      "age": "<estimated or unknown>",
+      "age": "<estimated based on site content, copyright, etc.>",
       "ssl": <boolean>,
       "sslIssuer": "<issuer if known>"
     },
     "business": {
       "hasContactInfo": <boolean>,
+      "hasPhysicalAddress": <boolean>,
+      "addressVerification": "<verified|suspicious|not_found|po_box>",
+      "businessAge": "<estimated years or 'unknown'>",
       "hasAboutPage": <boolean>,
       "hasPrivacyPolicy": <boolean>,
       "hasTerms": <boolean>,
-      "hasReturnPolicy": <boolean>
+      "hasReturnPolicy": <boolean>,
+      "hasShippingInfo": <boolean>
+    },
+    "dropshipperIndicators": {
+      "isLikelyDropshipper": <boolean>,
+      "confidence": "<high|medium|low>",
+      "reasons": ["<reason1>", "<reason2>"]
+    },
+    "imageAnalysis": {
+      "appearsOriginal": <boolean>,
+      "stockPhotoLikely": <boolean>,
+      "qualityAssessment": "<professional|average|poor|suspicious>"
     },
     "redFlags": ["<flag1>", "<flag2>"],
     "positiveSignals": ["<signal1>", "<signal2>"],
     "pricing": {
       "suspiciouslyLow": <boolean>,
+      "comparisonToMarket": "<much_lower|slightly_lower|normal|higher>",
       "notes": "<string>"
     },
     "socialProof": {
       "hasReviews": <boolean>,
+      "reviewsAppearAuthentic": <boolean>,
       "hasSocialLinks": <boolean>,
+      "externalReviewPlatforms": <boolean>,
       "notes": "<string>"
+    },
+    "websiteQuality": {
+      "designQuality": "<professional|average|poor>",
+      "grammarQuality": "<excellent|good|poor>",
+      "overallProfessionalism": "<high|medium|low>"
     }
   }
 }`;
@@ -189,14 +245,14 @@ Return ONLY valid JSON in this exact format:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert at analyzing e-commerce websites for legitimacy. Return only valid JSON.'
+            content: 'You are an expert fraud analyst and e-commerce investigator. Analyze websites for legitimacy with extreme attention to detail. Always return valid JSON only.'
           },
           {
             role: 'user',
             content: analysisPrompt
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
       }),
     });
 
@@ -241,21 +297,43 @@ Return ONLY valid JSON in this exact format:
           },
           business: {
             hasContactInfo: false,
+            hasPhysicalAddress: false,
+            addressVerification: 'not_found',
+            businessAge: 'unknown',
             hasAboutPage: false,
             hasPrivacyPolicy: false,
             hasTerms: false,
             hasReturnPolicy: false,
+            hasShippingInfo: false,
+          },
+          dropshipperIndicators: {
+            isLikelyDropshipper: false,
+            confidence: 'low',
+            reasons: ['Could not complete analysis'],
+          },
+          imageAnalysis: {
+            appearsOriginal: false,
+            stockPhotoLikely: false,
+            qualityAssessment: 'unknown',
           },
           redFlags: ['Could not complete full analysis'],
           positiveSignals: [],
           pricing: {
             suspiciouslyLow: false,
+            comparisonToMarket: 'normal',
             notes: 'Unable to analyze pricing',
           },
           socialProof: {
             hasReviews: false,
+            reviewsAppearAuthentic: false,
             hasSocialLinks: false,
+            externalReviewPlatforms: false,
             notes: 'Unable to verify social proof',
+          },
+          websiteQuality: {
+            designQuality: 'unknown',
+            grammarQuality: 'unknown',
+            overallProfessionalism: 'unknown',
           },
         },
       };

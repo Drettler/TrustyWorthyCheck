@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, History } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, MapPin, Clock, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -8,18 +8,16 @@ import { AnalysisCard } from './AnalysisCard';
 import { CheckItem } from './CheckItem';
 import { FlagsList } from './FlagsList';
 import { ScanningAnimation } from './ScanningAnimation';
-import { HistoryPanel } from './HistoryPanel';
 import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
-import { useUrlHistory, type HistoryEntry } from '@/hooks/use-url-history';
+import { useUrlHistory } from '@/hooks/use-url-history';
 
 export function UrlChecker() {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [scanStage, setScanStage] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
-  const { history, addToHistory, removeFromHistory, clearHistory } = useUrlHistory();
+  const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,12 +58,6 @@ export function UrlChecker() {
   const handleNewCheck = () => {
     setResult(null);
     setUrl('');
-  };
-
-  const handleHistorySelect = (entry: HistoryEntry) => {
-    setUrl(entry.url);
-    setResult(entry.result);
-    setShowHistory(false);
   };
 
   return (
@@ -119,42 +111,6 @@ export function UrlChecker() {
         </div>
       </motion.form>
 
-      {/* History Toggle */}
-      {!isLoading && !result && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-8"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowHistory(!showHistory)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <History className="w-4 h-4 mr-2" />
-            {showHistory ? 'Hide History' : `View History (${history.length})`}
-          </Button>
-
-          <AnimatePresence>
-            {showHistory && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 overflow-hidden"
-              >
-                <HistoryPanel
-                  history={history}
-                  onSelect={handleHistorySelect}
-                  onRemove={removeFromHistory}
-                  onClear={clearHistory}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
 
       {/* Loading State */}
       <AnimatePresence mode="wait">
@@ -219,8 +175,8 @@ export function UrlChecker() {
                 title="Business Legitimacy"
                 icon={Building2}
                 status={
-                  Object.values(result.details.business).filter(Boolean).length >= 4 ? 'success' :
-                  Object.values(result.details.business).filter(Boolean).length >= 2 ? 'warning' :
+                  (result.details.business.hasPhysicalAddress && result.details.business.addressVerification === 'verified') ? 'success' :
+                  result.details.business.hasContactInfo ? 'warning' :
                   'danger'
                 }
                 delay={0.1}
@@ -231,6 +187,19 @@ export function UrlChecker() {
                     status={result.details.business.hasContactInfo ? 'pass' : 'fail'} 
                   />
                   <CheckItem 
+                    label="Physical address" 
+                    status={result.details.business.hasPhysicalAddress ? 'pass' : 'fail'} 
+                  />
+                  <CheckItem 
+                    label="Address verification" 
+                    status={
+                      result.details.business.addressVerification === 'verified' ? 'pass' :
+                      result.details.business.addressVerification === 'suspicious' ? 'fail' :
+                      result.details.business.addressVerification === 'po_box' ? 'warning' :
+                      'fail'
+                    } 
+                  />
+                  <CheckItem 
                     label="About page" 
                     status={result.details.business.hasAboutPage ? 'pass' : 'fail'} 
                   />
@@ -239,13 +208,19 @@ export function UrlChecker() {
                     status={result.details.business.hasPrivacyPolicy ? 'pass' : 'fail'} 
                   />
                   <CheckItem 
-                    label="Terms of service" 
-                    status={result.details.business.hasTerms ? 'pass' : 'fail'} 
-                  />
-                  <CheckItem 
                     label="Return/Refund policy" 
                     status={result.details.business.hasReturnPolicy ? 'pass' : 'fail'} 
                   />
+                  <CheckItem 
+                    label="Shipping information" 
+                    status={result.details.business.hasShippingInfo ? 'pass' : 'fail'} 
+                  />
+                  {result.details.business.businessAge && (
+                    <div className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
+                      <Clock className="w-4 h-4" />
+                      <span>Business age: {result.details.business.businessAge}</span>
+                    </div>
+                  )}
                 </div>
               </AnalysisCard>
 
@@ -263,7 +238,7 @@ export function UrlChecker() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">SSL Certificate</span>
-                    <span className={`text-sm font-medium ${result.details.domain.ssl ? 'text-success' : 'text-danger'}`}>
+                    <span className={`text-sm font-medium ${result.details.domain.ssl ? 'text-status-safe' : 'text-status-danger'}`}>
                       {result.details.domain.ssl ? 'Secure' : 'Not Secure'}
                     </span>
                   </div>
@@ -280,22 +255,99 @@ export function UrlChecker() {
                 </div>
               </AnalysisCard>
 
+              {/* Dropshipper Detection */}
+              <AnalysisCard
+                title="Dropshipper Detection"
+                icon={AlertTriangle}
+                status={
+                  result.details.dropshipperIndicators?.isLikelyDropshipper 
+                    ? (result.details.dropshipperIndicators.confidence === 'high' ? 'danger' : 'warning')
+                    : 'success'
+                }
+                delay={0.25}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    {result.details.dropshipperIndicators?.isLikelyDropshipper ? (
+                      <AlertTriangle className="w-4 h-4 text-status-warning" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 text-status-safe" />
+                    )}
+                    <span className={`text-sm font-medium ${result.details.dropshipperIndicators?.isLikelyDropshipper ? 'text-status-warning' : 'text-foreground'}`}>
+                      {result.details.dropshipperIndicators?.isLikelyDropshipper 
+                        ? `Likely dropshipper (${result.details.dropshipperIndicators.confidence} confidence)`
+                        : 'No dropshipper indicators found'}
+                    </span>
+                  </div>
+                  {result.details.dropshipperIndicators?.reasons && result.details.dropshipperIndicators.reasons.length > 0 && (
+                    <ul className="text-sm text-muted-foreground space-y-1 ml-6 list-disc">
+                      {result.details.dropshipperIndicators.reasons.map((reason, i) => (
+                        <li key={i}>{reason}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </AnalysisCard>
+
+              {/* Image Analysis */}
+              <AnalysisCard
+                title="Image Analysis"
+                icon={Image}
+                status={
+                  result.details.imageAnalysis?.appearsOriginal ? 'success' :
+                  result.details.imageAnalysis?.stockPhotoLikely ? 'warning' :
+                  'neutral'
+                }
+                delay={0.3}
+              >
+                <div className="space-y-2">
+                  <CheckItem 
+                    label="Original product images" 
+                    status={result.details.imageAnalysis?.appearsOriginal ? 'pass' : 'warning'} 
+                  />
+                  <CheckItem 
+                    label="Stock photos detected" 
+                    status={result.details.imageAnalysis?.stockPhotoLikely ? 'fail' : 'pass'} 
+                  />
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-sm text-muted-foreground">Image quality</span>
+                    <span className={`text-sm font-medium ${
+                      result.details.imageAnalysis?.qualityAssessment === 'professional' ? 'text-status-safe' :
+                      result.details.imageAnalysis?.qualityAssessment === 'suspicious' ? 'text-status-danger' :
+                      'text-muted-foreground'
+                    }`}>
+                      {result.details.imageAnalysis?.qualityAssessment || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+              </AnalysisCard>
+
               {/* Pricing Analysis */}
               <AnalysisCard
                 title="Pricing Analysis"
                 icon={DollarSign}
                 status={result.details.pricing.suspiciouslyLow ? 'warning' : 'neutral'}
-                delay={0.3}
+                delay={0.35}
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     {result.details.pricing.suspiciouslyLow ? (
-                      <AlertTriangle className="w-4 h-4 text-warning" />
+                      <AlertTriangle className="w-4 h-4 text-status-warning" />
                     ) : (
-                      <CheckCircle className="w-4 h-4 text-success" />
+                      <CheckCircle className="w-4 h-4 text-status-safe" />
                     )}
-                    <span className={`text-sm ${result.details.pricing.suspiciouslyLow ? 'text-warning' : 'text-foreground'}`}>
+                    <span className={`text-sm ${result.details.pricing.suspiciouslyLow ? 'text-status-warning' : 'text-foreground'}`}>
                       {result.details.pricing.suspiciouslyLow ? 'Prices may be too good to be true' : 'Pricing appears reasonable'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Compared to market</span>
+                    <span className={`text-sm font-medium ${
+                      result.details.pricing.comparisonToMarket === 'much_lower' ? 'text-status-danger' :
+                      result.details.pricing.comparisonToMarket === 'slightly_lower' ? 'text-status-warning' :
+                      'text-foreground'
+                    }`}>
+                      {result.details.pricing.comparisonToMarket?.replace('_', ' ') || 'Normal'}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">{result.details.pricing.notes}</p>
@@ -307,7 +359,7 @@ export function UrlChecker() {
                 title="Social Proof"
                 icon={Users}
                 status={
-                  result.details.socialProof.hasReviews && result.details.socialProof.hasSocialLinks ? 'success' :
+                  result.details.socialProof.hasReviews && result.details.socialProof.reviewsAppearAuthentic ? 'success' :
                   result.details.socialProof.hasReviews || result.details.socialProof.hasSocialLinks ? 'warning' :
                   'danger'
                 }
@@ -319,10 +371,63 @@ export function UrlChecker() {
                     status={result.details.socialProof.hasReviews ? 'pass' : 'fail'} 
                   />
                   <CheckItem 
+                    label="Reviews appear authentic" 
+                    status={result.details.socialProof.reviewsAppearAuthentic ? 'pass' : 'warning'} 
+                  />
+                  <CheckItem 
                     label="Social media presence" 
                     status={result.details.socialProof.hasSocialLinks ? 'pass' : 'fail'} 
                   />
+                  <CheckItem 
+                    label="External review platforms" 
+                    status={result.details.socialProof.externalReviewPlatforms ? 'pass' : 'warning'} 
+                  />
                   <p className="text-sm text-muted-foreground mt-2">{result.details.socialProof.notes}</p>
+                </div>
+              </AnalysisCard>
+
+              {/* Website Quality */}
+              <AnalysisCard
+                title="Website Quality"
+                icon={Globe}
+                status={
+                  result.details.websiteQuality?.overallProfessionalism === 'high' ? 'success' :
+                  result.details.websiteQuality?.overallProfessionalism === 'medium' ? 'warning' :
+                  'danger'
+                }
+                delay={0.45}
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Design quality</span>
+                    <span className={`text-sm font-medium ${
+                      result.details.websiteQuality?.designQuality === 'professional' ? 'text-status-safe' :
+                      result.details.websiteQuality?.designQuality === 'poor' ? 'text-status-danger' :
+                      'text-muted-foreground'
+                    }`}>
+                      {result.details.websiteQuality?.designQuality || 'Unknown'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Grammar quality</span>
+                    <span className={`text-sm font-medium ${
+                      result.details.websiteQuality?.grammarQuality === 'excellent' || result.details.websiteQuality?.grammarQuality === 'good' ? 'text-status-safe' :
+                      result.details.websiteQuality?.grammarQuality === 'poor' ? 'text-status-danger' :
+                      'text-muted-foreground'
+                    }`}>
+                      {result.details.websiteQuality?.grammarQuality || 'Unknown'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Overall professionalism</span>
+                    <span className={`text-sm font-medium ${
+                      result.details.websiteQuality?.overallProfessionalism === 'high' ? 'text-status-safe' :
+                      result.details.websiteQuality?.overallProfessionalism === 'low' ? 'text-status-danger' :
+                      'text-muted-foreground'
+                    }`}>
+                      {result.details.websiteQuality?.overallProfessionalism || 'Unknown'}
+                    </span>
+                  </div>
                 </div>
               </AnalysisCard>
             </div>
