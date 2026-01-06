@@ -13,21 +13,43 @@ export interface AnalysisResult {
     };
     business: {
       hasContactInfo: boolean;
+      hasPhysicalAddress: boolean;
+      addressVerification: 'verified' | 'suspicious' | 'not_found' | 'po_box';
+      businessAge: string;
       hasAboutPage: boolean;
       hasPrivacyPolicy: boolean;
       hasTerms: boolean;
       hasReturnPolicy: boolean;
+      hasShippingInfo: boolean;
+    };
+    dropshipperIndicators: {
+      isLikelyDropshipper: boolean;
+      confidence: 'high' | 'medium' | 'low';
+      reasons: string[];
+    };
+    imageAnalysis: {
+      appearsOriginal: boolean;
+      stockPhotoLikely: boolean;
+      qualityAssessment: 'professional' | 'average' | 'poor' | 'suspicious' | 'unknown';
     };
     redFlags: string[];
     positiveSignals: string[];
     pricing: {
       suspiciouslyLow: boolean;
+      comparisonToMarket: 'much_lower' | 'slightly_lower' | 'normal' | 'higher';
       notes: string;
     };
     socialProof: {
       hasReviews: boolean;
+      reviewsAppearAuthentic: boolean;
       hasSocialLinks: boolean;
+      externalReviewPlatforms: boolean;
       notes: string;
+    };
+    websiteQuality: {
+      designQuality: 'professional' | 'average' | 'poor' | 'unknown';
+      grammarQuality: 'excellent' | 'good' | 'poor' | 'unknown';
+      overallProfessionalism: 'high' | 'medium' | 'low' | 'unknown';
     };
   };
   scrapedData?: {
