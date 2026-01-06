@@ -157,13 +157,13 @@ export function SocialSellerChecker() {
             <div className={`rounded-xl border-2 p-6 ${getRiskBgColor(result.riskLevel)}`}>
               {result.riskLevel === 'high' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-400 font-semibold"
+                  className="flex items-center justify-center gap-2 mb-4 text-red-400 font-semibold animate-pulse"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <XCircle className="w-5 h-5" />
+                  <XCircle className="w-5 h-5 animate-bounce" />
                   <span className="uppercase tracking-wide text-sm">Warning: High Risk Seller</span>
-                  <XCircle className="w-5 h-5" />
+                  <XCircle className="w-5 h-5 animate-bounce" />
                 </motion.div>
               )}
               <div className="flex items-center justify-between mb-4">
