@@ -54,7 +54,7 @@ export function SocialSellerChecker() {
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'high': return 'text-status-danger';
+      case 'high': return 'text-red-600';
       case 'medium': return 'text-status-warning';
       default: return 'text-status-safe';
     }
@@ -62,7 +62,7 @@ export function SocialSellerChecker() {
 
   const getRiskBgColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-gradient-to-br from-red-950/60 via-yellow-950/40 to-red-950/60 border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.25)]';
+      case 'high': return 'bg-yellow-400 border-red-600 shadow-[0_0_50px_rgba(250,204,21,0.5)]';
       case 'medium': return 'bg-amber-950/40 border-amber-500/40';
       default: return 'bg-status-safe/10 border-status-safe/20';
     }
@@ -157,13 +157,13 @@ export function SocialSellerChecker() {
             <div className={`rounded-xl border-2 p-6 ${getRiskBgColor(result.riskLevel)}`}>
               {result.riskLevel === 'high' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500 bg-clip-text text-transparent font-bold animate-pulse"
+                  className="flex items-center justify-center gap-2 mb-4 text-red-600 font-bold animate-pulse"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <XCircle className="w-5 h-5 text-yellow-500 animate-bounce" />
+                  <XCircle className="w-5 h-5 text-red-600 animate-bounce" />
                   <span className="uppercase tracking-wide text-sm">⚠️ Warning: High Risk Seller ⚠️</span>
-                  <XCircle className="w-5 h-5 text-red-500 animate-bounce" />
+                  <XCircle className="w-5 h-5 text-red-600 animate-bounce" />
                 </motion.div>
               )}
               <div className="flex items-center justify-between mb-4">
@@ -186,7 +186,7 @@ export function SocialSellerChecker() {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-foreground">{result.summary}</p>
+              <p className={`text-sm ${result.riskLevel === 'high' ? 'text-red-700' : 'text-foreground'}`}>{result.summary}</p>
             </div>
 
             {/* Red Flags */}
