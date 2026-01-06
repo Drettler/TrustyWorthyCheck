@@ -169,29 +169,45 @@ Respond in JSON format:
   }
 }
 
-// Calculate risk score
+// Calculate risk score - higher score = MORE risk (0 = safe, 100 = scam)
+// But we display it as a trust score to users, so we invert for display
 function calculateRiskScore(usernameAnalysis: { concerns: string[] } | null, bioAnalysis: { concerns: string[]; positives: string[] } | null): { score: number; level: 'low' | 'medium' | 'high' } {
-  let score = 50; // Start neutral
+  // Start with a base risk score
+  let riskScore = 0;
+  let hasAnyConcerns = false;
 
-  // Username concerns
-  if (usernameAnalysis) {
-    score += usernameAnalysis.concerns.length * 10;
+  // Username concerns add to risk
+  if (usernameAnalysis && usernameAnalysis.concerns.length > 0) {
+    riskScore += usernameAnalysis.concerns.length * 15;
+    hasAnyConcerns = true;
   }
 
-  // Bio concerns and positives
+  // Bio concerns add to risk, positives reduce risk
   if (bioAnalysis) {
-    score += bioAnalysis.concerns.length * 8;
-    score -= bioAnalysis.positives.length * 5;
+    if (bioAnalysis.concerns.length > 0) {
+      riskScore += bioAnalysis.concerns.length * 12;
+      hasAnyConcerns = true;
+    }
+    riskScore -= bioAnalysis.positives.length * 5;
   }
 
-  // Clamp score
-  score = Math.max(0, Math.min(100, score));
+  // If no concerns at all, give a low risk score (25 = 75% safe when inverted)
+  if (!hasAnyConcerns) {
+    riskScore = 25; // This means 75% trust score when inverted
+  } else {
+    // Ensure minimum risk score when there are concerns
+    riskScore = Math.max(40, riskScore);
+  }
 
+  // Clamp score between 0 and 100
+  riskScore = Math.max(0, Math.min(100, riskScore));
+
+  // Determine risk level
   let level: 'low' | 'medium' | 'high' = 'low';
-  if (score >= 70) level = 'high';
-  else if (score >= 40) level = 'medium';
+  if (riskScore >= 70) level = 'high';
+  else if (riskScore >= 40) level = 'medium';
 
-  return { score, level };
+  return { score: riskScore, level };
 }
 
 Deno.serve(async (req) => {

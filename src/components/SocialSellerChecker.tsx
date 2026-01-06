@@ -180,8 +180,8 @@ export function SocialSellerChecker() {
                       {result.riskLevel === 'high' ? 'High Risk' : 
                        result.riskLevel === 'medium' ? 'Medium Risk' : 'Low Risk'}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Risk Score: {result.riskScore}/100
+                    <p className={`text-sm ${result.riskLevel === 'high' ? 'text-red-600' : 'text-muted-foreground'}`}>
+                      Trust Score: {100 - result.riskScore}/100
                     </p>
                   </div>
                 </div>
