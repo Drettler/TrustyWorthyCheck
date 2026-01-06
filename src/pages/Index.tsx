@@ -1,27 +1,27 @@
-import { motion } from 'framer-motion';
-import { Shield, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
-import { UrlChecker } from '@/components/UrlChecker';
+import { motion } from "framer-motion";
+import { Shield, AlertTriangle, CheckCircle, Zap } from "lucide-react";
+import { UrlChecker } from "@/components/UrlChecker";
 
 const features = [
   {
     icon: Shield,
-    title: 'Deep Security Analysis',
-    description: 'SSL certificates, domain verification, and security checks',
+    title: "Deep Security Analysis",
+    description: "SSL certificates, domain verification, and security checks",
   },
   {
     icon: AlertTriangle,
-    title: 'Scam Detection',
-    description: 'AI-powered detection of fake stores and dropshippers',
+    title: "Scam Detection",
+    description: "AI-powered detection of fake stores and dropshippers",
   },
   {
     icon: CheckCircle,
-    title: 'Trust Scoring',
-    description: 'Comprehensive 0-100 trust score with detailed breakdown',
+    title: "Trust Scoring",
+    description: "Comprehensive 0-100 trust score with detailed breakdown",
   },
   {
     icon: Zap,
-    title: 'Instant Results',
-    description: 'Get comprehensive analysis in seconds',
+    title: "Instant Results",
+    description: "Get comprehensive analysis in seconds",
   },
 ];
 
@@ -37,24 +37,20 @@ export default function Index() {
 
         <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-16">
           {/* Header */}
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
               <Shield className="w-4 h-4" />
-              Protect Yourself Before You Buy
+              Protect Yourself Before You Buy - No one else will!
             </div>
-            
+
             <h1 className="font-display text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
               Is This Website
               <span className="text-primary"> Legit?</span>
             </h1>
-            
+
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Verify any e-commerce site before making a purchase. Our AI analyzes 
-              websites for scams, dropshippers, and security risks.
+              Verify any site before making a purchase. Let us analyzes websites for scams, dropshippers, false reviews,
+              bogus products and security risks.
             </p>
           </motion.div>
 
@@ -104,9 +100,13 @@ export default function Index() {
 
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {[
-            { step: '01', title: 'Enter URL', description: 'Paste the website link you want to check' },
-            { step: '02', title: 'AI Analysis', description: 'Our AI scans for security, legitimacy, and red flags' },
-            { step: '03', title: 'Get Results', description: 'Receive a detailed trust score and recommendations' },
+            { step: "01", title: "Enter URL", description: "Paste the website link you want to check" },
+            {
+              step: "02",
+              title: "AI Analysis",
+              description: "We will scan for legitimacy, bogus reviews, website securitities and other red flags",
+            },
+            { step: "03", title: "Get Results", description: "Receive a detailed trust score and recommendations" },
           ].map((item, index) => (
             <motion.div
               key={item.step}
@@ -116,9 +116,7 @@ export default function Index() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.15 }}
             >
-              <div className="text-5xl font-display font-bold text-primary/20 mb-4">
-                {item.step}
-              </div>
+              <div className="text-5xl font-display font-bold text-primary/20 mb-4">{item.step}</div>
               <h3 className="font-display font-semibold text-lg mb-2">{item.title}</h3>
               <p className="text-sm text-muted-foreground">{item.description}</p>
             </motion.div>
@@ -130,7 +128,8 @@ export default function Index() {
       <footer className="border-t border-border py-8">
         <div className="container px-4 text-center text-sm text-muted-foreground">
           <p>
-            This tool provides advisory information only. Always conduct additional research before making purchases.
+            This tool provides advisory information, so you won't get scammed. Always conduct additional research before
+            making purchases.
           </p>
         </div>
       </footer>
