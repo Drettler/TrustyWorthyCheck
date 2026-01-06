@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image } from "lucide-react";
 import { UrlChecker } from "@/components/UrlChecker";
 
 const features = [
@@ -107,6 +107,77 @@ export default function Index() {
             </motion.div>
           ))}
         </motion.div>
+      </section>
+
+      {/* Social Media Checks Section */}
+      <section className="container px-4 py-16 border-t border-border">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <Instagram className="w-4 h-4" />
+            Social Media Analysis
+          </div>
+          <h2 className="font-display text-3xl font-bold mb-4">We Check Social Profiles Too</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Buying from someone on Instagram, TikTok, or Facebook Marketplace? We analyze seller profiles for signs of scams and fake accounts.
+          </p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {[
+            {
+              icon: Clock,
+              title: "Account Age",
+              description: "New accounts selling expensive items are a major red flag",
+            },
+            {
+              icon: Users,
+              title: "Follower Analysis",
+              description: "Detect fake followers and suspicious follower/following ratios",
+            },
+            {
+              icon: TrendingUp,
+              title: "Engagement Patterns",
+              description: "Low engagement or artificially inflated likes indicate bot activity",
+            },
+            {
+              icon: BadgeCheck,
+              title: "Verification Status",
+              description: "Check for verified badges and authentic profile information",
+            },
+            {
+              icon: Bot,
+              title: "Bot Detection",
+              description: "Identify automated accounts and suspicious activity patterns",
+            },
+            {
+              icon: Image,
+              title: "Profile Image Check",
+              description: "Detect stolen or stock photos used as profile pictures",
+            },
+          ].map((check, index) => (
+            <motion.div
+              key={check.title}
+              className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border border-border/50"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <check.icon className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">{check.title}</h3>
+                <p className="text-sm text-muted-foreground">{check.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
       {/* How It Works */}
