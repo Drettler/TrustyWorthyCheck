@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
+import { Skull, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface TrustScoreGaugeProps {
   score: number;
   verdict: 'safe' | 'caution' | 'danger';
+  redFlagsCount?: number;
 }
 
-export function TrustScoreGauge({ score, verdict }: TrustScoreGaugeProps) {
+export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScoreGaugeProps) {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (score / 100) * circumference;
   
@@ -38,6 +40,14 @@ export function TrustScoreGauge({ score, verdict }: TrustScoreGaugeProps) {
       case 'safe': return 'LEGIT';
       case 'caution': return 'CAUTION';
       case 'danger': return 'SCAM';
+    }
+  };
+
+  const getVerdictIcon = () => {
+    switch (verdict) {
+      case 'safe': return <ShieldCheck className="w-4 h-4" />;
+      case 'caution': return <AlertTriangle className="w-4 h-4" />;
+      case 'danger': return <Skull className="w-5 h-5" />;
     }
   };
 
@@ -94,7 +104,7 @@ export function TrustScoreGauge({ score, verdict }: TrustScoreGaugeProps) {
       
       {/* Verdict badge */}
       <motion.div
-        className={`mt-4 px-4 py-1.5 rounded-full font-semibold text-sm uppercase tracking-wider ${
+        className={`mt-4 px-4 py-1.5 rounded-full font-semibold text-sm uppercase tracking-wider flex items-center gap-2 ${
           verdict === 'safe' ? 'bg-success/20 text-success' :
           verdict === 'caution' ? 'bg-warning/20 text-warning' :
           'bg-danger/20 text-danger'
@@ -103,8 +113,21 @@ export function TrustScoreGauge({ score, verdict }: TrustScoreGaugeProps) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8 }}
       >
+        {getVerdictIcon()}
         {getVerdictLabel()}
       </motion.div>
+
+      {/* Red flags count badge */}
+      {redFlagsCount > 0 && (
+        <motion.div
+          className="mt-2 text-sm text-danger font-medium"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          {redFlagsCount} Critical Red Flag{redFlagsCount !== 1 ? 's' : ''} Found
+        </motion.div>
+      )}
     </motion.div>
   );
 }

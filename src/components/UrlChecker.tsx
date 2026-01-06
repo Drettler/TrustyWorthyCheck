@@ -138,13 +138,16 @@ export function UrlChecker() {
           >
             {/* Trust Score Header */}
             <div className="glass-card rounded-2xl p-8 text-center">
-              <div className="flex flex-col items-center gap-6">
-                <TrustScoreGauge score={result.trustScore} verdict={result.verdict} />
+              <div className="flex flex-col items-center gap-4">
+                <TrustScoreGauge 
+                  score={result.trustScore} 
+                  verdict={result.verdict} 
+                  redFlagsCount={result.details.redFlags?.length || 0}
+                />
                 <div className="text-center max-w-2xl">
-                  <h2 className="font-display text-2xl font-bold mb-3">
+                  <h2 className="font-display text-xl font-bold mb-2">
                     {result.scrapedData?.title || result.details.domain.name}
                   </h2>
-                  <p className="text-muted-foreground text-lg mb-4">{result.summary}</p>
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Globe className="w-4 h-4" />
                     <span>{result.details.domain.name}</span>
@@ -205,6 +208,12 @@ export function UrlChecker() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-6 pt-2">
+                    {/* Summary */}
+                    <div className="glass-card rounded-2xl p-6">
+                      <h3 className="font-display text-lg font-semibold mb-3">Analysis Summary</h3>
+                      <p className="text-muted-foreground">{result.summary}</p>
+                    </div>
+
                     {/* Screenshot */}
                     {result.scrapedData?.screenshot && (
                       <div className="glass-card rounded-2xl p-6">
