@@ -40,17 +40,17 @@ export default function Index() {
           <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
               <Shield className="w-4 h-4" />
-              Protect Yourself Before You Buy - No one else will!
+              Protect Yourself Before You Buy
             </div>
 
             <h1 className="font-display text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Is This Website
-              <span className="text-primary"> Legit?</span>
+              Scam or Legit -
+              <span className="text-primary"> Should I?</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Verify any site before making a purchase. Let us analyzes websites for scams, dropshippers, false reviews,
-              bogus products and security risks.
+              Check any website before making a purchase. Our AI analyzes for scams, dropshippers, fake reviews,
+              and security risks so you can shop with confidence.
             </p>
           </motion.div>
 
