@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag } from "lucide-react";
 import { UrlChecker } from "@/components/UrlChecker";
 
 const features = [
@@ -25,6 +25,11 @@ const features = [
   },
 ];
 
+const platforms = [
+  "Facebook", "Instagram", "TikTok", "Pinterest", "Twitter/X", 
+  "eBay", "Etsy", "Amazon", "Shopify Stores"
+];
+
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
@@ -48,9 +53,27 @@ export default function Index() {
               <span className="text-primary"> Should I?</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Check any website before making a purchase. We will analyze sites for scams, dropshippers, fake reviews,
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
+              Check any website before making a purchase. We analyze sites for scams, dropshippers, fake reviews,
               and security risks so you can buy with confidence.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                Websites
+              </span>
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
+                <Instagram className="w-3.5 h-3.5" />
+                Social Media
+              </span>
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
+                <Facebook className="w-3.5 h-3.5" />
+                Marketplaces
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground/70 mt-2">
+              Works with {platforms.slice(0, 5).join(", ")} & more
             </p>
           </motion.div>
 
