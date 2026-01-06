@@ -119,11 +119,11 @@ export default function Index() {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             <Instagram className="w-4 h-4" />
-            Social Media Analysis
+            Social Media Guidance
           </div>
-          <h2 className="font-display text-3xl font-bold mb-4">We Check Social Profiles Too</h2>
+          <h2 className="font-display text-3xl font-bold mb-4">Evaluating Social Sellers</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Buying from someone on Instagram, TikTok, or Facebook Marketplace? We analyze seller profiles for signs of scams and fake accounts.
+            Buying from someone on Instagram, TikTok, or Facebook Marketplace? We'll help you know what red flags to look for when evaluating seller profiles.
           </p>
         </motion.div>
 
@@ -131,33 +131,33 @@ export default function Index() {
           {[
             {
               icon: Clock,
-              title: "Account Age",
-              description: "New accounts selling expensive items are a major red flag",
+              title: "Check Account Age",
+              description: "New accounts selling expensive items are a major red flag — look for established profiles",
             },
             {
               icon: Users,
-              title: "Follower Analysis",
-              description: "Detect fake followers and suspicious follower/following ratios",
+              title: "Review Followers",
+              description: "Check follower counts and follower/following ratios for signs of fake or bought followers",
             },
             {
               icon: TrendingUp,
-              title: "Engagement Patterns",
-              description: "Low engagement or artificially inflated likes indicate bot activity",
+              title: "Examine Engagement",
+              description: "Low engagement or generic comments like 'nice!' may indicate bot activity",
             },
             {
               icon: BadgeCheck,
-              title: "Verification Status",
-              description: "Check for verified badges and authentic profile information",
+              title: "Look for Verification",
+              description: "Verified badges add credibility — be wary of sellers impersonating verified accounts",
             },
             {
               icon: Bot,
-              title: "Bot Detection",
-              description: "Identify automated accounts and suspicious activity patterns",
+              title: "Spot Bot Patterns",
+              description: "Repetitive posts, no personal content, or rapid follower growth suggest automation",
             },
             {
               icon: Image,
-              title: "Profile Image Check",
-              description: "Detect stolen or stock photos used as profile pictures",
+              title: "Verify Profile Photos",
+              description: "Reverse image search profile pictures to check if they're stolen or stock photos",
             },
           ].map((check, index) => (
             <motion.div
@@ -178,6 +178,15 @@ export default function Index() {
             </motion.div>
           ))}
         </div>
+        
+        <motion.p 
+          className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <span className="text-primary">Note:</span> Social media platforms restrict automated scanning. When you check a social URL, we provide AI-powered guidance on what to look for rather than direct profile analysis.
+        </motion.p>
       </section>
 
       {/* How It Works */}
