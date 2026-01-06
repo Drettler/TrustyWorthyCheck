@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch } from "lucide-react";
 import { UrlChecker } from "@/components/UrlChecker";
+import { SocialSellerChecker } from "@/components/SocialSellerChecker";
 
 const features = [
   {
@@ -109,7 +110,35 @@ export default function Index() {
         </motion.div>
       </section>
 
-      {/* Social Media Checks Section */}
+      {/* Social Seller Checker Section */}
+      <section className="container px-4 py-16 border-t border-border">
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <UserSearch className="w-4 h-4" />
+            Social Seller Analysis
+          </div>
+          <h2 className="font-display text-3xl font-bold mb-4">Check Social Media Sellers</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Paste a seller's username or bio to analyze for scam patterns, impersonation attempts, and red flags using AI.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto"
+        >
+          <SocialSellerChecker />
+        </motion.div>
+      </section>
+
+      {/* Social Media Tips Section */}
       <section className="container px-4 py-16 border-t border-border">
         <motion.div
           className="text-center mb-12"
@@ -117,13 +146,13 @@ export default function Index() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-4">
             <Instagram className="w-4 h-4" />
-            Social Media Guidance
+            Manual Verification Tips
           </div>
-          <h2 className="font-display text-3xl font-bold mb-4">Evaluating Social Sellers</h2>
+          <h2 className="font-display text-3xl font-bold mb-4">What to Check Yourself</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Buying from someone on Instagram, TikTok, or Facebook Marketplace? We'll help you know what red flags to look for when evaluating seller profiles.
+            These checks require viewing the profile directly — use them alongside our AI analysis.
           </p>
         </motion.div>
 
@@ -178,15 +207,6 @@ export default function Index() {
             </motion.div>
           ))}
         </div>
-        
-        <motion.p 
-          className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <span className="text-primary">Note:</span> Social media platforms restrict automated scanning. When you check a social URL, we provide AI-powered guidance on what to look for rather than direct profile analysis.
-        </motion.p>
       </section>
 
       {/* How It Works */}
