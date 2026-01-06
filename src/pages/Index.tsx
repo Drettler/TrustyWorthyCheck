@@ -49,8 +49,8 @@ export default function Index() {
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Check any website before making a purchase. Our AI analyzes for scams, dropshippers, fake reviews,
-              and security risks so you can shop with confidence.
+              Check any website before making a purchase. We will analyze sites for scams, dropshippers, fake reviews,
+              and security risks so you can buy with confidence.
             </p>
           </motion.div>
 
