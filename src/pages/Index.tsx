@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch, Globe } from "lucide-react";
 import { UrlChecker } from "@/components/UrlChecker";
 import { SocialSellerChecker } from "@/components/SocialSellerChecker";
 
@@ -34,7 +34,7 @@ const platforms = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+      {/* ===================== WEBSITE CHECKER SECTION ===================== */}
       <div className="relative overflow-hidden">
         {/* Background glow effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -42,7 +42,7 @@ export default function Index() {
         </div>
 
         <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-16">
-          {/* Header */}
+          {/* Main Header */}
           <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
               <Shield className="w-4 h-4" />
@@ -54,37 +54,71 @@ export default function Index() {
               <span className="text-primary"> Should I?</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
-              Check any website before making a purchase. We analyze sites for scams, dropshippers, fake reviews,
-              and security risks so you can buy with confidence.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Check any website or social media seller before making a purchase. We analyze for scams, dropshippers, fake reviews, and security risks.
             </p>
+          </motion.div>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
+          {/* Tool Selector Tabs */}
+          <motion.div 
+            className="flex justify-center gap-4 mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <a href="#website-checker" className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors">
+              <Globe className="w-4 h-4" />
+              Website Checker
+            </a>
+            <a href="#social-seller-checker" className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-muted text-muted-foreground font-medium text-sm hover:bg-muted/80 transition-colors">
+              <UserSearch className="w-4 h-4" />
+              Social Seller Checker
+            </a>
+          </motion.div>
+
+          {/* Website Checker Tool */}
+          <div id="website-checker">
+            <motion.div 
+              className="text-center mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                <Globe className="w-3 h-3" />
+                Tool 1: Website Analysis
+              </div>
+            </motion.div>
+            <UrlChecker />
+            
+            <motion.div 
+              className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground mt-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
                 <ShoppingBag className="w-3.5 h-3.5" />
-                Websites
+                Online Stores
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
                 <Instagram className="w-3.5 h-3.5" />
-                Social Media
+                Social Links
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
                 <Facebook className="w-3.5 h-3.5" />
                 Marketplaces
               </span>
-            </div>
-            <p className="text-xs text-muted-foreground/70 mt-2">
+            </motion.div>
+            <p className="text-xs text-muted-foreground/70 mt-2 text-center">
               Works with {platforms.slice(0, 5).join(", ")} & more
             </p>
-          </motion.div>
-
-          {/* URL Checker */}
-          <UrlChecker />
+          </div>
         </div>
       </div>
 
-      {/* Features Section */}
-      <section className="container px-4 py-16">
+      {/* Website Checker Features */}
+      <section className="container px-4 py-12">
         <motion.div
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
           initial={{ opacity: 0 }}
@@ -110,32 +144,61 @@ export default function Index() {
         </motion.div>
       </section>
 
-      {/* Social Seller Checker Section */}
-      <section className="container px-4 py-16 border-t border-border">
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            <UserSearch className="w-4 h-4" />
-            Social Seller Analysis
-          </div>
-          <h2 className="font-display text-3xl font-bold mb-4">Check Social Media Sellers</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Paste a seller's username or bio to analyze for scam patterns, impersonation attempts, and red flags using AI.
-          </p>
-        </motion.div>
+      {/* ===================== SOCIAL SELLER CHECKER SECTION ===================== */}
+      <section id="social-seller-checker" className="relative bg-muted/30 border-y border-border">
+        {/* Background accent */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
+        </div>
+        
+        <div className="container relative z-10 px-4 py-16 md:py-20">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
+              <UserSearch className="w-3 h-3" />
+              Tool 2: Social Seller Analysis
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Check Social Media Sellers</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Buying from someone on Instagram, TikTok, or Facebook Marketplace? Paste their username or bio to analyze for scam patterns and red flags.
+            </p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto"
-        >
-          <SocialSellerChecker />
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto bg-background/80 backdrop-blur-sm"
+          >
+            <SocialSellerChecker />
+          </motion.div>
+          
+          <motion.div 
+            className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground mt-8"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+              <Instagram className="w-3.5 h-3.5" />
+              Instagram
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+              <Facebook className="w-3.5 h-3.5" />
+              Facebook
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+              TikTok
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+              Marketplace Sellers
+            </span>
+          </motion.div>
+        </div>
       </section>
 
       {/* Social Media Tips Section */}
