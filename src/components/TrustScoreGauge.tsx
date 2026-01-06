@@ -35,9 +35,9 @@ export function TrustScoreGauge({ score, verdict }: TrustScoreGaugeProps) {
 
   const getVerdictLabel = () => {
     switch (verdict) {
-      case 'safe': return 'SAFE';
+      case 'safe': return 'LEGIT';
       case 'caution': return 'CAUTION';
-      case 'danger': return 'DANGER';
+      case 'danger': return 'SCAM';
     }
   };
 
