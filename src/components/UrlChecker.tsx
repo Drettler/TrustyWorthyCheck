@@ -146,13 +146,13 @@ export function UrlChecker() {
             }`}>
               {result.verdict === 'danger' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-400 font-semibold"
+                  className="flex items-center justify-center gap-2 mb-4 text-red-400 font-semibold animate-pulse"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <AlertTriangle className="w-5 h-5" />
+                  <AlertTriangle className="w-5 h-5 animate-bounce" />
                   <span className="uppercase tracking-wide text-sm">Warning: Potential Scam Detected</span>
-                  <AlertTriangle className="w-5 h-5" />
+                  <AlertTriangle className="w-5 h-5 animate-bounce" />
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-4">
