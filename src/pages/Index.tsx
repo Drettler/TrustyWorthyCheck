@@ -156,8 +156,8 @@ export default function Index() {
             },
             {
               icon: Image,
-              title: "Verify Profile Photos",
-              description: "Reverse image search profile pictures to check if they're stolen or stock photos",
+              title: "Check Post History",
+              description: "Look for consistent posting over time — sudden activity or only sales posts is suspicious",
             },
           ].map((check, index) => (
             <motion.div
