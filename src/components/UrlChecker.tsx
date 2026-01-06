@@ -139,20 +139,20 @@ export function UrlChecker() {
             {/* Trust Score Header */}
             <div className={`rounded-2xl p-8 text-center border-2 ${
               result.verdict === 'danger' 
-                ? 'bg-red-950/50 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.15)]' 
+                ? 'bg-gradient-to-br from-red-950/60 via-yellow-950/40 to-red-950/60 border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.25)]' 
                 : result.verdict === 'caution'
                 ? 'bg-amber-950/30 border-amber-500/30'
                 : 'glass-card border-transparent'
             }`}>
               {result.verdict === 'danger' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-400 font-semibold animate-pulse"
+                  className="flex items-center justify-center gap-2 mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500 bg-clip-text text-transparent font-bold animate-pulse"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <AlertTriangle className="w-5 h-5 animate-bounce" />
-                  <span className="uppercase tracking-wide text-sm">Warning: Potential Scam Detected</span>
-                  <AlertTriangle className="w-5 h-5 animate-bounce" />
+                  <AlertTriangle className="w-5 h-5 text-yellow-500 animate-bounce" />
+                  <span className="uppercase tracking-wide text-sm">⚠️ Warning: Potential Scam Detected ⚠️</span>
+                  <AlertTriangle className="w-5 h-5 text-red-500 animate-bounce" />
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-4">

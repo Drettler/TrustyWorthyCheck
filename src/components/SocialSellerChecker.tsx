@@ -62,7 +62,7 @@ export function SocialSellerChecker() {
 
   const getRiskBgColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-red-950/60 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)]';
+      case 'high': return 'bg-gradient-to-br from-red-950/60 via-yellow-950/40 to-red-950/60 border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.25)]';
       case 'medium': return 'bg-amber-950/40 border-amber-500/40';
       default: return 'bg-status-safe/10 border-status-safe/20';
     }
@@ -157,13 +157,13 @@ export function SocialSellerChecker() {
             <div className={`rounded-xl border-2 p-6 ${getRiskBgColor(result.riskLevel)}`}>
               {result.riskLevel === 'high' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-400 font-semibold animate-pulse"
+                  className="flex items-center justify-center gap-2 mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500 bg-clip-text text-transparent font-bold animate-pulse"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <XCircle className="w-5 h-5 animate-bounce" />
-                  <span className="uppercase tracking-wide text-sm">Warning: High Risk Seller</span>
-                  <XCircle className="w-5 h-5 animate-bounce" />
+                  <XCircle className="w-5 h-5 text-yellow-500 animate-bounce" />
+                  <span className="uppercase tracking-wide text-sm">⚠️ Warning: High Risk Seller ⚠️</span>
+                  <XCircle className="w-5 h-5 text-red-500 animate-bounce" />
                 </motion.div>
               )}
               <div className="flex items-center justify-between mb-4">
