@@ -108,7 +108,7 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
           verdict === 'safe' ? 'bg-success/20 text-success' :
           verdict === 'caution' ? 'bg-warning/20 text-warning' :
           'bg-danger/20 text-danger'
-        }`}
+        } ${verdict === 'danger' ? 'animate-shake' : ''}`}
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8 }}
