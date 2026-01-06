@@ -103,10 +103,10 @@ export default function Index() {
             { step: "01", title: "Enter URL", description: "Paste the website link you want to check" },
             {
               step: "02",
-              title: "Legitimacy Analysis",
-              description: "We will scan for legitimacy, bogus reviews, website securitities and other red flags",
+              title: "Legit Checker",
+              description: "We will scan for legitimacy, bogus reviews, website securitities, and other red flags",
             },
-            { step: "03", title: "Get Results", description: "Receive a detailed trust score and recommendations" },
+            { step: "03", title: "Get Results", description: "Receive a detailed trust score, so you won't get scammed" },
           ].map((item, index) => (
             <motion.div
               key={item.step}
@@ -128,7 +128,7 @@ export default function Index() {
       <footer className="border-t border-border py-8">
         <div className="container px-4 text-center text-sm text-muted-foreground">
           <p>
-            This tool provides advisory information, so you won't get scammed. Always conduct additional research before
+            This tool provides advisory information, so you won't get scammed. We need to protect ourselves, when no one else will!  Always conduct additional research before
             making purchases.
           </p>
         </div>
