@@ -139,20 +139,20 @@ export function UrlChecker() {
             {/* Trust Score Header */}
             <div className={`rounded-2xl p-8 text-center border-2 ${
               result.verdict === 'danger' 
-                ? 'bg-gradient-to-br from-red-950/60 via-yellow-950/40 to-red-950/60 border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.25)]' 
+                ? 'bg-yellow-400 border-red-600 shadow-[0_0_50px_rgba(250,204,21,0.5)]' 
                 : result.verdict === 'caution'
                 ? 'bg-amber-950/30 border-amber-500/30'
                 : 'glass-card border-transparent'
             }`}>
               {result.verdict === 'danger' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500 bg-clip-text text-transparent font-bold animate-pulse"
+                  className="flex items-center justify-center gap-2 mb-4 text-red-600 font-bold animate-pulse"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <AlertTriangle className="w-5 h-5 text-yellow-500 animate-bounce" />
+                  <AlertTriangle className="w-5 h-5 text-red-600 animate-bounce" />
                   <span className="uppercase tracking-wide text-sm">⚠️ Warning: Potential Scam Detected ⚠️</span>
-                  <AlertTriangle className="w-5 h-5 text-red-500 animate-bounce" />
+                  <AlertTriangle className="w-5 h-5 text-red-600 animate-bounce" />
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-4">
@@ -162,14 +162,14 @@ export function UrlChecker() {
                   redFlagsCount={result.details.redFlags?.length || 0}
                 />
                 <div className="text-center max-w-2xl">
-                  <h2 className="font-display text-xl font-bold mb-2">
+                  <h2 className={`font-display text-xl font-bold mb-2 ${result.verdict === 'danger' ? 'text-red-700' : ''}`}>
                     {result.scrapedData?.title || result.details.domain.name}
                   </h2>
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <div className={`flex items-center justify-center gap-2 text-sm ${result.verdict === 'danger' ? 'text-red-600' : 'text-muted-foreground'}`}>
                     <Globe className="w-4 h-4" />
                     <span>{result.details.domain.name}</span>
                     {result.details.domain.ssl && (
-                      <span className="flex items-center gap-1 text-success">
+                      <span className={`flex items-center gap-1 ${result.verdict === 'danger' ? 'text-red-700' : 'text-success'}`}>
                         <Shield className="w-3 h-3" />
                         SSL
                       </span>
