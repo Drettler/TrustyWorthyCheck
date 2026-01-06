@@ -37,7 +37,7 @@ export function TrustScoreGauge({ score, verdict }: TrustScoreGaugeProps) {
     switch (verdict) {
       case 'safe': return 'LEGIT';
       case 'caution': return 'CAUTION';
-      case 'danger': return 'DANGER';
+      case 'danger': return 'SCAM';
     }
   };
 
