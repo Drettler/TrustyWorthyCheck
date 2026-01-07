@@ -1,5 +1,41 @@
 import { supabase } from '@/integrations/supabase/client';
 
+export interface VirusTotalData {
+  isMalicious: boolean;
+  maliciousCount: number;
+  suspiciousCount: number;
+  harmlessCount: number;
+  totalEngines: number;
+  reputationScore: number;
+  categories: string[];
+  lastAnalysisDate?: string;
+  available: boolean;
+}
+
+export interface WhoisData {
+  domainName?: string;
+  registrar?: string;
+  createdDate?: string;
+  updatedDate?: string;
+  expiryDate?: string;
+  domainAge?: string;
+  domainAgeInDays?: number;
+  registrantCountry?: string;
+  registrantOrg?: string;
+  nameServers?: string[];
+  isPrivacyProtected: boolean;
+  available: boolean;
+}
+
+export interface PriceComparisonData {
+  productsAnalyzed: number;
+  averageDiscount: number;
+  suspiciouslyLowCount: number;
+  marketPosition: 'much_lower' | 'slightly_lower' | 'normal' | 'higher';
+  comparisonNotes: string[];
+  redFlags: string[];
+}
+
 export interface AnalysisResult {
   trustScore: number;
   verdict: 'safe' | 'caution' | 'danger';
@@ -56,6 +92,11 @@ export interface AnalysisResult {
     title?: string;
     description?: string;
     screenshot?: string;
+  };
+  proFeatures?: {
+    virusTotal: VirusTotalData;
+    whois: WhoisData;
+    priceComparison: PriceComparisonData;
   };
 }
 

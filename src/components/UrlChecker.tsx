@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -314,13 +314,91 @@ export function UrlChecker() {
                         This assessment is based on automated checks and publicly available information. We recommend reviewing the details below and conducting your own verification before making purchases.
                       </p>
                       
-                      {/* Monetization teaser */}
-                      <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50">
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">Want deeper analysis?</span> Full reports include WHOIS history, reputation database checks, and comparative market analysis.
-                          <span className="text-primary font-medium ml-1">Coming soon</span>
-                        </p>
-                      </div>
+                      {/* Pro Features Preview - Show actual data */}
+                      {result.proFeatures && (
+                        <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Sparkles className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-semibold text-primary">Pro Analysis Preview</span>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {/* VirusTotal Preview */}
+                            <div className="p-3 rounded-lg bg-background/60 border border-border/50">
+                              <div className="flex items-center gap-2 mb-2">
+                                <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-xs font-medium">Security Scan</span>
+                              </div>
+                              {result.proFeatures.virusTotal.available ? (
+                                <div className={`text-sm font-semibold ${result.proFeatures.virusTotal.isMalicious ? 'text-danger' : 'text-success'}`}>
+                                  {result.proFeatures.virusTotal.isMalicious 
+                                    ? `⚠️ ${result.proFeatures.virusTotal.maliciousCount} threats detected`
+                                    : '✓ No threats detected'}
+                                </div>
+                              ) : (
+                                <div className="text-xs text-muted-foreground">Scan complete</div>
+                              )}
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                {result.proFeatures.virusTotal.totalEngines} security engines checked
+                              </p>
+                            </div>
+                            
+                            {/* WHOIS Preview */}
+                            <div className="p-3 rounded-lg bg-background/60 border border-border/50">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Calendar className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-xs font-medium">Domain Age</span>
+                              </div>
+                              {result.proFeatures.whois.available ? (
+                                <>
+                                  <div className={`text-sm font-semibold ${
+                                    result.proFeatures.whois.domainAgeInDays && result.proFeatures.whois.domainAgeInDays < 90 
+                                      ? 'text-danger' 
+                                      : result.proFeatures.whois.domainAgeInDays && result.proFeatures.whois.domainAgeInDays < 365
+                                      ? 'text-warning'
+                                      : 'text-foreground'
+                                  }`}>
+                                    {result.proFeatures.whois.domainAge || 'Unknown'}
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground mt-1">
+                                    {result.proFeatures.whois.registrar ? `via ${result.proFeatures.whois.registrar}` : 'Registrar info available'}
+                                  </p>
+                                </>
+                              ) : (
+                                <div className="text-xs text-muted-foreground">WHOIS data available</div>
+                              )}
+                            </div>
+                            
+                            {/* Price Comparison Preview */}
+                            <div className="p-3 rounded-lg bg-background/60 border border-border/50">
+                              <div className="flex items-center gap-2 mb-2">
+                                <TrendingDown className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-xs font-medium">Price Analysis</span>
+                              </div>
+                              {result.proFeatures.priceComparison.productsAnalyzed > 0 ? (
+                                <>
+                                  <div className={`text-sm font-semibold ${
+                                    result.proFeatures.priceComparison.averageDiscount >= 60 
+                                      ? 'text-danger' 
+                                      : result.proFeatures.priceComparison.averageDiscount >= 40
+                                      ? 'text-warning'
+                                      : 'text-foreground'
+                                  }`}>
+                                    {result.proFeatures.priceComparison.averageDiscount}% avg discount
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground mt-1">
+                                    {result.proFeatures.priceComparison.productsAnalyzed} prices analyzed
+                                  </p>
+                                </>
+                              ) : (
+                                <div className="text-xs text-muted-foreground">No pricing detected</div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-center text-muted-foreground mt-3">
+                            Unlock Pro for full WHOIS history, detailed security reports & market comparison
+                          </p>
+                        </div>
+                      )}
                     </div>
 
 

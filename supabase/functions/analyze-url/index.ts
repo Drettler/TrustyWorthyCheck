@@ -32,6 +32,374 @@ interface SecurityHeaders {
   score: number;
 }
 
+interface VirusTotalResult {
+  isMalicious: boolean;
+  maliciousCount: number;
+  suspiciousCount: number;
+  harmlessCount: number;
+  undetectedCount: number;
+  totalEngines: number;
+  reputationScore: number;
+  categories: string[];
+  lastAnalysisDate?: string;
+  error?: string;
+}
+
+interface WhoisResult {
+  domainName?: string;
+  registrar?: string;
+  createdDate?: string;
+  updatedDate?: string;
+  expiryDate?: string;
+  domainAge?: string;
+  domainAgeInDays?: number;
+  registrant?: {
+    organization?: string;
+    country?: string;
+    state?: string;
+  };
+  nameServers?: string[];
+  status?: string[];
+  isPrivacyProtected: boolean;
+  error?: string;
+}
+
+interface PriceComparisonResult {
+  productsAnalyzed: number;
+  averageDiscount: number;
+  suspiciouslyLowCount: number;
+  comparisonNotes: string[];
+  marketPosition: 'much_lower' | 'slightly_lower' | 'normal' | 'higher';
+  redFlags: string[];
+}
+
+// VirusTotal API integration
+async function checkVirusTotal(domain: string): Promise<VirusTotalResult> {
+  const apiKey = Deno.env.get('VIRUSTOTAL_API_KEY');
+  
+  if (!apiKey) {
+    console.log('VirusTotal API key not configured');
+    return {
+      isMalicious: false,
+      maliciousCount: 0,
+      suspiciousCount: 0,
+      harmlessCount: 0,
+      undetectedCount: 0,
+      totalEngines: 0,
+      reputationScore: 0,
+      categories: [],
+      error: 'VirusTotal not configured'
+    };
+  }
+
+  try {
+    console.log('Checking VirusTotal for domain:', domain);
+    
+    // Get domain report from VirusTotal
+    const response = await fetch(`https://www.virustotal.com/api/v3/domains/${domain}`, {
+      headers: {
+        'x-apikey': apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log('Domain not found in VirusTotal database');
+        return {
+          isMalicious: false,
+          maliciousCount: 0,
+          suspiciousCount: 0,
+          harmlessCount: 0,
+          undetectedCount: 0,
+          totalEngines: 0,
+          reputationScore: 0,
+          categories: [],
+          error: 'Domain not in database'
+        };
+      }
+      throw new Error(`VirusTotal API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const attributes = data.data?.attributes || {};
+    const lastAnalysisStats = attributes.last_analysis_stats || {};
+    const categories = attributes.categories || {};
+    
+    const maliciousCount = lastAnalysisStats.malicious || 0;
+    const suspiciousCount = lastAnalysisStats.suspicious || 0;
+    const harmlessCount = lastAnalysisStats.harmless || 0;
+    const undetectedCount = lastAnalysisStats.undetected || 0;
+    const totalEngines = maliciousCount + suspiciousCount + harmlessCount + undetectedCount;
+
+    console.log('VirusTotal results:', { maliciousCount, suspiciousCount, totalEngines });
+
+    return {
+      isMalicious: maliciousCount > 0,
+      maliciousCount,
+      suspiciousCount,
+      harmlessCount,
+      undetectedCount,
+      totalEngines,
+      reputationScore: attributes.reputation || 0,
+      categories: Object.values(categories) as string[],
+      lastAnalysisDate: attributes.last_analysis_date 
+        ? new Date(attributes.last_analysis_date * 1000).toISOString() 
+        : undefined,
+    };
+  } catch (error) {
+    console.error('VirusTotal check failed:', error);
+    return {
+      isMalicious: false,
+      maliciousCount: 0,
+      suspiciousCount: 0,
+      harmlessCount: 0,
+      undetectedCount: 0,
+      totalEngines: 0,
+      reputationScore: 0,
+      categories: [],
+      error: error instanceof Error ? error.message : 'Check failed'
+    };
+  }
+}
+
+// WHOIS lookup using free API
+async function lookupWhois(domain: string): Promise<WhoisResult> {
+  try {
+    console.log('Looking up WHOIS for domain:', domain);
+    
+    // Use whoisjson.com free API (no key required, rate limited)
+    const response = await fetch(`https://whoisjson.com/api/v1/whois?domain=${encodeURIComponent(domain)}`, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      // Try fallback API
+      console.log('Primary WHOIS API failed, trying fallback...');
+      return await lookupWhoisFallback(domain);
+    }
+
+    const data = await response.json();
+    
+    // Calculate domain age
+    let domainAge = 'Unknown';
+    let domainAgeInDays = 0;
+    if (data.created) {
+      const createdDate = new Date(data.created);
+      const now = new Date();
+      domainAgeInDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (domainAgeInDays < 30) {
+        domainAge = `${domainAgeInDays} days`;
+      } else if (domainAgeInDays < 365) {
+        domainAge = `${Math.floor(domainAgeInDays / 30)} months`;
+      } else {
+        domainAge = `${Math.floor(domainAgeInDays / 365)} years`;
+      }
+    }
+
+    console.log('WHOIS results:', { domainAge, registrar: data.registrar });
+
+    return {
+      domainName: data.domain_name || domain,
+      registrar: data.registrar,
+      createdDate: data.created,
+      updatedDate: data.updated,
+      expiryDate: data.expires,
+      domainAge,
+      domainAgeInDays,
+      registrant: {
+        organization: data.registrant?.organization,
+        country: data.registrant?.country,
+        state: data.registrant?.state,
+      },
+      nameServers: data.name_servers,
+      status: data.status,
+      isPrivacyProtected: !!(data.registrant?.organization?.toLowerCase().includes('privacy') ||
+        data.registrant?.organization?.toLowerCase().includes('proxy') ||
+        data.registrant?.organization?.toLowerCase().includes('redacted')),
+    };
+  } catch (error) {
+    console.error('WHOIS lookup failed:', error);
+    return await lookupWhoisFallback(domain);
+  }
+}
+
+// Fallback WHOIS lookup
+async function lookupWhoisFallback(domain: string): Promise<WhoisResult> {
+  try {
+    // Try ip-api WHOIS (basic info)
+    const response = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        isPrivacyProtected: false,
+        error: 'WHOIS lookup unavailable'
+      };
+    }
+
+    const data = await response.json();
+    
+    // Extract dates from events
+    let createdDate: string | undefined;
+    let updatedDate: string | undefined;
+    let expiryDate: string | undefined;
+    
+    for (const event of data.events || []) {
+      if (event.eventAction === 'registration') createdDate = event.eventDate;
+      if (event.eventAction === 'last changed') updatedDate = event.eventDate;
+      if (event.eventAction === 'expiration') expiryDate = event.eventDate;
+    }
+
+    // Calculate domain age
+    let domainAge = 'Unknown';
+    let domainAgeInDays = 0;
+    if (createdDate) {
+      const created = new Date(createdDate);
+      const now = new Date();
+      domainAgeInDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (domainAgeInDays < 30) {
+        domainAge = `${domainAgeInDays} days`;
+      } else if (domainAgeInDays < 365) {
+        domainAge = `${Math.floor(domainAgeInDays / 30)} months`;
+      } else {
+        domainAge = `${Math.floor(domainAgeInDays / 365)} years`;
+      }
+    }
+
+    // Extract registrar
+    const registrar = data.entities?.find((e: any) => e.roles?.includes('registrar'))?.vcardArray?.[1]?.find((v: any) => v[0] === 'fn')?.[3];
+
+    return {
+      domainName: data.ldhName || domain,
+      registrar: registrar,
+      createdDate,
+      updatedDate,
+      expiryDate,
+      domainAge,
+      domainAgeInDays,
+      nameServers: data.nameservers?.map((ns: any) => ns.ldhName),
+      status: data.status,
+      isPrivacyProtected: false,
+    };
+  } catch (error) {
+    console.error('Fallback WHOIS lookup failed:', error);
+    return {
+      isPrivacyProtected: false,
+      error: 'WHOIS lookup failed'
+    };
+  }
+}
+
+// Enhanced price comparison analysis
+function analyzePriceComparison(content: string, html: string): PriceComparisonResult {
+  const contentLower = content.toLowerCase();
+  const redFlags: string[] = [];
+  const comparisonNotes: string[] = [];
+  
+  // Extract price patterns
+  const pricePatterns = [
+    /\$\d+(?:\.\d{2})?/g,
+    /was\s*\$(\d+(?:\.\d{2})?)\s*now\s*\$(\d+(?:\.\d{2})?)/gi,
+    /(\d+)%\s*off/gi,
+    /save\s*\$?(\d+)/gi,
+    /retail\s*(?:value|price)[:\s]*\$(\d+)/gi,
+    /msrp[:\s]*\$(\d+)/gi,
+    /compare\s*at\s*\$(\d+)/gi,
+  ];
+  
+  // Count products with extreme discounts
+  let suspiciouslyLowCount = 0;
+  let totalDiscountPercentages: number[] = [];
+  
+  // Look for "was/now" patterns
+  const wasNowPattern = /was\s*\$(\d+(?:\.\d{2})?)\s*now\s*\$(\d+(?:\.\d{2})?)/gi;
+  let match;
+  while ((match = wasNowPattern.exec(content)) !== null) {
+    const wasPrice = parseFloat(match[1]);
+    const nowPrice = parseFloat(match[2]);
+    if (wasPrice > 0 && nowPrice > 0) {
+      const discount = ((wasPrice - nowPrice) / wasPrice) * 100;
+      totalDiscountPercentages.push(discount);
+      if (discount >= 70) {
+        suspiciouslyLowCount++;
+      }
+    }
+  }
+  
+  // Look for percentage off claims
+  const percentOffPattern = /(\d+)%\s*off/gi;
+  while ((match = percentOffPattern.exec(content)) !== null) {
+    const discount = parseInt(match[1]);
+    if (discount >= 50) {
+      totalDiscountPercentages.push(discount);
+    }
+    if (discount >= 80) {
+      suspiciouslyLowCount++;
+    }
+  }
+  
+  // Analyze discount patterns
+  const averageDiscount = totalDiscountPercentages.length > 0
+    ? Math.round(totalDiscountPercentages.reduce((a, b) => a + b, 0) / totalDiscountPercentages.length)
+    : 0;
+  
+  // Determine market position
+  let marketPosition: 'much_lower' | 'slightly_lower' | 'normal' | 'higher' = 'normal';
+  if (averageDiscount >= 60) {
+    marketPosition = 'much_lower';
+    redFlags.push(`Average discount of ${averageDiscount}% is unusually high`);
+  } else if (averageDiscount >= 40) {
+    marketPosition = 'slightly_lower';
+    comparisonNotes.push(`Products advertised with ${averageDiscount}% average discount`);
+  }
+  
+  // Check for suspicious pricing indicators
+  if (contentLower.includes('wholesale price') || contentLower.includes('factory direct')) {
+    comparisonNotes.push('Claims wholesale/factory direct pricing');
+  }
+  
+  if (contentLower.includes('clearance') && contentLower.includes('final sale')) {
+    comparisonNotes.push('Clearance items marked as final sale');
+  }
+  
+  // Check for "too good to be true" patterns
+  const luxuryBrands = ['gucci', 'louis vuitton', 'chanel', 'prada', 'rolex', 'cartier', 'hermes', 'burberry'];
+  for (const brand of luxuryBrands) {
+    if (contentLower.includes(brand) && averageDiscount >= 50) {
+      redFlags.push(`Luxury brand ${brand.charAt(0).toUpperCase() + brand.slice(1)} at suspicious discount`);
+      suspiciouslyLowCount++;
+    }
+  }
+  
+  // Check for fake "compare at" pricing
+  if (/compare\s*at\s*\$\d{3,}/i.test(content) && suspiciouslyLowCount > 0) {
+    redFlags.push('Uses "compare at" pricing which may be inflated');
+  }
+  
+  // Check for artificial urgency with pricing
+  if ((contentLower.includes('today only') || contentLower.includes('flash sale')) && averageDiscount >= 50) {
+    comparisonNotes.push('Flash sale or time-limited pricing in effect');
+  }
+
+  console.log('Price comparison analysis:', { averageDiscount, suspiciouslyLowCount, marketPosition });
+
+  return {
+    productsAnalyzed: totalDiscountPercentages.length,
+    averageDiscount,
+    suspiciouslyLowCount,
+    comparisonNotes,
+    marketPosition,
+    redFlags,
+  };
+}
+
 // Known scam patterns and suspicious indicators
 const scamPatterns = {
   domains: [
@@ -651,12 +1019,23 @@ Deno.serve(async (req) => {
     const paymentAnalysis = analyzePaymentMethods(markdown);
     const scamPatternAnalysis = detectScamPatterns(markdown, html);
     const linkAnalysis = analyzeLinks(links, domain);
+    const priceComparison = analyzePriceComparison(markdown, html);
+    
+    // Run external API checks in parallel
+    console.log('Running external security checks...');
+    const [virusTotalResult, whoisResult] = await Promise.all([
+      checkVirusTotal(domain),
+      lookupWhois(domain),
+    ]);
     
     console.log('Urgency tactics:', urgencyAnalysis);
     console.log('Contact info:', contactAnalysis);
     console.log('Payment methods:', paymentAnalysis);
     console.log('Scam patterns:', scamPatternAnalysis);
     console.log('Link analysis:', linkAnalysis);
+    console.log('Price comparison:', priceComparison);
+    console.log('VirusTotal:', virusTotalResult);
+    console.log('WHOIS:', whoisResult);
 
     // Build enhanced context for AI
     const preAnalysisFindings = {
@@ -666,7 +1045,10 @@ Deno.serve(async (req) => {
       contactInfo: contactAnalysis,
       paymentMethods: paymentAnalysis,
       scamPatterns: scamPatternAnalysis,
-      linkAnalysis
+      linkAnalysis,
+      priceComparison,
+      virusTotal: virusTotalResult,
+      whois: whoisResult,
     };
 
     // Step 2: Analyze with AI - Enhanced prompt with pre-analysis findings
@@ -702,6 +1084,29 @@ ADDRESS & PHONE VERIFICATION:
 - Phone Analysis: ${contactAnalysis.phoneAnalysis.found ? 
     `Found=${contactAnalysis.phoneAnalysis.found}, Legit=${contactAnalysis.phoneAnalysis.looksLegitimate}, HasCountryCode=${contactAnalysis.phoneAnalysis.hasCountryCode}, ValidFormat=${contactAnalysis.phoneAnalysis.isValidFormat}${contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.phoneAnalysis.suspiciousPatterns.join(', ') : ''}` 
     : 'No phone number found'}
+
+VIRUSTOTAL SECURITY SCAN (Pro Feature):
+${virusTotalResult.error ? `- Status: ${virusTotalResult.error}` : `- Malicious Detections: ${virusTotalResult.maliciousCount}/${virusTotalResult.totalEngines} security engines
+- Suspicious Detections: ${virusTotalResult.suspiciousCount}/${virusTotalResult.totalEngines} engines
+- Reputation Score: ${virusTotalResult.reputationScore}
+- Categories: ${virusTotalResult.categories.length > 0 ? virusTotalResult.categories.join(', ') : 'Uncategorized'}
+${virusTotalResult.isMalicious ? '⚠️ WARNING: Domain flagged as MALICIOUS by security vendors!' : '✓ No malware/phishing detected'}`}
+
+WHOIS DOMAIN HISTORY (Pro Feature):
+${whoisResult.error ? `- Status: ${whoisResult.error}` : `- Domain Age: ${whoisResult.domainAge || 'Unknown'}${whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 90 ? ' ⚠️ VERY NEW DOMAIN - HIGH RISK' : whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 365 ? ' ⚠️ Domain less than 1 year old' : ''}
+- Registrar: ${whoisResult.registrar || 'Unknown'}
+- Created: ${whoisResult.createdDate || 'Unknown'}
+- Expires: ${whoisResult.expiryDate || 'Unknown'}
+- Registrant Country: ${whoisResult.registrant?.country || 'Unknown'}
+- Privacy Protected: ${whoisResult.isPrivacyProtected ? 'Yes (identity hidden)' : 'No'}`}
+
+PRICE COMPARISON ANALYSIS (Pro Feature):
+- Products Analyzed: ${priceComparison.productsAnalyzed}
+- Average Discount: ${priceComparison.averageDiscount}%${priceComparison.averageDiscount >= 60 ? ' ⚠️ SUSPICIOUSLY HIGH' : ''}
+- Suspiciously Low Prices: ${priceComparison.suspiciouslyLowCount} items
+- Market Position: ${priceComparison.marketPosition}
+${priceComparison.redFlags.length > 0 ? '- Price Red Flags: ' + priceComparison.redFlags.join(', ') : ''}
+${priceComparison.comparisonNotes.length > 0 ? '- Notes: ' + priceComparison.comparisonNotes.join(', ') : ''}
 `;
 
     console.log('Analyzing with AI...');
@@ -1171,6 +1576,80 @@ Return ONLY valid JSON in this exact format:
       socialLinksFound: linkAnalysis.socialPlatforms,
       reviewPlatformsFound: linkAnalysis.reviewPlatforms
     };
+
+    // Add Pro features data
+    analysisResult.proFeatures = {
+      virusTotal: {
+        isMalicious: virusTotalResult.isMalicious,
+        maliciousCount: virusTotalResult.maliciousCount,
+        suspiciousCount: virusTotalResult.suspiciousCount,
+        harmlessCount: virusTotalResult.harmlessCount,
+        totalEngines: virusTotalResult.totalEngines,
+        reputationScore: virusTotalResult.reputationScore,
+        categories: virusTotalResult.categories,
+        lastAnalysisDate: virusTotalResult.lastAnalysisDate,
+        available: !virusTotalResult.error,
+      },
+      whois: {
+        domainName: whoisResult.domainName,
+        registrar: whoisResult.registrar,
+        createdDate: whoisResult.createdDate,
+        updatedDate: whoisResult.updatedDate,
+        expiryDate: whoisResult.expiryDate,
+        domainAge: whoisResult.domainAge,
+        domainAgeInDays: whoisResult.domainAgeInDays,
+        registrantCountry: whoisResult.registrant?.country,
+        registrantOrg: whoisResult.registrant?.organization,
+        nameServers: whoisResult.nameServers,
+        isPrivacyProtected: whoisResult.isPrivacyProtected,
+        available: !whoisResult.error,
+      },
+      priceComparison: {
+        productsAnalyzed: priceComparison.productsAnalyzed,
+        averageDiscount: priceComparison.averageDiscount,
+        suspiciouslyLowCount: priceComparison.suspiciouslyLowCount,
+        marketPosition: priceComparison.marketPosition,
+        comparisonNotes: priceComparison.comparisonNotes,
+        redFlags: priceComparison.redFlags,
+      },
+    };
+
+    // Add VirusTotal red flags
+    if (virusTotalResult.isMalicious) {
+      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
+      analysisResult.details.redFlags.push(`⚠️ MALWARE ALERT: ${virusTotalResult.maliciousCount} security vendors flagged this domain as malicious`);
+      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 40);
+      analysisResult.verdict = 'danger';
+    }
+    if (virusTotalResult.suspiciousCount > 2) {
+      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
+      analysisResult.details.redFlags.push(`${virusTotalResult.suspiciousCount} security vendors flagged this domain as suspicious`);
+      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
+    }
+
+    // Add WHOIS red flags for new domains
+    if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 90) {
+      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
+      analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - very new domains are higher risk`);
+      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
+      if (analysisResult.trustScore < 40) analysisResult.verdict = 'danger';
+      else if (analysisResult.trustScore < 70) analysisResult.verdict = 'caution';
+    } else if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 365) {
+      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
+      analysisResult.details.redFlags.push(`Domain is less than 1 year old (${whoisResult.domainAge})`);
+      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 5);
+    }
+
+    // Add price comparison red flags
+    for (const flag of priceComparison.redFlags) {
+      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
+      if (!analysisResult.details.redFlags.includes(flag)) {
+        analysisResult.details.redFlags.push(flag);
+      }
+    }
+    if (priceComparison.suspiciouslyLowCount >= 3) {
+      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 10);
+    }
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
 
