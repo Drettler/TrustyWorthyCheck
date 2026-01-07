@@ -98,6 +98,19 @@ export interface AnalysisResult {
     whois: WhoisData;
     priceComparison: PriceComparisonData;
   };
+  scamIndicators?: {
+    government: {
+      isLikelyScam: boolean;
+      agencies: string[];
+      patterns: string[];
+    };
+    subscription: {
+      isLikelyScam: boolean;
+      brands: string[];
+      hasPhonePrompt: boolean;
+      patterns: string[];
+    };
+  };
 }
 
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {

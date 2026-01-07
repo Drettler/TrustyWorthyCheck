@@ -10,6 +10,7 @@ import { CheckItem } from './CheckItem';
 import { FlagsList } from './FlagsList';
 import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
+import { ScamWarningBanner } from './ScamWarningBanner';
 import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
@@ -387,8 +388,15 @@ export function UrlChecker() {
             exit={{ opacity: 0 }}
             className="space-y-4"
           >
-            {/* Warning Banner for Danger/Caution */}
-            {(result.verdict === 'danger' || result.verdict === 'caution') && (
+            {/* Scam-Specific Warning Banners */}
+            {result.scamIndicators && (
+              <ScamWarningBanner scamIndicators={result.scamIndicators} />
+            )}
+
+            {/* Warning Banner for Danger/Caution (only show if no scam-specific banner) */}
+            {(result.verdict === 'danger' || result.verdict === 'caution') && 
+             !result.scamIndicators?.government?.isLikelyScam && 
+             !result.scamIndicators?.subscription?.isLikelyScam && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
