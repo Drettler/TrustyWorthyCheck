@@ -142,12 +142,6 @@ export function SocialSellerChecker() {
               </p>
             </div>
 
-            {/* Check limit info */}
-            <p className="text-xs text-muted-foreground text-center">
-              <span className={`font-medium ${checksRemaining > 0 ? 'text-primary' : 'text-amber-500'}`}>
-                {checksRemaining} free check{checksRemaining !== 1 ? 's' : ''} remaining today
-              </span> • Upgrade for unlimited
-            </p>
 
             <Button
               type="submit"

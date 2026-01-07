@@ -267,11 +267,6 @@ export function UrlChecker() {
           <p className="text-xs text-muted-foreground">
             Optional fields help provide context but are not required for analysis
           </p>
-          <p className="text-xs text-muted-foreground">
-            <span className={`font-medium ${checksRemaining > 0 ? 'text-primary' : 'text-amber-500'}`}>
-              {checksRemaining} free check{checksRemaining !== 1 ? 's' : ''} remaining today
-            </span>
-          </p>
         </div>
       </motion.form>
 
