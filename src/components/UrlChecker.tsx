@@ -293,17 +293,6 @@ export function UrlChecker() {
                       </div>
                     </div>
 
-                    {/* Screenshot */}
-                    {result.scrapedData?.screenshot && (
-                      <div className="glass-card rounded-2xl p-6">
-                        <h3 className="font-display text-lg font-semibold mb-4">Website Screenshot</h3>
-                        <img
-                          src={`data:image/png;base64,${result.scrapedData.screenshot}`}
-                          alt="Website screenshot"
-                          className="rounded-lg border border-border w-full max-w-2xl mx-auto"
-                        />
-                      </div>
-                    )}
 
                     {/* Automated Checks Section Header */}
                     <div className="flex items-center gap-3 pt-2">
@@ -625,42 +614,6 @@ export function UrlChecker() {
                       </AnalysisCard>
                     </div>
 
-                    {/* Guided Verification Section */}
-                    <div className="glass-card rounded-2xl p-6 border border-border/50">
-                      <h3 className="font-display text-lg font-semibold mb-3 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-primary" />
-                        Manual Verification Checklist
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        These items require your judgment. Visit the website directly to verify:
-                      </p>
-                      <div className="grid sm:grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span>Contact page has real phone/email</span>
-                        </div>
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span>Physical address can be verified</span>
-                        </div>
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span>Reviews seem genuine, not templated</span>
-                        </div>
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span>Prices are realistic for the product</span>
-                        </div>
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span>Return policy is clear and reasonable</span>
-                        </div>
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span>Payment options include buyer protection</span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </motion.div>
               )}
