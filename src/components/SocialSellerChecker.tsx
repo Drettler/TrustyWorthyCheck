@@ -138,7 +138,7 @@ export function SocialSellerChecker() {
                 disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground">
-                AI will analyze for urgency tactics, suspicious claims, and scam patterns
+                AI will analyze for urgency tactics, suspicious claims, and trust patterns
               </p>
             </div>
 
