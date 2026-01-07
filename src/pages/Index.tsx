@@ -1,7 +1,9 @@
-import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch, Globe, Linkedin } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch, Globe, Linkedin, ChevronDown, ChevronUp } from "lucide-react";
 import { UrlChecker } from "@/components/UrlChecker";
 import { SocialSellerChecker } from "@/components/SocialSellerChecker";
+import { Button } from "@/components/ui/button";
 
 const features = [
   {
@@ -32,6 +34,8 @@ const platforms = [
 ];
 
 export default function Index() {
+  const [showSocialChecker, setShowSocialChecker] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ===================== WEBSITE CHECKER SECTION ===================== */}
@@ -59,36 +63,8 @@ export default function Index() {
             </p>
           </motion.div>
 
-          {/* Tool Selector Tabs */}
-          <motion.div 
-            className="flex justify-center gap-4 mb-8"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <a href="#website-checker" className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors">
-              <Globe className="w-4 h-4" />
-              Website Checker
-            </a>
-            <a href="#social-seller-checker" className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-muted text-muted-foreground font-medium text-sm hover:bg-muted/80 transition-colors">
-              <UserSearch className="w-4 h-4" />
-              Social Seller Checker
-            </a>
-          </motion.div>
-
           {/* Website Checker Tool */}
           <div id="website-checker">
-            <motion.div 
-              className="text-center mb-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15 }}
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                <Globe className="w-3 h-3" />
-                Tool 1: Website Analysis
-              </div>
-            </motion.div>
             <UrlChecker />
             
             <motion.div 
@@ -144,137 +120,156 @@ export default function Index() {
         </motion.div>
       </section>
 
-      {/* ===================== SOCIAL SELLER CHECKER SECTION ===================== */}
-      <section id="social-seller-checker" className="relative bg-muted/30 border-y border-border">
-        {/* Background accent */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
-        </div>
-        
-        <div className="container relative z-10 px-4 py-16 md:py-20">
-          <motion.div
-            className="text-center mb-10"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
-              <UserSearch className="w-3 h-3" />
-              Tool 2: Social Seller Analysis
-            </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Evaluate Social Media Sellers</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Considering a purchase from someone on Instagram, TikTok, Facebook Marketplace, or LinkedIn? Enter their username or bio text to review common trust indicators.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto bg-background/80 backdrop-blur-sm"
-          >
-            <SocialSellerChecker />
-          </motion.div>
-          
-          <motion.div 
-            className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground mt-8"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-          >
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-              <Instagram className="w-3.5 h-3.5" />
-              Instagram
-            </span>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-              <Facebook className="w-3.5 h-3.5" />
-              Facebook
-            </span>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-              <Linkedin className="w-3.5 h-3.5" />
-              LinkedIn
-            </span>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-              TikTok
-            </span>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-              Marketplace Sellers
-            </span>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Social Media Tips Section */}
-      <section className="container px-4 py-16 border-t border-border">
+      {/* ===================== SOCIAL SELLER CHECKER TOGGLE ===================== */}
+      <section className="container px-4 py-8">
         <motion.div
-          className="text-center mb-12"
+          className="text-center"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-4">
-            <Instagram className="w-4 h-4" />
-            Manual Verification Tips
-          </div>
-          <h2 className="font-display text-3xl font-bold mb-4">What to Check Yourself</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            These checks require viewing the profile directly — use them alongside our AI analysis.
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setShowSocialChecker(!showSocialChecker)}
+            className="gap-2"
+          >
+            <UserSearch className="w-5 h-5" />
+            {showSocialChecker ? "Hide Social Seller Checker" : "Check a Social Media Seller"}
+            {showSocialChecker ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
+          <p className="text-sm text-muted-foreground mt-2">
+            Evaluate sellers on Instagram, TikTok, Facebook & more
           </p>
         </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
-            {
-              icon: Clock,
-              title: "Check Account Age",
-              description: "New accounts selling expensive items are a major red flag — look for established profiles",
-            },
-            {
-              icon: Users,
-              title: "Review Followers",
-              description: "Check follower counts and follower/following ratios for signs of fake or bought followers",
-            },
-            {
-              icon: TrendingUp,
-              title: "Examine Engagement",
-              description: "Low engagement or generic comments like 'nice!' may indicate bot activity",
-            },
-            {
-              icon: BadgeCheck,
-              title: "Look for Verification",
-              description: "Verified badges add credibility — be wary of sellers impersonating verified accounts",
-            },
-            {
-              icon: Bot,
-              title: "Spot Bot Patterns",
-              description: "Repetitive posts, no personal content, or rapid follower growth suggest automation",
-            },
-            {
-              icon: Image,
-              title: "Check Post History",
-              description: "Look for consistent posting over time — sudden activity or only sales posts is suspicious",
-            },
-          ].map((check, index) => (
-            <motion.div
-              key={check.title}
-              className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border border-border/50"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <check.icon className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">{check.title}</h3>
-                <p className="text-sm text-muted-foreground">{check.description}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
       </section>
+
+      {/* ===================== SOCIAL SELLER CHECKER SECTION ===================== */}
+      <AnimatePresence>
+        {showSocialChecker && (
+          <motion.section
+            id="social-seller-checker"
+            className="relative bg-muted/30 border-y border-border"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Background accent */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
+            </div>
+            
+            <div className="container relative z-10 px-4 py-16 md:py-20">
+              <motion.div
+                className="text-center mb-10"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
+                  <UserSearch className="w-3 h-3" />
+                  Social Seller Analysis
+                </div>
+                <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Evaluate Social Media Sellers</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Considering a purchase from someone on Instagram, TikTok, Facebook Marketplace, or LinkedIn? Enter their username or bio text to review common trust indicators.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto bg-background/80 backdrop-blur-sm"
+              >
+                <SocialSellerChecker />
+              </motion.div>
+              
+              <motion.div 
+                className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground mt-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+                  <Instagram className="w-3.5 h-3.5" />
+                  Instagram
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+                  <Facebook className="w-3.5 h-3.5" />
+                  Facebook
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+                  <Linkedin className="w-3.5 h-3.5" />
+                  LinkedIn
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+                  TikTok
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
+                  Marketplace Sellers
+                </span>
+              </motion.div>
+
+              {/* Social Media Tips */}
+              <div className="mt-12 pt-8 border-t border-border/50">
+                <h3 className="font-display text-xl font-bold text-center mb-6">What to Check Yourself</h3>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                  {[
+                    {
+                      icon: Clock,
+                      title: "Check Account Age",
+                      description: "New accounts selling expensive items are a major red flag",
+                    },
+                    {
+                      icon: Users,
+                      title: "Review Followers",
+                      description: "Check follower counts and ratios for signs of fake followers",
+                    },
+                    {
+                      icon: TrendingUp,
+                      title: "Examine Engagement",
+                      description: "Low engagement or generic comments may indicate bots",
+                    },
+                    {
+                      icon: BadgeCheck,
+                      title: "Look for Verification",
+                      description: "Verified badges add credibility to seller accounts",
+                    },
+                    {
+                      icon: Bot,
+                      title: "Spot Bot Patterns",
+                      description: "Repetitive posts or rapid follower growth suggest automation",
+                    },
+                    {
+                      icon: Image,
+                      title: "Check Post History",
+                      description: "Consistent posting over time indicates legitimacy",
+                    },
+                  ].map((check, index) => (
+                    <motion.div
+                      key={check.title}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/30"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + index * 0.05 }}
+                    >
+                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <check.icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-0.5">{check.title}</h4>
+                        <p className="text-xs text-muted-foreground">{check.description}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
 
       {/* How It Works */}
       <section className="container px-4 py-16 border-t border-border">
