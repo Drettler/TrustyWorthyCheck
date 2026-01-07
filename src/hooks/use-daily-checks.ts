@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'scam-or-legit-daily-checks';
-const MAX_FREE_CHECKS = 1;
+const MAX_FREE_CHECKS = 50; // Increased for testing - change back to 1 for production
 
 interface DailyCheckData {
   date: string;
