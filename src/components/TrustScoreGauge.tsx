@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldX, Check } from 'lucide-react';
 
 interface TrustScoreGaugeProps {
   score: number;
@@ -10,6 +10,7 @@ interface TrustScoreGaugeProps {
 export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScoreGaugeProps) {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (score / 100) * circumference;
+  const isTrustworthy = score >= 75;
   
   const getVerdictColor = () => {
     switch (verdict) {
@@ -60,48 +61,69 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
     >
       {/* Score Circle */}
       <div className="relative">
-        <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
-          {/* Background circle */}
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            stroke="hsl(var(--muted))"
-            strokeWidth="6"
-            strokeLinecap="round"
-            opacity="0.4"
-          />
-          {/* Progress circle */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            className={getStrokeColor()}
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset }}
-            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-          />
-        </svg>
-        
-        {/* Score text in center */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <motion.span 
-            className={`text-4xl font-display font-bold ${getVerdictColor()}`}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
+        {isTrustworthy ? (
+          /* Green checkmark circle for trustworthy sites (75+) */
+          <motion.div
+            className="w-36 h-36 rounded-full bg-success flex items-center justify-center"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            {score}
-          </motion.span>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium mt-0.5">
-            Trust Score
-          </span>
-        </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.3, type: "spring", stiffness: 200 }}
+            >
+              <Check className="w-16 h-16 text-success-foreground" strokeWidth={3} />
+            </motion.div>
+          </motion.div>
+        ) : (
+          /* Regular gauge for scores below 75 */
+          <>
+            <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
+              {/* Background circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="hsl(var(--muted))"
+                strokeWidth="6"
+                strokeLinecap="round"
+                opacity="0.4"
+              />
+              {/* Progress circle */}
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                className={getStrokeColor()}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset }}
+                transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+              />
+            </svg>
+            
+            {/* Score text in center */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <motion.span 
+                className={`text-4xl font-display font-bold ${getVerdictColor()}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+              >
+                {score}
+              </motion.span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium mt-0.5">
+                Trust Score
+              </span>
+            </div>
+          </>
+        )}
       </div>
       
       {/* Verdict Section */}
