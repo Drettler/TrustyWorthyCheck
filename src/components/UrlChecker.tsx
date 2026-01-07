@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -20,6 +20,8 @@ export function UrlChecker() {
   const [scanStage, setScanStage] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showGovScamAlert, setShowGovScamAlert] = useState(false);
+  const [forRelativeMode, setForRelativeMode] = useState(false);
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
   const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
@@ -81,6 +83,118 @@ export function UrlChecker() {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
+      {/* Preset Buttons */}
+      <motion.div
+        className="mb-4 flex flex-wrap gap-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        {/* Government & Subscription Scam Preset */}
+        <button
+          type="button"
+          onClick={() => setShowGovScamAlert(!showGovScamAlert)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+            showGovScamAlert
+              ? 'bg-warning/10 border-warning/40 text-warning'
+              : 'bg-card border-border hover:border-primary/50 text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Shield className="w-4 h-4" />
+          Is this a DMV, IRS, Norton, or McAfee message?
+        </button>
+
+        {/* Check for Parent/Relative Button */}
+        <button
+          type="button"
+          onClick={() => setForRelativeMode(!forRelativeMode)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+            forRelativeMode
+              ? 'bg-primary/10 border-primary/40 text-primary'
+              : 'bg-card border-border hover:border-primary/50 text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Heart className="w-4 h-4" />
+          Check this for a parent or relative
+        </button>
+      </motion.div>
+
+      {/* Government Scam Alert Banner */}
+      <AnimatePresence>
+        {showGovScamAlert && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-4 overflow-hidden"
+          >
+            <div className="rounded-xl p-4 bg-warning/10 border-2 border-warning/30">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-warning" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-warning">Important: Government & Subscription Scam Warning</h3>
+                    <button 
+                      onClick={() => setShowGovScamAlert(false)}
+                      className="text-muted-foreground hover:text-foreground p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-sm text-foreground/80 mt-1">
+                    <strong>Government agencies</strong> (IRS, DMV, SSA) and <strong>major software companies</strong> (Norton, McAfee, Microsoft) <strong>do not demand immediate payment via email or text links</strong>.
+                  </p>
+                  <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                    <li>• The IRS will <strong>never</strong> call or email demanding immediate payment</li>
+                    <li>• Norton/McAfee renewal notices with "call this number" are almost always scams</li>
+                    <li>• When in doubt, go directly to the official website by typing it yourself</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Relative Mode Banner */}
+      <AnimatePresence>
+        {forRelativeMode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-4 overflow-hidden"
+          >
+            <div className="rounded-xl p-4 bg-primary/10 border-2 border-primary/30">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-primary">Helping a Parent or Relative?</h3>
+                    <button 
+                      onClick={() => setForRelativeMode(false)}
+                      className="text-muted-foreground hover:text-foreground p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-sm text-foreground/80 mt-1">
+                    Great idea! Paste the link they received and we'll check if it's safe.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💡 <strong>Tip:</strong> Have them forward suspicious emails/texts to you, then paste the links here.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Search Form */}
       <motion.form
         onSubmit={handleSubmit}
