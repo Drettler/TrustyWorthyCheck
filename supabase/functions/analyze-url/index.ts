@@ -1,7 +1,80 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Create a hash for URL caching
+async function hashUrl(url: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(url.toLowerCase().trim());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Check cache for existing results
+async function getCachedResult(urlHash: string): Promise<any | null> {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data, error } = await supabase
+      .from('url_analysis_cache')
+      .select('result')
+      .eq('url_hash', urlHash)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (error) {
+      console.log('Cache lookup error:', error.message);
+      return null;
+    }
+
+    if (data) {
+      console.log('Cache hit for URL');
+      return data.result;
+    }
+
+    console.log('Cache miss');
+    return null;
+  } catch (error) {
+    console.error('Cache check failed:', error);
+    return null;
+  }
+}
+
+// Store result in cache
+async function cacheResult(urlHash: string, url: string, result: any): Promise<void> {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Upsert to handle potential race conditions
+    const { error } = await supabase
+      .from('url_analysis_cache')
+      .upsert({
+        url_hash: urlHash,
+        url: url,
+        result: result,
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+      }, { onConflict: 'url_hash' });
+
+    if (error) {
+      console.log('Cache store error:', error.message);
+    } else {
+      console.log('Result cached successfully');
+    }
+  } catch (error) {
+    console.error('Cache store failed:', error);
+  }
+}
 
 interface ScrapedData {
   markdown?: string;
@@ -1304,6 +1377,18 @@ Deno.serve(async (req) => {
 
     console.log('Analyzing URL:', formattedUrl);
 
+    // Check cache first
+    const urlHash = await hashUrl(formattedUrl);
+    const cachedResult = await getCachedResult(urlHash);
+    
+    if (cachedResult) {
+      console.log('Returning cached result');
+      return new Response(
+        JSON.stringify({ success: true, result: cachedResult, cached: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Detect if this is a social media or marketplace URL
     const platformInfo = detectPlatform(formattedUrl);
     console.log('Platform detected:', platformInfo);
@@ -2144,8 +2229,11 @@ Return ONLY valid JSON in this exact format:
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
 
+    // Cache the result for 24 hours
+    await cacheResult(urlHash, formattedUrl, analysisResult);
+
     return new Response(
-      JSON.stringify({ success: true, result: analysisResult }),
+      JSON.stringify({ success: true, result: analysisResult, cached: false }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      url_analysis_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          result: Json
+          url: string
+          url_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          result: Json
+          url: string
+          url_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          result?: Json
+          url?: string
+          url_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
