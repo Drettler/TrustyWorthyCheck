@@ -2053,6 +2053,21 @@ Return ONLY valid JSON in this exact format:
       reviewPlatformsFound: linkAnalysis.reviewPlatforms
     };
 
+    // Add scam indicators for UI banners
+    analysisResult.scamIndicators = {
+      government: {
+        isLikelyScam: governmentScamAnalysis.isLikelyGovScam,
+        agencies: governmentScamAnalysis.mentionedAgencies,
+        patterns: governmentScamAnalysis.suspiciousPatterns,
+      },
+      subscription: {
+        isLikelyScam: subscriptionScamAnalysis.isLikelySubscriptionScam,
+        brands: subscriptionScamAnalysis.mentionedBrands,
+        hasPhonePrompt: subscriptionScamAnalysis.hasPhoneCallPrompt,
+        patterns: subscriptionScamAnalysis.suspiciousPatterns,
+      },
+    };
+
     // Add Pro features data
     analysisResult.proFeatures = {
       virusTotal: {
