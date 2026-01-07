@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -643,6 +643,61 @@ export function UrlChecker() {
                         )}
                       </AnalysisCard>
                     </div>
+
+                    {/* Pro Features Teaser */}
+                    <motion.div
+                      className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <h3 className="font-display font-semibold text-primary">Unlock Pro Features</h3>
+                      </div>
+                      <div className="grid sm:grid-cols-3 gap-3">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/50 opacity-75">
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-muted-foreground">Downloadable Report</p>
+                            <span className="text-[10px] text-primary font-medium flex items-center gap-1">
+                              <Lock className="w-3 h-3" /> Pro
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/50 opacity-75">
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                            <Search className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-muted-foreground">Full Reasoning</p>
+                            <span className="text-[10px] text-primary font-medium flex items-center gap-1">
+                              <Lock className="w-3 h-3" /> Pro
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/50 opacity-75">
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                            <InfinityIcon className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-muted-foreground">Unlimited Checks</p>
+                            <span className="text-[10px] text-primary font-medium flex items-center gap-1">
+                              <Lock className="w-3 h-3" /> Pro
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-center">
+                        <Button variant="default" size="sm" className="gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Upgrade to Pro
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">Coming soon</p>
+                      </div>
+                    </motion.div>
 
                   </div>
                 </motion.div>
