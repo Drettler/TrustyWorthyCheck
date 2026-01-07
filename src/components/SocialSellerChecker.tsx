@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useDailyChecks } from '@/hooks/use-daily-checks';
+import { UpgradePrompt } from './UpgradePrompt';
 import { analyzeSocialSeller, type SocialSellerResult } from '@/lib/api/social-seller';
 
 export function SocialSellerChecker() {
@@ -13,6 +15,7 @@ export function SocialSellerChecker() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<SocialSellerResult | null>(null);
   const { toast } = useToast();
+  const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +25,11 @@ export function SocialSellerChecker() {
         description: 'Please enter a username or bio to analyze.',
         variant: 'destructive',
       });
+      return;
+    }
+
+    // Check daily limit before proceeding
+    if (!useCheck()) {
       return;
     }
 
@@ -76,6 +84,15 @@ export function SocialSellerChecker() {
     }
   };
 
+  // Show upgrade prompt if limit reached and no result displayed
+  if (isLimitReached && !result) {
+    return (
+      <div className="w-full max-w-2xl mx-auto">
+        <UpgradePrompt onResetDemo={resetForDemo} />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <AnimatePresence mode="wait">
@@ -124,6 +141,13 @@ export function SocialSellerChecker() {
                 AI will analyze for urgency tactics, suspicious claims, and scam patterns
               </p>
             </div>
+
+            {/* Check limit info */}
+            <p className="text-xs text-muted-foreground text-center">
+              <span className={`font-medium ${checksRemaining > 0 ? 'text-primary' : 'text-amber-500'}`}>
+                {checksRemaining} free check{checksRemaining !== 1 ? 's' : ''} remaining today
+              </span> • Upgrade for unlimited
+            </p>
 
             <Button
               type="submit"

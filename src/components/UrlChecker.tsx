@@ -8,9 +8,11 @@ import { AnalysisCard } from './AnalysisCard';
 import { CheckItem } from './CheckItem';
 import { FlagsList } from './FlagsList';
 import { ScanningAnimation } from './ScanningAnimation';
+import { UpgradePrompt } from './UpgradePrompt';
 import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
+import { useDailyChecks } from '@/hooks/use-daily-checks';
 
 export function UrlChecker() {
   const [url, setUrl] = useState('');
@@ -20,6 +22,7 @@ export function UrlChecker() {
   const [showDetails, setShowDetails] = useState(false);
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
+  const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -34,6 +37,11 @@ export function UrlChecker() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
+
+    // Check daily limit before proceeding
+    if (!useCheck()) {
+      return;
+    }
 
     setIsLoading(true);
     setScanStage(0);
@@ -61,6 +69,15 @@ export function UrlChecker() {
     setUrl('');
     setShowDetails(false);
   };
+
+  // Show upgrade prompt if limit reached and no result displayed
+  if (isLimitReached && !result) {
+    return (
+      <div className="w-full max-w-4xl mx-auto">
+        <UpgradePrompt onResetDemo={resetForDemo} />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -137,7 +154,9 @@ export function UrlChecker() {
             Optional fields help provide context but are not required for analysis
           </p>
           <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-primary">1 free check per day</span> • Upgrade for unlimited
+            <span className={`font-medium ${checksRemaining > 0 ? 'text-primary' : 'text-amber-500'}`}>
+              {checksRemaining} free check{checksRemaining !== 1 ? 's' : ''} remaining today
+            </span> • Upgrade for unlimited
           </p>
         </div>
       </motion.form>
