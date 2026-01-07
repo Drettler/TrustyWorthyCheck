@@ -6,23 +6,23 @@ import { SocialSellerChecker } from "@/components/SocialSellerChecker";
 const features = [
   {
     icon: Shield,
-    title: "Deep Security Analysis",
-    description: "SSL certificates, domain verification, and security checks",
+    title: "Security Checks",
+    description: "SSL certificates, domain age, and encryption verification",
   },
   {
     icon: AlertTriangle,
-    title: "Scam Detection",
-    description: "AI-powered detection of fake stores and dropshippers",
+    title: "Transparency Indicators",
+    description: "Business contact info, policies, and registration details",
   },
   {
     icon: CheckCircle,
-    title: "Trust Scoring",
-    description: "Comprehensive 0-100 trust score with detailed breakdown",
+    title: "Trust Assessment",
+    description: "Evidence-based scoring with detailed breakdown",
   },
   {
     icon: Zap,
-    title: "Instant Results",
-    description: "Get comprehensive analysis in seconds",
+    title: "Educational Guidance",
+    description: "Learn what to look for when evaluating websites",
   },
 ];
 
@@ -46,16 +46,16 @@ export default function Index() {
           <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
               <Shield className="w-4 h-4" />
-              Protect Yourself Before You Buy
+              Research Before You Purchase
             </div>
 
             <h1 className="font-display text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Scam or Legit -
-              <span className="text-primary"> Should I?</span>
+              Is This Website
+              <span className="text-primary"> Trustworthy?</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Check any website or social media seller before making a purchase. We analyze for scams, dropshippers, fake reviews, and security risks.
+              Make informed decisions before purchasing online. Our tool helps you evaluate website legitimacy through security checks and transparency indicators.
             </p>
           </motion.div>
 
@@ -162,9 +162,9 @@ export default function Index() {
               <UserSearch className="w-3 h-3" />
               Tool 2: Social Seller Analysis
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Check Social Media Sellers</h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Evaluate Social Media Sellers</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Buying from someone on Instagram, TikTok, Facebook Marketplace, or LinkedIn? Paste their username or bio to analyze for scam patterns and red flags.
+              Considering a purchase from someone on Instagram, TikTok, Facebook Marketplace, or LinkedIn? Enter their username or bio text to review common trust indicators.
             </p>
           </motion.div>
 
@@ -290,13 +290,13 @@ export default function Index() {
 
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {[
-            { step: "01", title: "Enter URL", description: "Paste the website link you want to check" },
+            { step: "01", title: "Enter URL", description: "Paste the website link you want to evaluate" },
             {
               step: "02",
-              title: "Legit Checker",
-              description: "We will scan for legitimacy, bogus reviews, website securitities, and other red flags",
+              title: "Automated Analysis",
+              description: "We run security checks and gather transparency indicators automatically",
             },
-            { step: "03", title: "Get Results", description: "Receive a detailed trust score, so you won't get scammed" },
+            { step: "03", title: "Review Results", description: "Get an evidence-based assessment with clear explanations" },
           ].map((item, index) => (
             <motion.div
               key={item.step}
@@ -318,8 +318,7 @@ export default function Index() {
       <footer className="border-t border-border py-8">
         <div className="container px-4 text-center text-sm text-muted-foreground">
           <p>
-            This tool provides advisory information, so you won't get scammed. We need to protect ourselves, when no one else will!  Always conduct additional research before
-            making purchases.
+            This tool provides educational information to help you make informed decisions. Results are based on automated checks and should be used alongside your own research. Always verify important details before making purchases.
           </p>
         </div>
       </footer>
