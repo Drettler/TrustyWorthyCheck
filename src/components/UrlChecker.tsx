@@ -13,6 +13,7 @@ import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
 import { useDailyChecks } from '@/hooks/use-daily-checks';
+import { useSubscription } from '@/hooks/use-subscription';
 
 export function UrlChecker() {
   const [url, setUrl] = useState('');
@@ -25,6 +26,7 @@ export function UrlChecker() {
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
   const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
+  const { isSubscribed, subscriberEmail, checkSubscription, openCustomerPortal } = useSubscription();
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -40,8 +42,8 @@ export function UrlChecker() {
     e.preventDefault();
     if (!url.trim()) return;
 
-    // Check daily limit before proceeding
-    if (!useCheck()) {
+    // Pro subscribers bypass daily limit check
+    if (!isSubscribed && !useCheck()) {
       return;
     }
 
@@ -72,11 +74,14 @@ export function UrlChecker() {
     setShowDetails(false);
   };
 
-  // Show upgrade prompt if limit reached and no result displayed
-  if (isLimitReached && !result) {
+  // Show upgrade prompt if limit reached and no result displayed (and not subscribed)
+  if (isLimitReached && !isSubscribed && !result) {
     return (
       <div className="w-full max-w-4xl mx-auto">
-        <UpgradePrompt onResetDemo={resetForDemo} />
+        <UpgradePrompt 
+          onResetDemo={resetForDemo} 
+          onSubscriptionVerified={checkSubscription}
+        />
       </div>
     );
   }
@@ -267,11 +272,28 @@ export function UrlChecker() {
           <p className="text-xs text-muted-foreground">
             Optional fields help provide context but are not required for analysis
           </p>
-          <p className="text-xs text-muted-foreground">
-            <span className={`font-medium ${checksRemaining > 0 ? 'text-primary' : 'text-amber-500'}`}>
-              {checksRemaining} free check{checksRemaining !== 1 ? 's' : ''} remaining today
-            </span> • Upgrade for unlimited
-          </p>
+          {isSubscribed ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-primary flex items-center gap-1">
+                <InfinityIcon className="w-3 h-3" />
+                Pro • Unlimited checks
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-6 px-2"
+                onClick={() => subscriberEmail && openCustomerPortal(subscriberEmail)}
+              >
+                Manage
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              <span className={`font-medium ${checksRemaining > 0 ? 'text-primary' : 'text-amber-500'}`}>
+                {checksRemaining} free check{checksRemaining !== 1 ? 's' : ''} remaining today
+              </span> • Upgrade for unlimited
+            </p>
+          )}
         </div>
       </motion.form>
 
