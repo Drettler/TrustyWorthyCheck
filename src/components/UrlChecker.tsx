@@ -324,380 +324,73 @@ export function UrlChecker() {
                     </div>
 
 
-                    {/* Automated Checks Section Header */}
-                    <div className="flex items-center gap-3 pt-2">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-1 bg-muted rounded-full">
-                        ✓ Automated Checks
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {/* Business Legitimacy */}
-                      <AnalysisCard
-                        title="Business Legitimacy"
-                        icon={Building2}
-                        status={
-                          (result.details.business.hasPhysicalAddress && result.details.business.addressVerification === 'verified') ? 'success' :
-                          result.details.business.hasContactInfo ? 'warning' :
-                          'danger'
-                        }
-                        delay={0.1}
-                      >
-                        <div className="space-y-1">
-                          <CheckItem 
-                            label="Contact information" 
-                            status={result.details.business.hasContactInfo ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="Physical address" 
-                            status={result.details.business.hasPhysicalAddress ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="Address verification" 
-                            status={
-                              result.details.business.addressVerification === 'verified' ? 'pass' :
-                              result.details.business.addressVerification === 'suspicious' ? 'fail' :
-                              result.details.business.addressVerification === 'po_box' ? 'warning' :
-                              'fail'
-                            } 
-                          />
-                          <CheckItem 
-                            label="About page" 
-                            status={result.details.business.hasAboutPage ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="Privacy policy" 
-                            status={result.details.business.hasPrivacyPolicy ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="Return/Refund policy" 
-                            status={result.details.business.hasReturnPolicy ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="Shipping information" 
-                            status={result.details.business.hasShippingInfo ? 'pass' : 'fail'} 
-                          />
-                          {result.details.business.businessAge && (
-                            <div className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
-                              <Clock className="w-4 h-4" />
-                              <span>Business age: {result.details.business.businessAge}</span>
-                            </div>
-                          )}
-                        </div>
-                      </AnalysisCard>
+                    {/* Concerns Found - Free */}
+                    <AnalysisCard
+                      title="Concerns Found"
+                      icon={AlertTriangle}
+                      status={result.details.redFlags.length > 0 ? 'danger' : 'success'}
+                      delay={0.1}
+                    >
+                      <FlagsList items={result.details.redFlags} type="red" />
+                      {result.details.redFlags.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No significant concerns identified</p>
+                      )}
+                    </AnalysisCard>
 
-                      {/* Domain Info */}
-                      <AnalysisCard
-                        title="Domain Security"
-                        icon={Shield}
-                        status={result.details.domain.ssl ? 'success' : 'danger'}
-                        delay={0.2}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Domain</span>
-                            <span className="text-sm font-medium">{result.details.domain.name}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm text-muted-foreground">SSL Certificate</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">✓ Live</span>
-                            </div>
-                            <span className={`text-sm font-medium ${result.details.domain.ssl ? 'text-status-safe' : 'text-status-danger'}`}>
-                              {result.details.domain.ssl ? 'Secure' : 'Not Secure'}
-                            </span>
-                          </div>
-                          {result.details.domain.sslIssuer && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-muted-foreground">Issuer</span>
-                              <span className="text-sm">{result.details.domain.sslIssuer}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm text-muted-foreground">Domain Age</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">Estimated</span>
-                            </div>
-                            <span className="text-sm">{result.details.domain.age}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm text-muted-foreground">WHOIS Data</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Coming Soon</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">—</span>
-                          </div>
-                        </div>
-                      </AnalysisCard>
-
-                      {/* Reseller/Fulfillment Analysis */}
-                      <AnalysisCard
-                        title="Fulfillment Model"
-                        icon={AlertTriangle}
-                        status={
-                          result.details.dropshipperIndicators?.isLikelyDropshipper 
-                            ? (result.details.dropshipperIndicators.confidence === 'high' ? 'danger' : 'warning')
-                            : 'success'
-                        }
-                        delay={0.25}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            {result.details.dropshipperIndicators?.isLikelyDropshipper ? (
-                              <AlertTriangle className="w-4 h-4 text-status-warning" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-status-safe" />
-                            )}
-                            <span className={`text-sm font-medium ${result.details.dropshipperIndicators?.isLikelyDropshipper ? 'text-status-warning' : 'text-foreground'}`}>
-                              {result.details.dropshipperIndicators?.isLikelyDropshipper 
-                                ? `Reseller indicators found (${result.details.dropshipperIndicators.confidence} confidence)`
-                                : 'No reseller indicators found'}
-                            </span>
-                          </div>
-                          {result.details.dropshipperIndicators?.reasons && result.details.dropshipperIndicators.reasons.length > 0 && (
-                            <ul className="text-sm text-muted-foreground space-y-1 ml-6 list-disc">
-                              {result.details.dropshipperIndicators.reasons.map((reason, i) => (
-                                <li key={i}>{reason}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </AnalysisCard>
-
-                      {/* Image Analysis */}
-                      <AnalysisCard
-                        title="Image Analysis"
-                        icon={Image}
-                        status={
-                          result.details.imageAnalysis?.appearsOriginal ? 'success' :
-                          result.details.imageAnalysis?.stockPhotoLikely ? 'warning' :
-                          'neutral'
-                        }
-                        delay={0.3}
-                      >
-                        <div className="space-y-2">
-                          <CheckItem 
-                            label="Original product images" 
-                            status={result.details.imageAnalysis?.appearsOriginal ? 'pass' : 'warning'} 
-                          />
-                          <CheckItem 
-                            label="Stock photos detected" 
-                            status={result.details.imageAnalysis?.stockPhotoLikely ? 'fail' : 'pass'} 
-                          />
-                          <div className="flex justify-between items-center pt-1">
-                            <span className="text-sm text-muted-foreground">Image quality</span>
-                            <span className={`text-sm font-medium ${
-                              result.details.imageAnalysis?.qualityAssessment === 'professional' ? 'text-status-safe' :
-                              result.details.imageAnalysis?.qualityAssessment === 'suspicious' ? 'text-status-danger' :
-                              'text-muted-foreground'
-                            }`}>
-                              {result.details.imageAnalysis?.qualityAssessment || 'Unknown'}
-                            </span>
-                          </div>
-                        </div>
-                      </AnalysisCard>
-
-                      {/* Pricing Analysis */}
-                      <AnalysisCard
-                        title="Pricing Analysis"
-                        icon={DollarSign}
-                        status={result.details.pricing.suspiciouslyLow ? 'warning' : 'neutral'}
-                        delay={0.35}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            {result.details.pricing.suspiciouslyLow ? (
-                              <AlertTriangle className="w-4 h-4 text-status-warning" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-status-safe" />
-                            )}
-                            <span className={`text-sm ${result.details.pricing.suspiciouslyLow ? 'text-status-warning' : 'text-foreground'}`}>
-                              {result.details.pricing.suspiciouslyLow ? 'Prices may be too good to be true' : 'Pricing appears reasonable'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Compared to market</span>
-                            <span className={`text-sm font-medium ${
-                              result.details.pricing.comparisonToMarket === 'much_lower' ? 'text-status-danger' :
-                              result.details.pricing.comparisonToMarket === 'slightly_lower' ? 'text-status-warning' :
-                              'text-foreground'
-                            }`}>
-                              {result.details.pricing.comparisonToMarket?.replace('_', ' ') || 'Normal'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{result.details.pricing.notes}</p>
-                        </div>
-                      </AnalysisCard>
-
-                      {/* Social Proof */}
-                      <AnalysisCard
-                        title="Social Proof"
-                        icon={Users}
-                        status={
-                          result.details.socialProof.hasReviews && result.details.socialProof.reviewsAppearAuthentic ? 'success' :
-                          result.details.socialProof.hasReviews || result.details.socialProof.hasSocialLinks ? 'warning' :
-                          'danger'
-                        }
-                        delay={0.4}
-                      >
-                        <div className="space-y-1">
-                          <CheckItem 
-                            label="Customer reviews visible" 
-                            status={result.details.socialProof.hasReviews ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="Reviews appear authentic" 
-                            status={result.details.socialProof.reviewsAppearAuthentic ? 'pass' : 'warning'} 
-                          />
-                          <CheckItem 
-                            label="Social media presence" 
-                            status={result.details.socialProof.hasSocialLinks ? 'pass' : 'fail'} 
-                          />
-                          <CheckItem 
-                            label="External review platforms" 
-                            status={result.details.socialProof.externalReviewPlatforms ? 'pass' : 'warning'} 
-                          />
-                          <p className="text-sm text-muted-foreground mt-2">{result.details.socialProof.notes}</p>
-                        </div>
-                      </AnalysisCard>
-
-                      {/* Website Quality */}
-                      <AnalysisCard
-                        title="Website Quality"
-                        icon={Globe}
-                        status={
-                          result.details.websiteQuality?.overallProfessionalism === 'high' ? 'success' :
-                          result.details.websiteQuality?.overallProfessionalism === 'medium' ? 'warning' :
-                          'danger'
-                        }
-                        delay={0.45}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Design quality</span>
-                            <span className={`text-sm font-medium ${
-                              result.details.websiteQuality?.designQuality === 'professional' ? 'text-status-safe' :
-                              result.details.websiteQuality?.designQuality === 'poor' ? 'text-status-danger' :
-                              'text-muted-foreground'
-                            }`}>
-                              {result.details.websiteQuality?.designQuality || 'Unknown'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Grammar quality</span>
-                            <span className={`text-sm font-medium ${
-                              result.details.websiteQuality?.grammarQuality === 'excellent' || result.details.websiteQuality?.grammarQuality === 'good' ? 'text-status-safe' :
-                              result.details.websiteQuality?.grammarQuality === 'poor' ? 'text-status-danger' :
-                              'text-muted-foreground'
-                            }`}>
-                              {result.details.websiteQuality?.grammarQuality || 'Unknown'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Overall professionalism</span>
-                            <span className={`text-sm font-medium ${
-                              result.details.websiteQuality?.overallProfessionalism === 'high' ? 'text-status-safe' :
-                              result.details.websiteQuality?.overallProfessionalism === 'low' ? 'text-status-danger' :
-                              'text-muted-foreground'
-                            }`}>
-                              {result.details.websiteQuality?.overallProfessionalism || 'Unknown'}
-                            </span>
-                          </div>
-                        </div>
-                      </AnalysisCard>
-                    </div>
-
-                    {/* Summary Findings Section Header */}
-                    <div className="flex items-center gap-3 pt-2">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-1 bg-muted rounded-full">
-                        Summary Findings
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-
-                    {/* Concerns & Positive Signals */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <AnalysisCard
-                        title="Concerns Found"
-                        icon={AlertTriangle}
-                        status={result.details.redFlags.length > 0 ? 'danger' : 'success'}
-                        delay={0.5}
-                      >
-                        <FlagsList items={result.details.redFlags} type="red" />
-                        {result.details.redFlags.length === 0 && (
-                          <p className="text-sm text-muted-foreground">No significant concerns identified</p>
-                        )}
-                      </AnalysisCard>
-
-                      <AnalysisCard
-                        title="Positive Indicators"
-                        icon={CheckCircle}
-                        status={result.details.positiveSignals.length > 0 ? 'success' : 'neutral'}
-                        delay={0.6}
-                      >
-                        <FlagsList items={result.details.positiveSignals} type="green" />
-                        {result.details.positiveSignals.length === 0 && (
-                          <p className="text-sm text-muted-foreground">Limited positive indicators found</p>
-                        )}
-                      </AnalysisCard>
-                    </div>
-
-                    {/* Pro Features Teaser */}
+                    {/* Locked Pro Features */}
                     <motion.div
                       className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      <div className="flex items-center gap-2 mb-4">
-                        <Sparkles className="w-5 h-5 text-primary" />
-                        <h3 className="font-display font-semibold text-primary">Unlock Pro Features</h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-5 h-5 text-primary" />
+                          <h3 className="font-display font-semibold text-primary">Full Analysis Available with Pro</h3>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary font-medium">
+                          8 detailed reports
+                        </span>
                       </div>
-                      <div className="grid sm:grid-cols-3 gap-3">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/50 opacity-75">
-                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                            <FileText className="w-4 h-4 text-muted-foreground" />
+                      
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+                        {[
+                          { icon: Building2, label: "Business Legitimacy" },
+                          { icon: Shield, label: "Domain Security" },
+                          { icon: AlertTriangle, label: "Fulfillment Model" },
+                          { icon: Image, label: "Image Analysis" },
+                          { icon: DollarSign, label: "Pricing Analysis" },
+                          { icon: Users, label: "Social Proof" },
+                          { icon: Globe, label: "Website Quality" },
+                          { icon: CheckCircle, label: "Positive Indicators" },
+                        ].map((item, index) => (
+                          <div 
+                            key={item.label}
+                            className="flex items-center gap-2 p-3 rounded-xl bg-background/60 border border-border/50 opacity-60"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                              <item.icon className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-muted-foreground truncate">{item.label}</p>
+                              <span className="text-[10px] text-primary/70 flex items-center gap-0.5">
+                                <Lock className="w-2.5 h-2.5" /> Pro
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-muted-foreground">Downloadable Report</p>
-                            <span className="text-[10px] text-primary font-medium flex items-center gap-1">
-                              <Lock className="w-3 h-3" /> Pro
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/50 opacity-75">
-                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                            <Search className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-muted-foreground">Full Reasoning</p>
-                            <span className="text-[10px] text-primary font-medium flex items-center gap-1">
-                              <Lock className="w-3 h-3" /> Pro
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/50 opacity-75">
-                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                            <InfinityIcon className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-muted-foreground">Unlimited Checks</p>
-                            <span className="text-[10px] text-primary font-medium flex items-center gap-1">
-                              <Lock className="w-3 h-3" /> Pro
-                            </span>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                      <div className="mt-4 text-center">
-                        <Button variant="default" size="sm" className="gap-2">
+
+                      <div className="text-center pt-2 border-t border-primary/20">
+                        <Button variant="default" size="lg" className="gap-2 mt-4">
                           <Sparkles className="w-4 h-4" />
-                          Upgrade to Pro
+                          Unlock Full Report
                         </Button>
-                        <p className="text-xs text-muted-foreground mt-2">Coming soon</p>
+                        <p className="text-xs text-muted-foreground mt-2">Get detailed analysis, downloadable reports & unlimited checks</p>
                       </div>
                     </motion.div>
+
 
                   </div>
                 </motion.div>
