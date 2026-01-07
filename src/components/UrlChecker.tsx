@@ -13,10 +13,12 @@ import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
 import { useDailyChecks } from '@/hooks/use-daily-checks';
+import { supabase } from '@/integrations/supabase/client';
 
 export function UrlChecker() {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [scanStage, setScanStage] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -25,6 +27,28 @@ export function UrlChecker() {
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
   const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
+
+  const handleUnlockFullReport = async () => {
+    setIsPaymentLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment');
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Payment Error',
+        description: 'Could not start the payment process. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPaymentLoading(false);
+    }
+  };
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -621,11 +645,31 @@ export function UrlChecker() {
                       </div>
 
                       <div className="text-center pt-2 border-t border-primary/20">
-                        <Button variant="default" size="lg" className="gap-2 mt-4">
-                          <Sparkles className="w-4 h-4" />
-                          Unlock Full Report
+                        <Button 
+                          variant="default" 
+                          size="lg" 
+                          className="gap-2 mt-4"
+                          onClick={handleUnlockFullReport}
+                          disabled={isPaymentLoading}
+                        >
+                          {isPaymentLoading ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              >
+                                <Sparkles className="w-4 h-4" />
+                              </motion.div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              Unlock Full Report - $4.99
+                            </>
+                          )}
                         </Button>
-                        <p className="text-xs text-muted-foreground mt-2">Get detailed analysis, downloadable reports & unlimited checks</p>
+                        <p className="text-xs text-muted-foreground mt-2">One-time payment • Detailed analysis & downloadable report</p>
                       </div>
                     </motion.div>
 
