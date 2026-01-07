@@ -4,7 +4,7 @@ export function useDailyChecks() {
   return {
     checksRemaining: Infinity,
     isLimitReached: false,
-    useCheck: () => false,
+    useCheck: () => true,
     resetForDemo: () => {},
     maxChecks: Infinity,
   };
