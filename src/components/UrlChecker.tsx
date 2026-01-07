@@ -182,8 +182,42 @@ export function UrlChecker() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="space-y-6"
+            className="space-y-4"
           >
+            {/* Warning Banner for Danger/Caution */}
+            {(result.verdict === 'danger' || result.verdict === 'caution') && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-xl p-4 flex items-start gap-3 ${
+                  result.verdict === 'danger'
+                    ? 'bg-danger/10 border-2 border-danger/30'
+                    : 'bg-warning/10 border-2 border-warning/30'
+                }`}
+              >
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                  result.verdict === 'danger' ? 'bg-danger/20' : 'bg-warning/20'
+                }`}>
+                  <AlertTriangle className={`w-5 h-5 ${
+                    result.verdict === 'danger' ? 'text-danger' : 'text-warning'
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className={`font-semibold text-sm ${
+                    result.verdict === 'danger' ? 'text-danger' : 'text-warning'
+                  }`}>
+                    {result.verdict === 'danger' 
+                      ? 'High Risk Website Detected' 
+                      : 'Proceed With Caution'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {result.verdict === 'danger'
+                      ? 'Multiple red flags were identified. We recommend avoiding transactions on this website.'
+                      : 'Some concerns were found. Review the details below before proceeding.'}
+                  </p>
+                </div>
+              </motion.div>
+            )}
             {/* Results Header Card */}
             <div className="glass-card rounded-2xl overflow-hidden">
               {/* Website Info Header */}
