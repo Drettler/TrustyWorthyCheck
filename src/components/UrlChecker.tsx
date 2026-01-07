@@ -419,26 +419,56 @@ export function UrlChecker() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6 text-center"
+              className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6"
             >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <ShieldAlert className="w-5 h-5 text-primary" />
-                <h3 className="font-display text-lg font-semibold">Extra Protection</h3>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <span className="text-2xl">🧠</span>
+                <h3 className="font-display text-xl font-semibold">Want Extra Protection?</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                If a website feels risky, protect your identity before continuing.
-              </p>
-              <Button
-                variant="default"
-                size="lg"
-                className="gap-2"
-                asChild
-              >
-                <a href="https://www.aura.com/lp/identity-theft-protection" target="_blank" rel="noopener noreferrer">
-                  <ShieldCheck className="w-4 h-4" />
-                  Protect My Identity
-                </a>
-              </Button>
+              
+              <div className="grid sm:grid-cols-3 gap-4">
+                {/* Identity Protection */}
+                <div className="rounded-xl border border-border/50 bg-background/50 p-4 text-center">
+                  <div className="text-2xl mb-2">🛡</div>
+                  <h4 className="font-semibold text-sm mb-1">Identity Protection</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Protect your identity and credit if a site feels unsafe.
+                  </p>
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <a href="https://www.aura.com/lp/identity-theft-protection" target="_blank" rel="noopener noreferrer">
+                      Protect My Identity
+                    </a>
+                  </Button>
+                </div>
+
+                {/* Password Security */}
+                <div className="rounded-xl border border-border/50 bg-background/50 p-4 text-center">
+                  <div className="text-2xl mb-2">🔐</div>
+                  <h4 className="font-semibold text-sm mb-1">Password Security</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Stop password leaks and account takeovers.
+                  </p>
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <a href="https://www.dashlane.com/" target="_blank" rel="noopener noreferrer">
+                      Secure My Accounts
+                    </a>
+                  </Button>
+                </div>
+
+                {/* Payment Safety */}
+                <div className="rounded-xl border border-border/50 bg-background/50 p-4 text-center">
+                  <div className="text-2xl mb-2">💳</div>
+                  <h4 className="font-semibold text-sm mb-1">Payment Safety</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Use protected payments when buying online.
+                  </p>
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <a href="https://privacy.com/" target="_blank" rel="noopener noreferrer">
+                      Protect My Payment
+                    </a>
+                  </Button>
+                </div>
+              </div>
             </motion.div>
 
             {/* Actions */}
