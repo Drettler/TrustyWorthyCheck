@@ -66,9 +66,29 @@ export function UrlChecker() {
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  // Basic URL validation
+  const isValidUrl = (input: string): boolean => {
+    const trimmed = input.trim();
+    // Must not contain spaces (except possibly in encoded form)
+    if (trimmed.includes(' ')) return false;
+    // Must look like a domain or URL
+    const urlPattern = /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/.*)?$/i;
+    return urlPattern.test(trimmed);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
+
+    // Validate URL format before sending
+    if (!isValidUrl(url)) {
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid website URL (e.g., example.com or https://example.com)',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Check daily limit
     if (!useCheck()) {
