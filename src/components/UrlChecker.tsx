@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { useDailyChecks } from '@/hooks/use-daily-checks';
 import { supabase } from '@/integrations/supabase/client';
 
 export function UrlChecker() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -27,6 +29,48 @@ export function UrlChecker() {
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
   const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
+  const hasAutoChecked = useRef(false);
+
+  // Handle ?check= URL parameter from Chrome extension
+  useEffect(() => {
+    const checkUrl = searchParams.get('check');
+    if (checkUrl && !hasAutoChecked.current) {
+      hasAutoChecked.current = true;
+      setUrl(checkUrl);
+      // Clear the URL parameter
+      setSearchParams({}, { replace: true });
+      // Auto-submit after a brief delay to allow state to update
+      setTimeout(() => {
+        if (isValidUrl(checkUrl) && !isLimitReached) {
+          handleAutoSubmit(checkUrl);
+        }
+      }, 100);
+    }
+  }, [searchParams]);
+
+  const handleAutoSubmit = async (urlToCheck: string) => {
+    if (!useCheck()) return;
+    
+    setIsLoading(true);
+    setScanStage(0);
+    setResult(null);
+
+    try {
+      const analysisResult = await analyzeUrl(urlToCheck);
+      setResult(analysisResult);
+      addToHistory(urlToCheck, analysisResult);
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast({
+        title: 'Analysis Failed',
+        description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+      setScanStage(0);
+    }
+  };
 
   const handleUnlockFullReport = async () => {
     setIsPaymentLoading(true);
