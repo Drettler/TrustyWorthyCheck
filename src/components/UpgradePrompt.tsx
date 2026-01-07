@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Zap, Check, RotateCcw, Crown, FileText, Ticket, Loader2 } from 'lucide-react';
+import { Lock, Zap, Check, RotateCcw, Crown, FileText, Ticket, Loader2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,14 +8,37 @@ import { toast } from 'sonner';
 
 interface UpgradePromptProps {
   onResetDemo?: () => void;
+  onSubscriptionVerified?: (email: string) => Promise<boolean>;
 }
 
-export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
+export function UpgradePrompt({ onResetDemo, onSubscriptionVerified }: UpgradePromptProps) {
   const [couponCode, setCouponCode] = useState('');
-  const [isLoading, setIsLoading] = useState<'payPerCheck' | 'proMonthly' | null>(null);
+  const [isLoading, setIsLoading] = useState<'payPerCheck' | 'proMonthly' | 'verifying' | null>(null);
   const [email, setEmail] = useState('');
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'payPerCheck' | 'proMonthly' | null>(null);
+
+  const handleVerifySubscription = async () => {
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+
+    setIsLoading('verifying');
+    try {
+      const isSubscribed = await onSubscriptionVerified?.(email);
+      if (isSubscribed) {
+        toast.success('Pro subscription verified! You now have unlimited checks.');
+      } else {
+        toast.error('No active subscription found for this email.');
+      }
+    } catch (err) {
+      console.error('Verification error:', err);
+      toast.error('Failed to verify subscription. Please try again.');
+    } finally {
+      setIsLoading(null);
+    }
+  };
 
   const handleCheckout = async (priceType: 'payPerCheck' | 'proMonthly') => {
     if (!email && !showEmailInput) {
@@ -82,21 +105,54 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             onChange={(e) => setEmail(e.target.value)}
             className="mb-3"
           />
-          <Button 
-            onClick={() => selectedPlan && handleCheckout(selectedPlan)}
-            disabled={!email || isLoading !== null}
-            className="w-full"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              'Continue to Checkout'
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => selectedPlan && handleCheckout(selectedPlan)}
+              disabled={!email || isLoading !== null}
+              className="flex-1"
+            >
+              {isLoading === 'payPerCheck' || isLoading === 'proMonthly' ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Continue to Checkout'
+              )}
+            </Button>
+          </div>
         </motion.div>
+      )}
+
+      {/* Already subscribed? Verify */}
+      {onSubscriptionVerified && (
+        <div className="max-w-sm mx-auto mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Mail className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Already a Pro subscriber?</span>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="Enter your subscription email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="text-sm"
+            />
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleVerifySubscription}
+              disabled={!email || isLoading !== null}
+            >
+              {isLoading === 'verifying' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                'Verify'
+              )}
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Pricing Cards */}
