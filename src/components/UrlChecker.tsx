@@ -184,44 +184,40 @@ export function UrlChecker() {
             exit={{ opacity: 0 }}
             className="space-y-6"
           >
-            {/* Trust Score Header */}
-            <div className={`rounded-2xl p-8 text-center border-2 ${
-              result.verdict === 'danger' 
-                ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-400 dark:border-amber-600' 
-                : result.verdict === 'caution'
-                ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-500/30'
-                : 'glass-card border-success/30'
-            }`}>
-              {result.verdict === 'danger' && (
-                <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-amber-700 dark:text-amber-400 font-medium"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <span className="tracking-wide text-sm">Unable to verify key trust indicators — review details below</span>
-                </motion.div>
-              )}
-              <div className="flex flex-col items-center gap-4">
+            {/* Results Header Card */}
+            <div className="glass-card rounded-2xl overflow-hidden">
+              {/* Website Info Header */}
+              <div className="px-6 py-4 border-b border-border/50 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="font-display text-lg font-semibold truncate">
+                        {result.scrapedData?.title || result.details.domain.name}
+                      </h2>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="truncate">{result.details.domain.name}</span>
+                        {result.details.domain.ssl && (
+                          <span className="flex items-center gap-1 text-success text-xs font-medium bg-success/10 px-2 py-0.5 rounded-full">
+                            <Shield className="w-3 h-3" />
+                            SSL Secured
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Trust Score Section */}
+              <div className="p-8 flex flex-col items-center">
                 <TrustScoreGauge 
                   score={result.trustScore} 
                   verdict={result.verdict} 
                   redFlagsCount={result.details.redFlags?.length || 0}
                 />
-                <div className="text-center max-w-2xl">
-                  <h2 className="font-display text-xl font-bold mb-2">
-                    {result.scrapedData?.title || result.details.domain.name}
-                  </h2>
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Globe className="w-4 h-4" />
-                    <span>{result.details.domain.name}</span>
-                    {result.details.domain.ssl && (
-                      <span className="flex items-center gap-1 text-success">
-                        <Shield className="w-3 h-3" />
-                        SSL
-                      </span>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
 

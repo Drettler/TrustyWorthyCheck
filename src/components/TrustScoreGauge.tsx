@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
 
 interface TrustScoreGaugeProps {
   score: number;
@@ -26,39 +27,40 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
     }
   };
 
-  const getGlowClass = () => {
-    switch (verdict) {
-      case 'safe': return 'drop-shadow-[0_0_20px_hsl(160,84%,39%,0.5)]';
-      case 'caution': return 'drop-shadow-[0_0_20px_hsl(38,92%,50%,0.5)]';
-      case 'danger': return 'drop-shadow-[0_0_20px_hsl(0,84%,60%,0.5)]';
-    }
-  };
-
   const getVerdictLabel = () => {
     switch (verdict) {
-      case 'safe': return 'Likely Legit';
-      case 'caution': return 'Mixed / Use Caution';
-      case 'danger': return 'NOT TRUSTWORTHY';
+      case 'safe': return 'Likely Legitimate';
+      case 'caution': return 'Exercise Caution';
+      case 'danger': return 'High Risk';
     }
   };
 
   const getVerdictIcon = () => {
     switch (verdict) {
-      case 'safe': return <span className="text-base">✅</span>;
-      case 'caution': return <span className="text-base">⚠️</span>;
-      case 'danger': return <span className="text-base">❌</span>;
+      case 'safe': return <ShieldCheck className="w-5 h-5" />;
+      case 'caution': return <ShieldAlert className="w-5 h-5" />;
+      case 'danger': return <ShieldX className="w-5 h-5" />;
+    }
+  };
+
+  const getVerdictDescription = () => {
+    switch (verdict) {
+      case 'safe': return 'This website shows positive trust indicators';
+      case 'caution': return 'Some concerns were identified during analysis';
+      case 'danger': return 'Multiple red flags detected — proceed with caution';
     }
   };
 
   return (
     <motion.div 
-      className="relative flex flex-col items-center"
-      initial={{ scale: 0.8, opacity: 0 }}
+      className="flex flex-col items-center"
+      initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <div className={`relative ${getGlowClass()}`}>
-        <svg className="w-40 h-40 -rotate-90" viewBox="0 0 100 100">
+      {/* Score Circle */}
+      <div className="relative">
+        <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
           {/* Background circle */}
           <circle
             cx="50"
@@ -66,8 +68,9 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
             r="45"
             fill="none"
             stroke="hsl(var(--muted))"
-            strokeWidth="8"
+            strokeWidth="6"
             strokeLinecap="round"
+            opacity="0.4"
           />
           {/* Progress circle */}
           <motion.circle
@@ -76,12 +79,12 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
             r="45"
             fill="none"
             className={getStrokeColor()}
-            strokeWidth="8"
+            strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset }}
-            transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
           />
         </svg>
         
@@ -89,44 +92,60 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.span 
             className={`text-4xl font-display font-bold ${getVerdictColor()}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
           >
             {score}
           </motion.span>
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium mt-0.5">
             Trust Score
           </span>
         </div>
       </div>
       
-      {/* Verdict badge */}
+      {/* Verdict Section */}
       <motion.div
-        className={`mt-4 px-5 py-2.5 rounded-full font-bold text-sm tracking-wide flex items-center gap-2 uppercase ${
-          verdict === 'safe' ? 'bg-success/20 text-success' :
-          verdict === 'caution' ? 'bg-warning/20 text-warning' :
-          'bg-danger/25 text-danger border-2 border-danger/40'
-        }`}
+        className="mt-5 flex flex-col items-center gap-2"
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8 }}
+        transition={{ delay: 0.6 }}
       >
-        {getVerdictIcon()}
-        {getVerdictLabel()}
-      </motion.div>
-
-      {/* Concerns count badge */}
-      {redFlagsCount > 0 && (
-        <motion.div
-          className="mt-2 text-sm text-muted-foreground font-medium"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
+        {/* Verdict Badge */}
+        <div
+          className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
+            verdict === 'safe' 
+              ? 'bg-success/15 text-success border border-success/25' 
+              : verdict === 'caution' 
+              ? 'bg-warning/15 text-warning border border-warning/25' 
+              : 'bg-danger/15 text-danger border border-danger/30'
+          }`}
         >
-          {redFlagsCount} area{redFlagsCount !== 1 ? 's' : ''} requiring review
-        </motion.div>
-      )}
+          {getVerdictIcon()}
+          <span>{getVerdictLabel()}</span>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground text-center max-w-xs mt-1">
+          {getVerdictDescription()}
+        </p>
+
+        {/* Issues count */}
+        {redFlagsCount > 0 && (
+          <motion.div
+            className={`text-xs font-medium px-3 py-1 rounded-full mt-1 ${
+              verdict === 'danger' 
+                ? 'bg-danger/10 text-danger' 
+                : 'bg-muted text-muted-foreground'
+            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+          >
+            {redFlagsCount} issue{redFlagsCount !== 1 ? 's' : ''} identified
+          </motion.div>
+        )}
+      </motion.div>
     </motion.div>
   );
 }
