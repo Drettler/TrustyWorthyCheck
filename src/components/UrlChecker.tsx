@@ -31,6 +31,12 @@ export function UrlChecker() {
   const handleUnlockFullReport = async () => {
     setIsPaymentLoading(true);
     try {
+      // Store the current analysis result before redirecting to payment
+      if (result) {
+        sessionStorage.setItem('pendingAnalysisResult', JSON.stringify(result));
+        sessionStorage.setItem('pendingAnalysisUrl', url);
+      }
+      
       const { data, error } = await supabase.functions.invoke('create-payment');
       
       if (error) throw error;
