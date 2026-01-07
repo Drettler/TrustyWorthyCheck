@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, FileText, AlertTriangle, CheckCircle, Shield, Loader2, XCircle, Info } from 'lucide-react';
+import { User, FileText, AlertTriangle, CheckCircle, Shield, Loader2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,17 +54,17 @@ export function SocialSellerChecker() {
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-status-warning';
-      default: return 'text-status-safe';
+      case 'high': return 'text-amber-700 dark:text-amber-400';
+      case 'medium': return 'text-amber-600 dark:text-amber-400';
+      default: return 'text-emerald-600 dark:text-emerald-400';
     }
   };
 
   const getRiskBgColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-yellow-400 border-red-600 shadow-[0_0_50px_rgba(250,204,21,0.5)]';
-      case 'medium': return 'bg-amber-950/40 border-amber-500/40';
-      default: return 'bg-status-safe/10 border-status-safe/20';
+      case 'high': return 'bg-amber-50 dark:bg-amber-950/30 border-amber-400 dark:border-amber-600';
+      case 'medium': return 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-500/30';
+      default: return 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-500/30';
     }
   };
 
@@ -157,36 +157,34 @@ export function SocialSellerChecker() {
             <div className={`rounded-xl border-2 p-6 ${getRiskBgColor(result.riskLevel)}`}>
               {result.riskLevel === 'high' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-600 font-bold"
+                  className="flex items-center justify-center gap-2 mb-4 text-amber-700 dark:text-amber-400 font-medium"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <XCircle className="w-5 h-5 text-red-600" />
-                  <span className="uppercase tracking-wide text-sm">Multiple Risk Indicators Detected — Review Details</span>
-                  <XCircle className="w-5 h-5 text-red-600" />
+                  <span className="tracking-wide text-sm">Unable to verify key trust indicators — review details</span>
                 </motion.div>
               )}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  {result.riskLevel === 'high' ? (
-                    <XCircle className={`w-8 h-8 ${getRiskColor(result.riskLevel)}`} />
-                  ) : result.riskLevel === 'medium' ? (
-                    <AlertTriangle className={`w-8 h-8 ${getRiskColor(result.riskLevel)}`} />
-                  ) : (
-                    <CheckCircle className={`w-8 h-8 ${getRiskColor(result.riskLevel)}`} />
-                  )}
+                  <span className="text-2xl">
+                    {result.riskLevel === 'high' ? '❌' : 
+                     result.riskLevel === 'medium' ? '⚠️' : '✅'}
+                  </span>
                   <div>
                     <h3 className={`text-xl font-bold ${getRiskColor(result.riskLevel)}`}>
-                      {result.riskLevel === 'high' ? 'High Risk' : 
-                       result.riskLevel === 'medium' ? 'Medium Risk' : 'Low Risk'}
+                      {result.riskLevel === 'high' ? 'High Risk / Not Verified' : 
+                       result.riskLevel === 'medium' ? 'Mixed / Use Caution' : 'Likely Legit'}
                     </h3>
-                    <p className={`text-sm ${result.riskLevel === 'high' ? 'text-red-600' : 'text-muted-foreground'}`}>
+                    <p className="text-sm text-muted-foreground">
                       Trust Score: {100 - result.riskScore}/100
                     </p>
                   </div>
                 </div>
+                <span className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                  Free Preview
+                </span>
               </div>
-              <p className={`text-sm ${result.riskLevel === 'high' ? 'text-red-700' : 'text-foreground'}`}>{result.summary}</p>
+              <p className="text-sm text-foreground">{result.summary}</p>
             </div>
 
             {/* Concerns */}
@@ -228,13 +226,23 @@ export function SocialSellerChecker() {
               </div>
             )}
 
-            {/* Disclaimer */}
-            <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground">
-              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <p>
-                This analysis is based on pattern detection and AI assessment. Always verify sellers through 
-                platform reviews, payment protection, and direct communication before making purchases.
-              </p>
+            {/* Disclaimer + Monetization */}
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <p>
+                  This analysis is based on pattern detection and AI assessment. Always verify sellers through 
+                  platform reviews, payment protection, and direct communication before making purchases.
+                </p>
+              </div>
+              
+              {/* Monetization teaser */}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Want deeper analysis?</span> Full reports include profile history, engagement authenticity scoring, and cross-platform verification.
+                  <span className="text-primary font-medium ml-1">Coming soon</span>
+                </p>
+              </div>
             </div>
 
             <Button
