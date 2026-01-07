@@ -162,6 +162,62 @@
 }
 
 @layer components {
+  /* Interactive element base styles */
+  .interactive {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive:hover {
+    @apply brightness-105;
+  }
+
+  .interactive:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  .interactive:active {
+    @apply scale-[0.98];
+  }
+
+  /* Card hover states */
+  .card-interactive {
+    @apply transition-all duration-200 ease-out cursor-pointer;
+  }
+
+  .card-interactive:hover {
+    @apply shadow-md -translate-y-0.5;
+    border-color: hsl(var(--primary) / 0.2);
+  }
+
+  .card-interactive:focus-visible {
+    @apply outline-none ring-2 ring-primary/30 ring-offset-2;
+  }
+
+  /* Input focus states */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-none ring-2 ring-primary/30 border-primary/50;
+  }
+
+  /* Link hover states */
+  a:not(.no-hover-effect) {
+    @apply transition-colors duration-150;
+  }
+
+  /* Icon button hover */
+  .icon-interactive {
+    @apply transition-all duration-150 rounded-md p-1.5;
+  }
+
+  .icon-interactive:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .icon-interactive:focus-visible {
+    @apply outline-none ring-2 ring-ring;
+  }
+
   .gradient-hero {
     background: var(--gradient-hero);
   }
