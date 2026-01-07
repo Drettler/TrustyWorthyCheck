@@ -29,7 +29,43 @@ interface SecurityHeaders {
   hasCSP: boolean;
   hasXFrameOptions: boolean;
   hasXContentTypeOptions: boolean;
+  hasSecureCookies: boolean;
   score: number;
+}
+
+interface SSLAnalysis {
+  isValid: boolean;
+  issuer?: string;
+  expiryDate?: string;
+  protocol?: string;
+  grade?: 'A' | 'B' | 'C' | 'D' | 'F';
+}
+
+interface BusinessVerification {
+  hasVATNumber: boolean;
+  hasCompanyRegNumber: boolean;
+  hasDUNS: boolean;
+  hasPhysicalStore: boolean;
+  claimedCountry?: string;
+  actualIndicatedCountry?: string;
+  countriesMismatch: boolean;
+}
+
+interface GovernmentScamIndicators {
+  claimsGovAffiliation: boolean;
+  usesGovLookalikeTerms: boolean;
+  mentionedAgencies: string[];
+  isLikelyGovScam: boolean;
+  suspiciousPatterns: string[];
+}
+
+interface SubscriptionScamIndicators {
+  claimsAntivirusSoftware: boolean;
+  mentionedBrands: string[];
+  hasUrgentRenewalMessage: boolean;
+  hasPhoneCallPrompt: boolean;
+  isLikelySubscriptionScam: boolean;
+  suspiciousPatterns: string[];
 }
 
 interface VirusTotalResult {
@@ -500,6 +536,360 @@ function checkSuspiciousTLD(domain: string): boolean {
   return scamPatterns.suspiciousTLDs.some(tld => domain.toLowerCase().endsWith(tld));
 }
 
+// Detect government impersonation scams
+function detectGovernmentScam(content: string, html: string, domain: string): GovernmentScamIndicators {
+  const contentLower = content.toLowerCase();
+  const domainLower = domain.toLowerCase();
+  const suspiciousPatterns: string[] = [];
+  const mentionedAgencies: string[] = [];
+  
+  // Government agencies commonly impersonated
+  const govAgencies = {
+    us: ['irs', 'social security', 'ssa', 'dmv', 'medicare', 'fbi', 'dea', 'ice', 'customs', 'treasury', 'uscis', 'immigration'],
+    uk: ['hmrc', 'dvla', 'nhs', 'home office', 'gov.uk'],
+    au: ['ato', 'centrelink', 'mygov', 'medicare australia'],
+    ca: ['cra', 'service canada', 'revenue canada']
+  };
+  
+  // Check for government-like domain patterns
+  const govDomainPatterns = [
+    /gov[^a-z]/i, /\.gov\./i, /-gov-/i, /government/i,
+    /federal/i, /official/i, /department-of/i
+  ];
+  
+  let claimsGovAffiliation = false;
+  let usesGovLookalikeTerms = false;
+  
+  // Check domain for gov-like terms (suspicious if not actual .gov)
+  for (const pattern of govDomainPatterns) {
+    if (pattern.test(domainLower) && !domainLower.endsWith('.gov')) {
+      usesGovLookalikeTerms = true;
+      suspiciousPatterns.push('Domain contains government-like terms but is not official');
+    }
+  }
+  
+  // Check content for agency mentions
+  for (const [country, agencies] of Object.entries(govAgencies)) {
+    for (const agency of agencies) {
+      if (contentLower.includes(agency)) {
+        mentionedAgencies.push(agency.toUpperCase());
+        claimsGovAffiliation = true;
+      }
+    }
+  }
+  
+  // Check for common government scam phrases
+  const govScamPhrases = [
+    'verify your identity immediately',
+    'your tax refund',
+    'legal action will be taken',
+    'arrest warrant',
+    'your social security number has been suspended',
+    'call this number immediately',
+    'pay the fine',
+    'your license has been suspended',
+    'legal proceedings',
+    'failure to respond will result in',
+    'we have tried to contact you',
+    'urgent notice from',
+    'final warning',
+    'immediate payment required'
+  ];
+  
+  for (const phrase of govScamPhrases) {
+    if (contentLower.includes(phrase)) {
+      suspiciousPatterns.push(`Contains suspicious phrase: "${phrase}"`);
+    }
+  }
+  
+  // Check for payment demands (gov agencies don't demand gift cards, crypto, wire transfers)
+  const scamPaymentPhrases = [
+    'gift card', 'bitcoin', 'wire transfer', 'western union', 
+    'moneygram', 'pay immediately', 'zelle', 'cash app', 'venmo'
+  ];
+  
+  for (const phrase of scamPaymentPhrases) {
+    if (contentLower.includes(phrase) && claimsGovAffiliation) {
+      suspiciousPatterns.push(`Government claim + suspicious payment method: ${phrase}`);
+    }
+  }
+  
+  const isLikelyGovScam = 
+    (claimsGovAffiliation && (suspiciousPatterns.length >= 2 || usesGovLookalikeTerms)) ||
+    (usesGovLookalikeTerms && suspiciousPatterns.length >= 1);
+  
+  return {
+    claimsGovAffiliation,
+    usesGovLookalikeTerms,
+    mentionedAgencies: [...new Set(mentionedAgencies)],
+    isLikelyGovScam,
+    suspiciousPatterns
+  };
+}
+
+// Detect subscription/antivirus renewal scams
+function detectSubscriptionScam(content: string, html: string, domain: string): SubscriptionScamIndicators {
+  const contentLower = content.toLowerCase();
+  const domainLower = domain.toLowerCase();
+  const suspiciousPatterns: string[] = [];
+  const mentionedBrands: string[] = [];
+  
+  // Software commonly impersonated in subscription scams
+  const antivirusBrands = ['norton', 'mcafee', 'avast', 'kaspersky', 'bitdefender', 'avg', 'malwarebytes', 'webroot', 'trend micro', 'eset'];
+  const techBrands = ['microsoft', 'apple', 'google', 'amazon', 'geek squad', 'best buy', 'paypal'];
+  
+  let claimsAntivirusSoftware = false;
+  let hasUrgentRenewalMessage = false;
+  let hasPhoneCallPrompt = false;
+  
+  // Check for antivirus brand mentions
+  for (const brand of antivirusBrands) {
+    if (contentLower.includes(brand) || domainLower.includes(brand)) {
+      mentionedBrands.push(brand.charAt(0).toUpperCase() + brand.slice(1));
+      claimsAntivirusSoftware = true;
+    }
+  }
+  
+  for (const brand of techBrands) {
+    if (contentLower.includes(brand) || domainLower.includes(brand)) {
+      mentionedBrands.push(brand.charAt(0).toUpperCase() + brand.slice(1));
+    }
+  }
+  
+  // Check for renewal scam phrases
+  const renewalPhrases = [
+    'your subscription has expired',
+    'subscription will be renewed',
+    'auto-renewal',
+    'will be charged',
+    'renew now',
+    'subscription ending',
+    'license expired',
+    'protection expired',
+    'your computer is at risk',
+    'virus detected',
+    'your pc is infected',
+    'immediate action required',
+    'call our toll-free number',
+    'call us immediately',
+    'speak to a technician',
+    'remote access',
+    'let us fix your computer'
+  ];
+  
+  for (const phrase of renewalPhrases) {
+    if (contentLower.includes(phrase)) {
+      hasUrgentRenewalMessage = true;
+      suspiciousPatterns.push(`Contains renewal scam phrase: "${phrase}"`);
+    }
+  }
+  
+  // Check for phone call prompts (major red flag)
+  const phonePromptPatterns = [
+    /call\s*(us|now|immediately|toll[- ]free)/i,
+    /dial\s*\d/i,
+    /speak\s*(to|with)\s*(a|our)\s*(technician|support|agent)/i,
+    /\d{3}[- ]\d{3}[- ]\d{4}.*call/i,
+    /call.*\d{3}[- ]\d{3}[- ]\d{4}/i
+  ];
+  
+  for (const pattern of phonePromptPatterns) {
+    if (pattern.test(content)) {
+      hasPhoneCallPrompt = true;
+      suspiciousPatterns.push('Prompts user to call a phone number');
+    }
+  }
+  
+  // Pop-up style indicators in HTML
+  const popupIndicators = [
+    'alert-box', 'warning-popup', 'virus-alert', 'security-warning',
+    'fullscreen', 'modal-overlay', 'block-page'
+  ];
+  
+  for (const indicator of popupIndicators) {
+    if (html.toLowerCase().includes(indicator)) {
+      suspiciousPatterns.push(`Contains popup/alert indicator: ${indicator}`);
+    }
+  }
+  
+  const isLikelySubscriptionScam = 
+    (claimsAntivirusSoftware && hasUrgentRenewalMessage) ||
+    (hasPhoneCallPrompt && (hasUrgentRenewalMessage || claimsAntivirusSoftware)) ||
+    suspiciousPatterns.length >= 3;
+  
+  return {
+    claimsAntivirusSoftware,
+    mentionedBrands: [...new Set(mentionedBrands)],
+    hasUrgentRenewalMessage,
+    hasPhoneCallPrompt,
+    isLikelySubscriptionScam,
+    suspiciousPatterns
+  };
+}
+
+// Enhanced business verification
+function analyzeBusinessVerification(content: string, html: string): BusinessVerification {
+  const contentLower = content.toLowerCase();
+  
+  // VAT/Tax number patterns by country
+  const vatPatterns = [
+    /vat\s*(?:number|no|#)?[:\s]*([A-Z]{2}\d{8,12})/i,  // EU VAT
+    /tax\s*id[:\s]*(\d{2}-\d{7})/i,                       // US EIN
+    /abn[:\s]*(\d{11})/i,                                 // Australia ABN
+    /gst[:\s]*(\d+)/i                                     // GST numbers
+  ];
+  
+  // Company registration patterns
+  const companyRegPatterns = [
+    /company\s*(?:number|no|reg)[:\s]*(\d+)/i,
+    /registered\s*(?:company|business)[:\s#]*(\d+)/i,
+    /registration\s*(?:number|no)[:\s]*(\d+)/i,
+    /incorporated/i,
+    /ltd\b|llc\b|inc\b|corp\b|gmbh\b|pty\b/i
+  ];
+  
+  let hasVATNumber = false;
+  let hasCompanyRegNumber = false;
+  let hasDUNS = false;
+  let hasPhysicalStore = false;
+  
+  for (const pattern of vatPatterns) {
+    if (pattern.test(content)) {
+      hasVATNumber = true;
+      break;
+    }
+  }
+  
+  for (const pattern of companyRegPatterns) {
+    if (pattern.test(content)) {
+      hasCompanyRegNumber = true;
+      break;
+    }
+  }
+  
+  // Check for DUNS number
+  if (/duns\s*(?:number)?[:\s]*\d{9}/i.test(content)) {
+    hasDUNS = true;
+  }
+  
+  // Check for physical store indicators
+  const physicalStoreIndicators = [
+    'visit our store', 'our showroom', 'walk-in', 'store hours',
+    'store locations', 'find a store', 'retail location', 'brick and mortar'
+  ];
+  
+  for (const indicator of physicalStoreIndicators) {
+    if (contentLower.includes(indicator)) {
+      hasPhysicalStore = true;
+      break;
+    }
+  }
+  
+  // Detect claimed vs actual country
+  const countryIndicators: Record<string, string[]> = {
+    'USA': ['united states', 'u.s.', 'usa', 'america', 'california', 'new york', 'texas', 'florida'],
+    'UK': ['united kingdom', 'uk', 'england', 'london', 'britain', 'british'],
+    'Canada': ['canada', 'canadian', 'toronto', 'vancouver'],
+    'Australia': ['australia', 'australian', 'sydney', 'melbourne'],
+    'China': ['china', 'chinese', 'shenzhen', 'guangzhou', 'shanghai'],
+    'India': ['india', 'indian', 'mumbai', 'delhi', 'bangalore']
+  };
+  
+  let claimedCountry: string | undefined;
+  let actualIndicatedCountry: string | undefined;
+  
+  // Check about/contact sections for claimed location
+  for (const [country, indicators] of Object.entries(countryIndicators)) {
+    for (const indicator of indicators) {
+      if (contentLower.includes(indicator)) {
+        if (!claimedCountry) claimedCountry = country;
+        actualIndicatedCountry = country;
+      }
+    }
+  }
+  
+  // Check for overseas shipping indicators that might reveal true location
+  const overseasIndicators = [
+    { text: 'ships from china', country: 'China' },
+    { text: 'warehouse in shenzhen', country: 'China' },
+    { text: 'shipping from asia', country: 'China' },
+    { text: '15-30 business days', country: 'China' },
+    { text: '7-21 days delivery', country: 'China' }
+  ];
+  
+  for (const indicator of overseasIndicators) {
+    if (contentLower.includes(indicator.text)) {
+      actualIndicatedCountry = indicator.country;
+    }
+  }
+  
+  const countriesMismatch = claimedCountry !== undefined && 
+    actualIndicatedCountry !== undefined && 
+    claimedCountry !== actualIndicatedCountry;
+  
+  return {
+    hasVATNumber,
+    hasCompanyRegNumber,
+    hasDUNS,
+    hasPhysicalStore,
+    claimedCountry,
+    actualIndicatedCountry,
+    countriesMismatch
+  };
+}
+
+// Check for GDPR/Cookie compliance (legitimacy indicator)
+function analyzeComplianceIndicators(content: string, html: string): {
+  hasCookieNotice: boolean;
+  hasGDPRMention: boolean;
+  hasCCPAMention: boolean;
+  hasAccessibilityStatement: boolean;
+  complianceScore: number;
+} {
+  const contentLower = content.toLowerCase();
+  const htmlLower = html.toLowerCase();
+  
+  const hasCookieNotice = 
+    contentLower.includes('cookie') && (
+      contentLower.includes('accept') || 
+      contentLower.includes('consent') ||
+      contentLower.includes('policy')
+    ) ||
+    htmlLower.includes('cookie-consent') ||
+    htmlLower.includes('cookie-notice') ||
+    htmlLower.includes('cookiebot') ||
+    htmlLower.includes('onetrust');
+    
+  const hasGDPRMention = 
+    contentLower.includes('gdpr') ||
+    contentLower.includes('general data protection') ||
+    contentLower.includes('data protection officer');
+    
+  const hasCCPAMention = 
+    contentLower.includes('ccpa') ||
+    contentLower.includes('california consumer privacy') ||
+    contentLower.includes('do not sell my');
+    
+  const hasAccessibilityStatement = 
+    contentLower.includes('accessibility') ||
+    contentLower.includes('wcag') ||
+    contentLower.includes('ada compliance');
+  
+  let complianceScore = 0;
+  if (hasCookieNotice) complianceScore += 25;
+  if (hasGDPRMention) complianceScore += 25;
+  if (hasCCPAMention) complianceScore += 25;
+  if (hasAccessibilityStatement) complianceScore += 25;
+  
+  return {
+    hasCookieNotice,
+    hasGDPRMention,
+    hasCCPAMention,
+    hasAccessibilityStatement,
+    complianceScore
+  };
+}
+
 // Analyze urgency tactics in content
 function analyzeUrgencyTactics(content: string): { hasUrgencyTactics: boolean; count: number; examples: string[] } {
   const examples: string[] = [];
@@ -950,10 +1340,10 @@ Deno.serve(async (req) => {
     console.log('Typosquatting check:', typosquattingCheck);
     console.log('Suspicious TLD:', suspiciousTLD);
 
-    // Step 1: Scrape the website with Firecrawl
+    // Step 1: Scrape the website with Firecrawl - using all available formats
     const waitTime = platformInfo.isSocialMedia ? 5000 : 3000;
     
-    console.log('Scraping website with Firecrawl...');
+    console.log('Scraping website with Firecrawl (all formats)...');
     const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -962,7 +1352,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: ['markdown', 'html', 'links', 'screenshot'],
+        formats: ['markdown', 'html', 'links', 'screenshot', 'rawHtml'],
         onlyMainContent: false,
         waitFor: waitTime,
       }),
@@ -1021,6 +1411,12 @@ Deno.serve(async (req) => {
     const linkAnalysis = analyzeLinks(links, domain);
     const priceComparison = analyzePriceComparison(markdown, html);
     
+    // New enhanced analysis
+    const governmentScamAnalysis = detectGovernmentScam(markdown, html, domain);
+    const subscriptionScamAnalysis = detectSubscriptionScam(markdown, html, domain);
+    const businessVerification = analyzeBusinessVerification(markdown, html);
+    const complianceAnalysis = analyzeComplianceIndicators(markdown, html);
+    
     // Run external API checks in parallel
     console.log('Running external security checks...');
     const [virusTotalResult, whoisResult] = await Promise.all([
@@ -1034,6 +1430,10 @@ Deno.serve(async (req) => {
     console.log('Scam patterns:', scamPatternAnalysis);
     console.log('Link analysis:', linkAnalysis);
     console.log('Price comparison:', priceComparison);
+    console.log('Government scam detection:', governmentScamAnalysis);
+    console.log('Subscription scam detection:', subscriptionScamAnalysis);
+    console.log('Business verification:', businessVerification);
+    console.log('Compliance indicators:', complianceAnalysis);
     console.log('VirusTotal:', virusTotalResult);
     console.log('WHOIS:', whoisResult);
 
@@ -1049,6 +1449,10 @@ Deno.serve(async (req) => {
       priceComparison,
       virusTotal: virusTotalResult,
       whois: whoisResult,
+      governmentScam: governmentScamAnalysis,
+      subscriptionScam: subscriptionScamAnalysis,
+      businessVerification,
+      compliance: complianceAnalysis,
     };
 
     // Step 2: Analyze with AI - Enhanced prompt with pre-analysis findings
@@ -1084,6 +1488,34 @@ ADDRESS & PHONE VERIFICATION:
 - Phone Analysis: ${contactAnalysis.phoneAnalysis.found ? 
     `Found=${contactAnalysis.phoneAnalysis.found}, Legit=${contactAnalysis.phoneAnalysis.looksLegitimate}, HasCountryCode=${contactAnalysis.phoneAnalysis.hasCountryCode}, ValidFormat=${contactAnalysis.phoneAnalysis.isValidFormat}${contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.phoneAnalysis.suspiciousPatterns.join(', ') : ''}` 
     : 'No phone number found'}
+
+⚠️ GOVERNMENT IMPERSONATION SCAM DETECTION:
+- Claims Government Affiliation: ${governmentScamAnalysis.claimsGovAffiliation ? `⚠️ YES - Mentions: ${governmentScamAnalysis.mentionedAgencies.join(', ')}` : 'No'}
+- Uses Gov-Like Domain Terms: ${governmentScamAnalysis.usesGovLookalikeTerms ? '⚠️ YES - Domain mimics government' : 'No'}
+- LIKELY GOVERNMENT SCAM: ${governmentScamAnalysis.isLikelyGovScam ? '🚨 HIGH RISK' : 'No indicators'}
+${governmentScamAnalysis.suspiciousPatterns.length > 0 ? '- Suspicious Patterns: ' + governmentScamAnalysis.suspiciousPatterns.join(', ') : ''}
+
+⚠️ SUBSCRIPTION/ANTIVIRUS SCAM DETECTION:
+- Claims Antivirus/Software Brand: ${subscriptionScamAnalysis.claimsAntivirusSoftware ? `⚠️ YES - Mentions: ${subscriptionScamAnalysis.mentionedBrands.join(', ')}` : 'No'}
+- Has Urgent Renewal Message: ${subscriptionScamAnalysis.hasUrgentRenewalMessage ? '⚠️ YES' : 'No'}
+- Prompts Phone Call: ${subscriptionScamAnalysis.hasPhoneCallPrompt ? '🚨 MAJOR RED FLAG - Tech support scam indicator' : 'No'}
+- LIKELY SUBSCRIPTION SCAM: ${subscriptionScamAnalysis.isLikelySubscriptionScam ? '🚨 HIGH RISK' : 'No indicators'}
+${subscriptionScamAnalysis.suspiciousPatterns.length > 0 ? '- Suspicious Patterns: ' + subscriptionScamAnalysis.suspiciousPatterns.join(', ') : ''}
+
+BUSINESS VERIFICATION DETAILS:
+- Has VAT/Tax Number: ${businessVerification.hasVATNumber ? '✓ Yes' : 'No'}
+- Has Company Registration: ${businessVerification.hasCompanyRegNumber ? '✓ Yes' : 'No'}
+- Has Physical Store Location: ${businessVerification.hasPhysicalStore ? '✓ Yes' : 'No'}
+- Claimed Country: ${businessVerification.claimedCountry || 'Unknown'}
+- Indicated Country: ${businessVerification.actualIndicatedCountry || 'Unknown'}
+- Country Mismatch: ${businessVerification.countriesMismatch ? '⚠️ Claims one country but indicators suggest another' : 'No mismatch'}
+
+COMPLIANCE & LEGITIMACY INDICATORS:
+- Cookie/GDPR Notice: ${complianceAnalysis.hasCookieNotice ? '✓ Yes' : 'No'}
+- GDPR Mention: ${complianceAnalysis.hasGDPRMention ? '✓ Yes' : 'No'}
+- CCPA Mention: ${complianceAnalysis.hasCCPAMention ? '✓ Yes' : 'No'}
+- Accessibility Statement: ${complianceAnalysis.hasAccessibilityStatement ? '✓ Yes' : 'No'}
+- Compliance Score: ${complianceAnalysis.complianceScore}/100 (higher = more legitimate business practices)
 
 VIRUSTOTAL SECURITY SCAN (Pro Feature):
 ${virusTotalResult.error ? `- Status: ${virusTotalResult.error}` : `- Malicious Detections: ${virusTotalResult.maliciousCount}/${virusTotalResult.totalEngines} security engines
@@ -1464,6 +1896,50 @@ Return ONLY valid JSON in this exact format:
         }
         if (paymentAnalysis.onlyAcceptsUnusualMethods) {
           analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 20);
+        }
+        
+        // Government scam detection - very severe penalty
+        if (governmentScamAnalysis.isLikelyGovScam) {
+          analysisResult.details.redFlags.push('🚨 GOVERNMENT IMPERSONATION SCAM - Claims to be from ' + governmentScamAnalysis.mentionedAgencies.join(', '));
+          for (const pattern of governmentScamAnalysis.suspiciousPatterns.slice(0, 3)) {
+            analysisResult.details.redFlags.push(pattern);
+          }
+          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 50);
+          analysisResult.verdict = 'danger';
+        }
+        
+        // Subscription/tech support scam detection - very severe penalty
+        if (subscriptionScamAnalysis.isLikelySubscriptionScam) {
+          analysisResult.details.redFlags.push('🚨 SUBSCRIPTION/TECH SUPPORT SCAM - Impersonates ' + subscriptionScamAnalysis.mentionedBrands.join(', '));
+          if (subscriptionScamAnalysis.hasPhoneCallPrompt) {
+            analysisResult.details.redFlags.push('🚨 TECH SUPPORT SCAM - Prompts you to call a phone number');
+          }
+          for (const pattern of subscriptionScamAnalysis.suspiciousPatterns.slice(0, 3)) {
+            analysisResult.details.redFlags.push(pattern);
+          }
+          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 50);
+          analysisResult.verdict = 'danger';
+        }
+        
+        // Business verification penalties
+        if (businessVerification.countriesMismatch) {
+          analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
+          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
+        }
+        
+        // Positive compliance signals (slight boost for legitimate business practices)
+        if (complianceAnalysis.complianceScore >= 50) {
+          if (!analysisResult.details.positiveSignals) {
+            analysisResult.details.positiveSignals = [];
+          }
+          if (complianceAnalysis.hasCookieNotice) {
+            analysisResult.details.positiveSignals.push('Has cookie consent notice');
+          }
+          if (complianceAnalysis.hasGDPRMention) {
+            analysisResult.details.positiveSignals.push('Mentions GDPR compliance');
+          }
+          // Small trust boost for compliance
+          analysisResult.trustScore = Math.min(100, analysisResult.trustScore + 5);
         }
         
         // Recalculate verdict based on adjusted score
