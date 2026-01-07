@@ -327,9 +327,12 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="container px-4 text-center text-sm text-muted-foreground">
+        <div className="container px-4 text-center text-sm text-muted-foreground space-y-4">
           <p>
             This tool provides educational information to help you make informed decisions. Results are based on automated checks and should be used alongside your own research. Always verify important details before making purchases.
+          </p>
+          <p className="text-xs text-muted-foreground/60">
+            Powered by <span className="font-medium">TrustworthyCheck</span>
           </p>
         </div>
       </footer>
