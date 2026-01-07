@@ -569,121 +569,73 @@ export function UrlChecker() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-6 pt-2">
-                    {/* Summary - Free Preview */}
-                    <div className="glass-card rounded-2xl p-6 relative overflow-hidden">
-                      <div className="absolute top-3 right-3">
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                          Free Preview
-                        </span>
-                      </div>
-                      <h3 className="font-display text-lg font-semibold mb-3">Analysis Summary</h3>
-                      <p className="text-muted-foreground">{result.summary}</p>
-                      <p className="text-xs text-muted-foreground/70 mt-4 border-t border-border pt-3">
-                        This assessment is based on automated checks and publicly available information. We recommend reviewing the details below and conducting your own verification before making purchases.
-                      </p>
-                      
-                      {/* Pro Features Preview - Show actual data */}
-                      {result.proFeatures && (
-                        <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-semibold text-primary">Pro Analysis Preview</span>
+                    {/* Combined Summary & Concerns Card */}
+                    <div className="glass-card rounded-2xl overflow-hidden">
+                      {/* Analysis Summary */}
+                      <div className="p-6 border-b border-border/50">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            result.verdict === 'safe' 
+                              ? 'bg-success/10' 
+                              : result.verdict === 'caution' 
+                              ? 'bg-warning/10' 
+                              : 'bg-danger/10'
+                          }`}>
+                            {result.verdict === 'safe' ? (
+                              <CheckCircle className={`w-5 h-5 text-success`} />
+                            ) : (
+                              <AlertTriangle className={`w-5 h-5 ${result.verdict === 'caution' ? 'text-warning' : 'text-danger'}`} />
+                            )}
                           </div>
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            {/* VirusTotal Preview */}
-                            <div className="p-3 rounded-lg bg-background/60 border border-border/50">
-                              <div className="flex items-center gap-2 mb-2">
-                                <ShieldCheck className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-xs font-medium">Security Scan</span>
-                              </div>
-                              {result.proFeatures.virusTotal.available ? (
-                                <div className={`text-sm font-semibold ${result.proFeatures.virusTotal.isMalicious ? 'text-danger' : 'text-success'}`}>
-                                  {result.proFeatures.virusTotal.isMalicious 
-                                    ? `⚠️ ${result.proFeatures.virusTotal.maliciousCount} threats detected`
-                                    : '✓ No threats detected'}
-                                </div>
-                              ) : (
-                                <div className="text-xs text-muted-foreground">Scan complete</div>
-                              )}
-                              <p className="text-[10px] text-muted-foreground mt-1">
-                                {result.proFeatures.virusTotal.totalEngines} security engines checked
-                              </p>
-                            </div>
-                            
-                            {/* WHOIS Preview */}
-                            <div className="p-3 rounded-lg bg-background/60 border border-border/50">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Calendar className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-xs font-medium">Domain Age</span>
-                              </div>
-                              {result.proFeatures.whois.available ? (
-                                <>
-                                  <div className={`text-sm font-semibold ${
-                                    result.proFeatures.whois.domainAgeInDays && result.proFeatures.whois.domainAgeInDays < 90 
-                                      ? 'text-danger' 
-                                      : result.proFeatures.whois.domainAgeInDays && result.proFeatures.whois.domainAgeInDays < 365
-                                      ? 'text-warning'
-                                      : 'text-foreground'
-                                  }`}>
-                                    {result.proFeatures.whois.domainAge || 'Unknown'}
-                                  </div>
-                                  <p className="text-[10px] text-muted-foreground mt-1">
-                                    {result.proFeatures.whois.registrar ? `via ${result.proFeatures.whois.registrar}` : 'Registrar info available'}
-                                  </p>
-                                </>
-                              ) : (
-                                <div className="text-xs text-muted-foreground">WHOIS data available</div>
-                              )}
-                            </div>
-                            
-                            {/* Price Comparison Preview */}
-                            <div className="p-3 rounded-lg bg-background/60 border border-border/50">
-                              <div className="flex items-center gap-2 mb-2">
-                                <TrendingDown className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-xs font-medium">Price Analysis</span>
-                              </div>
-                              {result.proFeatures.priceComparison.productsAnalyzed > 0 ? (
-                                <>
-                                  <div className={`text-sm font-semibold ${
-                                    result.proFeatures.priceComparison.averageDiscount >= 60 
-                                      ? 'text-danger' 
-                                      : result.proFeatures.priceComparison.averageDiscount >= 40
-                                      ? 'text-warning'
-                                      : 'text-foreground'
-                                  }`}>
-                                    {result.proFeatures.priceComparison.averageDiscount}% avg discount
-                                  </div>
-                                  <p className="text-[10px] text-muted-foreground mt-1">
-                                    {result.proFeatures.priceComparison.productsAnalyzed} prices analyzed
-                                  </p>
-                                </>
-                              ) : (
-                                <div className="text-xs text-muted-foreground">No pricing detected</div>
-                              )}
-                            </div>
+                          <div>
+                            <h3 className="font-display text-lg font-semibold">Analysis Summary</h3>
+                            <p className="text-xs text-muted-foreground">Based on automated security checks</p>
                           </div>
-                          <p className="text-[10px] text-center text-muted-foreground mt-3">
-                            Unlock Pro for full WHOIS history, detailed security reports & market comparison
-                          </p>
                         </div>
-                      )}
+                        <p className="text-foreground/90 leading-relaxed">{result.summary}</p>
+                      </div>
+
+                      {/* Concerns Found */}
+                      <div className="p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            result.details.redFlags.length > 0 ? 'bg-danger/10' : 'bg-success/10'
+                          }`}>
+                            {result.details.redFlags.length > 0 ? (
+                              <AlertTriangle className="w-5 h-5 text-danger" />
+                            ) : (
+                              <CheckCircle className="w-5 h-5 text-success" />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-display text-lg font-semibold">
+                              {result.details.redFlags.length > 0 
+                                ? `${result.details.redFlags.length} Concern${result.details.redFlags.length > 1 ? 's' : ''} Found`
+                                : 'No Concerns Found'
+                              }
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              {result.details.redFlags.length > 0 
+                                ? 'Issues that may require attention'
+                                : 'No significant red flags detected'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        {result.details.redFlags.length > 0 ? (
+                          <FlagsList items={result.details.redFlags} type="red" />
+                        ) : (
+                          <div className="flex items-center gap-2 p-4 rounded-xl bg-success/5 border border-success/20">
+                            <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
+                            <p className="text-sm text-foreground/80">
+                              Our automated checks found no significant concerns with this website.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-
-                    {/* Concerns Found - Free */}
-                    <AnalysisCard
-                      title="Concerns Found"
-                      icon={AlertTriangle}
-                      status={result.details.redFlags.length > 0 ? 'danger' : 'success'}
-                      delay={0.1}
-                    >
-                      <FlagsList items={result.details.redFlags} type="red" />
-                      {result.details.redFlags.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No significant concerns identified</p>
-                      )}
-                    </AnalysisCard>
-
-                    {/* Locked Pro Features */}
+                    {/* Unlock Full Report CTA */}
                     <motion.div
                       className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6"
                       initial={{ opacity: 0, y: 10 }}
