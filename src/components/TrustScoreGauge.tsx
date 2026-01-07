@@ -38,7 +38,7 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
     switch (verdict) {
       case 'safe': return 'Likely Legit';
       case 'caution': return 'Mixed / Use Caution';
-      case 'danger': return 'High Risk / Not Verified';
+      case 'danger': return 'NOT TRUSTWORTHY';
     }
   };
 
@@ -103,10 +103,10 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
       
       {/* Verdict badge */}
       <motion.div
-        className={`mt-4 px-4 py-2 rounded-full font-semibold text-sm tracking-wide flex items-center gap-2 ${
+        className={`mt-4 px-5 py-2.5 rounded-full font-bold text-sm tracking-wide flex items-center gap-2 uppercase ${
           verdict === 'safe' ? 'bg-success/20 text-success' :
           verdict === 'caution' ? 'bg-warning/20 text-warning' :
-          'bg-danger/20 text-danger'
+          'bg-danger/25 text-danger border-2 border-danger/40'
         }`}
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
