@@ -67,11 +67,12 @@ export function UrlChecker() {
       {/* Search Form */}
       <motion.form
         onSubmit={handleSubmit}
-        className="mb-4"
+        className="mb-4 space-y-3"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
+        {/* URL Input - Required */}
         <div className="relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
             <Globe className="w-5 h-5" />
@@ -80,7 +81,7 @@ export function UrlChecker() {
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Enter website URL to check (e.g., example-shop.com)"
+            placeholder="Enter website URL (e.g., example-shop.com)"
             className="pl-12 pr-32 h-14 text-lg bg-card border-border focus:border-primary rounded-xl"
             disabled={isLoading}
           />
@@ -100,17 +101,40 @@ export function UrlChecker() {
                   >
                     <Shield className="w-5 h-5" />
                   </motion.div>
-                  Scanning
+                  Analyzing
                 </>
               ) : (
                 <>
                   <Search className="w-5 h-5" />
-                  Check URL
+                  Analyze
                 </>
               )}
             </Button>
           </div>
         </div>
+
+        {/* Optional Fields */}
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Business name (optional)"
+              className="h-10 text-sm bg-card border-border focus:border-primary rounded-lg"
+              disabled={isLoading}
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Country (optional)"
+              className="h-10 text-sm bg-card border-border focus:border-primary rounded-lg"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Optional fields help provide context but are not required for analysis
+        </p>
       </motion.form>
 
 
@@ -146,13 +170,13 @@ export function UrlChecker() {
             }`}>
               {result.verdict === 'danger' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-600 font-bold animate-pulse"
+                  className="flex items-center justify-center gap-2 mb-4 text-red-600 font-bold"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <AlertTriangle className="w-5 h-5 text-red-600 animate-bounce" />
-                  <span className="uppercase tracking-wide text-sm">⚠️ Warning: Potential Scam Detected ⚠️</span>
-                  <AlertTriangle className="w-5 h-5 text-red-600 animate-bounce" />
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <span className="uppercase tracking-wide text-sm">High Risk Indicators Detected — Review Details Below</span>
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-4">
@@ -229,6 +253,9 @@ export function UrlChecker() {
                     <div className="glass-card rounded-2xl p-6">
                       <h3 className="font-display text-lg font-semibold mb-3">Analysis Summary</h3>
                       <p className="text-muted-foreground">{result.summary}</p>
+                      <p className="text-xs text-muted-foreground/70 mt-4 border-t border-border pt-3">
+                        This assessment is based on automated checks and content analysis. We recommend reviewing the details below and conducting your own verification for important purchases.
+                      </p>
                     </div>
 
                     {/* Screenshot */}
@@ -243,7 +270,14 @@ export function UrlChecker() {
                       </div>
                     )}
 
-                    {/* Analysis Grid */}
+                    {/* Automated Checks Section Header */}
+                    <div className="flex items-center gap-3 pt-2">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-1 bg-muted rounded-full">
+                        ✓ Automated Checks
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Business Legitimacy */}
                       <AnalysisCard
@@ -312,7 +346,10 @@ export function UrlChecker() {
                             <span className="text-sm font-medium">{result.details.domain.name}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">SSL Certificate</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm text-muted-foreground">SSL Certificate</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">✓ Live</span>
+                            </div>
                             <span className={`text-sm font-medium ${result.details.domain.ssl ? 'text-status-safe' : 'text-status-danger'}`}>
                               {result.details.domain.ssl ? 'Secure' : 'Not Secure'}
                             </span>
@@ -324,15 +361,25 @@ export function UrlChecker() {
                             </div>
                           )}
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Domain Age</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm text-muted-foreground">Domain Age</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">Estimated</span>
+                            </div>
                             <span className="text-sm">{result.details.domain.age}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm text-muted-foreground">WHOIS Data</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Coming Soon</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">—</span>
                           </div>
                         </div>
                       </AnalysisCard>
 
-                      {/* Dropshipper Detection */}
+                      {/* Reseller/Fulfillment Analysis */}
                       <AnalysisCard
-                        title="Dropshipper Detection"
+                        title="Fulfillment Model"
                         icon={AlertTriangle}
                         status={
                           result.details.dropshipperIndicators?.isLikelyDropshipper 
@@ -350,8 +397,8 @@ export function UrlChecker() {
                             )}
                             <span className={`text-sm font-medium ${result.details.dropshipperIndicators?.isLikelyDropshipper ? 'text-status-warning' : 'text-foreground'}`}>
                               {result.details.dropshipperIndicators?.isLikelyDropshipper 
-                                ? `Likely dropshipper (${result.details.dropshipperIndicators.confidence} confidence)`
-                                : 'No dropshipper indicators found'}
+                                ? `Reseller indicators found (${result.details.dropshipperIndicators.confidence} confidence)`
+                                : 'No reseller indicators found'}
                             </span>
                           </div>
                           {result.details.dropshipperIndicators?.reasons && result.details.dropshipperIndicators.reasons.length > 0 && (
@@ -507,25 +554,77 @@ export function UrlChecker() {
                       </AnalysisCard>
                     </div>
 
-                    {/* Red Flags & Positive Signals */}
+                    {/* Summary Findings Section Header */}
+                    <div className="flex items-center gap-3 pt-2">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-1 bg-muted rounded-full">
+                        Summary Findings
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    {/* Concerns & Positive Signals */}
                     <div className="grid md:grid-cols-2 gap-4">
                       <AnalysisCard
-                        title="Red Flags"
+                        title="Concerns Found"
                         icon={AlertTriangle}
                         status={result.details.redFlags.length > 0 ? 'danger' : 'success'}
                         delay={0.5}
                       >
                         <FlagsList items={result.details.redFlags} type="red" />
+                        {result.details.redFlags.length === 0 && (
+                          <p className="text-sm text-muted-foreground">No significant concerns identified</p>
+                        )}
                       </AnalysisCard>
 
                       <AnalysisCard
-                        title="Positive Signals"
+                        title="Positive Indicators"
                         icon={CheckCircle}
                         status={result.details.positiveSignals.length > 0 ? 'success' : 'neutral'}
                         delay={0.6}
                       >
                         <FlagsList items={result.details.positiveSignals} type="green" />
+                        {result.details.positiveSignals.length === 0 && (
+                          <p className="text-sm text-muted-foreground">Limited positive indicators found</p>
+                        )}
                       </AnalysisCard>
+                    </div>
+
+                    {/* Guided Verification Section */}
+                    <div className="glass-card rounded-2xl p-6 border border-border/50">
+                      <h3 className="font-display text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Manual Verification Checklist
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        These items require your judgment. Visit the website directly to verify:
+                      </p>
+                      <div className="grid sm:grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span>Contact page has real phone/email</span>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span>Physical address can be verified</span>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span>Reviews seem genuine, not templated</span>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span>Prices are realistic for the product</span>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span>Return policy is clear and reasonable</span>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span>Payment options include buyer protection</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

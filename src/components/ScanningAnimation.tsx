@@ -1,11 +1,18 @@
 import { motion } from 'framer-motion';
-import { Shield, Search, Database, Brain } from 'lucide-react';
+import { Shield, Search, Database, Brain, Lock, Globe, FileText } from 'lucide-react';
+
+const automatedChecks = [
+  { icon: Lock, label: 'HTTPS/SSL Verification', status: 'live' as const },
+  { icon: Globe, label: 'Domain Analysis', status: 'live' as const },
+  { icon: Shield, label: 'Security Warnings Check', status: 'live' as const },
+  { icon: FileText, label: 'Red Flag Detection', status: 'live' as const },
+];
 
 const stages = [
-  { icon: Search, label: 'Scanning website...' },
-  { icon: Database, label: 'Analyzing content...' },
-  { icon: Brain, label: 'AI evaluation...' },
-  { icon: Shield, label: 'Generating report...' },
+  { icon: Search, label: 'Fetching website data...' },
+  { icon: Database, label: 'Running automated checks...' },
+  { icon: Brain, label: 'Analyzing transparency indicators...' },
+  { icon: Shield, label: 'Preparing assessment...' },
 ];
 
 interface ScanningAnimationProps {
@@ -86,9 +93,44 @@ export function ScanningAnimation({ currentStage = 0 }: ScanningAnimationProps) 
         {stages[currentStage]?.label}
       </motion.p>
       
-      <p className="text-sm text-muted-foreground mt-2">
+      <p className="text-sm text-muted-foreground mt-2 mb-6">
         This may take a few seconds...
       </p>
+
+      {/* Automated Checks List */}
+      <div className="w-full max-w-md bg-muted/30 rounded-xl p-4 border border-border/50">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          Automated Checks Running
+        </p>
+        <div className="space-y-2">
+          {automatedChecks.map((check, index) => {
+            const Icon = check.icon;
+            const isComplete = currentStage > index;
+            
+            return (
+              <motion.div
+                key={check.label}
+                className="flex items-center gap-3 text-sm"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.15 }}
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  isComplete ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                }`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <span className={isComplete ? 'text-foreground' : 'text-muted-foreground'}>
+                  {check.label}
+                </span>
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                  ✓ Live
+                </span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
