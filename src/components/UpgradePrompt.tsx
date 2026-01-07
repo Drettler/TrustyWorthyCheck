@@ -1,12 +1,56 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Zap, Check, RotateCcw } from 'lucide-react';
+import { Lock, Zap, Check, RotateCcw, Crown, FileText, Ticket, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface UpgradePromptProps {
   onResetDemo?: () => void;
 }
 
 export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
+  const [couponCode, setCouponCode] = useState('');
+  const [isLoading, setIsLoading] = useState<'payPerCheck' | 'proMonthly' | null>(null);
+  const [email, setEmail] = useState('');
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'payPerCheck' | 'proMonthly' | null>(null);
+
+  const handleCheckout = async (priceType: 'payPerCheck' | 'proMonthly') => {
+    if (!email && !showEmailInput) {
+      setSelectedPlan(priceType);
+      setShowEmailInput(true);
+      return;
+    }
+
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+
+    setIsLoading(priceType);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { 
+          priceType, 
+          email,
+          couponCode: priceType === 'proMonthly' ? couponCode : undefined 
+        },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -21,40 +65,157 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
         Daily Limit Reached
       </h3>
       <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-        You've used your free check for today. Upgrade to get unlimited checks and detailed reports.
+        You've used your free check for today. Unlock full reports with one of our plans.
       </p>
 
-      <div className="glass-card rounded-xl p-6 max-w-sm mx-auto mb-6">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-lg">Pro Plan</span>
-        </div>
-        
-        <ul className="space-y-2 text-sm text-left mb-6">
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-success" />
-            Unlimited daily checks
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-success" />
-            Full detailed reports
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-success" />
-            WHOIS & domain history
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-success" />
-            Priority analysis speed
-          </li>
-        </ul>
+      {/* Email Input */}
+      {showEmailInput && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="max-w-sm mx-auto mb-6"
+        >
+          <Input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mb-3"
+          />
+          <Button 
+            onClick={() => selectedPlan && handleCheckout(selectedPlan)}
+            disabled={!email || isLoading !== null}
+            className="w-full"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Continue to Checkout'
+            )}
+          </Button>
+        </motion.div>
+      )}
 
-        <Button variant="hero" size="lg" className="w-full" disabled>
-          Coming Soon
-        </Button>
-        <p className="text-xs text-muted-foreground mt-2">
-          Paid plans launching soon
-        </p>
+      {/* Pricing Cards */}
+      <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+        {/* Pay-Per-Check - Best for You */}
+        <div className="glass-card rounded-xl p-6 border-2 border-primary relative">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+            🥇 Best for You
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 mb-2 mt-2">
+            <FileText className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-lg">Pay-Per-Check</span>
+          </div>
+          
+          <div className="text-3xl font-bold mb-1">$4.99</div>
+          <p className="text-sm text-muted-foreground mb-4">One full report</p>
+          
+          <ul className="space-y-2 text-sm text-left mb-6">
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              Complete detailed analysis
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              Printable PDF report
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              Saved to your history
+            </li>
+          </ul>
+
+          <p className="text-xs text-muted-foreground mb-4 italic">
+            Perfect for parents, elderly helpers, and one-off fraud checks
+          </p>
+
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="w-full" 
+            onClick={() => handleCheckout('payPerCheck')}
+            disabled={isLoading !== null}
+          >
+            {isLoading === 'payPerCheck' ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Get Report'
+            )}
+          </Button>
+        </div>
+
+        {/* Pro Monthly Subscription */}
+        <div className="glass-card rounded-xl p-6 border border-border">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Crown className="w-5 h-5 text-amber-500" />
+            <span className="font-semibold text-lg">Pro Monthly</span>
+          </div>
+          <div className="text-xs text-muted-foreground mb-2">🥈 For frequent users</div>
+          
+          <div className="text-3xl font-bold mb-1">$9.99<span className="text-lg font-normal text-muted-foreground">/mo</span></div>
+          <p className="text-sm text-muted-foreground mb-4">Unlimited checks</p>
+          
+          <ul className="space-y-2 text-sm text-left mb-4">
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              Unlimited daily checks
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              Full detailed reports
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              WHOIS & domain history
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success flex-shrink-0" />
+              Priority analysis speed
+            </li>
+          </ul>
+
+          {/* Coupon Code Input */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                className="text-sm h-9"
+              />
+            </div>
+          </div>
+
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full" 
+            onClick={() => handleCheckout('proMonthly')}
+            disabled={isLoading !== null}
+          >
+            {isLoading === 'proMonthly' ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                Subscribe
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground mb-3">
