@@ -121,26 +121,42 @@ export default function Index() {
       </section>
 
       {/* ===================== SOCIAL SELLER CHECKER TOGGLE ===================== */}
-      <section className="container px-4 py-8">
+      <section className="container px-4 py-6">
         <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          onClick={() => setShowSocialChecker(!showSocialChecker)}
+          className="relative cursor-pointer group max-w-2xl mx-auto"
         >
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setShowSocialChecker(!showSocialChecker)}
-            className="gap-2"
-          >
-            <UserSearch className="w-5 h-5" />
-            {showSocialChecker ? "Hide Social Seller Checker" : "Check a Social Media Seller"}
-            {showSocialChecker ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
-          <p className="text-sm text-muted-foreground mt-2">
-            Evaluate sellers on Instagram, TikTok, Facebook & more
-          </p>
+          <div className={`flex items-center justify-between gap-4 p-5 rounded-2xl border-2 transition-all duration-300 ${
+            showSocialChecker 
+              ? 'bg-primary/10 border-primary/30' 
+              : 'bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                showSocialChecker ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+              }`}>
+                <UserSearch className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-display font-semibold text-lg">
+                  {showSocialChecker ? "Social Seller Checker" : "Need to check a social media seller?"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Evaluate sellers on Instagram, TikTok, Facebook & more
+                </p>
+              </div>
+            </div>
+            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+              showSocialChecker 
+                ? 'bg-primary/20 text-primary rotate-180' 
+                : 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'
+            }`}>
+              <ChevronDown className="w-5 h-5 transition-transform duration-300" />
+            </div>
+          </div>
         </motion.div>
       </section>
 
