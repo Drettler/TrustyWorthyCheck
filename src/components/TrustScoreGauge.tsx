@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ShieldCheck, ShieldAlert, ShieldX, Check } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldX, Check, Octagon } from 'lucide-react';
 
 interface TrustScoreGaugeProps {
   score: number;
@@ -11,6 +11,7 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (score / 100) * circumference;
   const isTrustworthy = score >= 75;
+  const isHighRisk = verdict === 'danger';
   
   const getVerdictColor = () => {
     switch (verdict) {
@@ -77,8 +78,28 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
               <Check className="w-16 h-16 text-success-foreground" strokeWidth={3} />
             </motion.div>
           </motion.div>
+        ) : isHighRisk ? (
+          /* Red stop sign for high-risk sites */
+          <motion.div
+            className="w-36 h-36 flex items-center justify-center"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, duration: 0.4, type: "spring", stiffness: 150 }}
+              className="relative"
+            >
+              <Octagon className="w-32 h-32 text-danger fill-danger" strokeWidth={1.5} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-danger-foreground font-bold text-xs tracking-wide">STOP</span>
+              </div>
+            </motion.div>
+          </motion.div>
         ) : (
-          /* Regular gauge for scores below 75 */
+          /* Regular gauge for caution scores */
           <>
             <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
               {/* Background circle */}
