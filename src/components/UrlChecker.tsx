@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -390,6 +390,57 @@ export function UrlChecker() {
                 />
               </div>
             </div>
+
+            {/* Extra Protection Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldAlert className="w-5 h-5 text-primary" />
+                <h3 className="font-display text-lg font-semibold">Extra Protection</h3>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  Recommended
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                If a site feels risky, these tools help prevent identity theft and fraud.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  asChild
+                >
+                  <a href="https://www.aura.com/lp/identity-theft-protection" target="_blank" rel="noopener noreferrer">
+                    <ShieldCheck className="w-4 h-4" />
+                    Protect My Identity
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  asChild
+                >
+                  <a href="https://www.experian.com/consumer-products/credit-monitoring.html" target="_blank" rel="noopener noreferrer">
+                    <CreditCard className="w-4 h-4" />
+                    Monitor My Credit
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  asChild
+                >
+                  <a href="https://www.identityguard.com/dark-web-monitoring" target="_blank" rel="noopener noreferrer">
+                    <Eye className="w-4 h-4" />
+                    Dark Web Monitoring
+                  </a>
+                </Button>
+              </div>
+            </motion.div>
 
             {/* Actions */}
             <motion.div
