@@ -71,7 +71,7 @@ export default function PaymentSuccess() {
               </>
             ) : (
               <>
-                <li>✓ Complete scam analysis</li>
+                <li>✓ Complete trustworthy analysis</li>
                 <li>✓ Printable PDF report</li>
                 <li>✓ Saved to your history</li>
               </>

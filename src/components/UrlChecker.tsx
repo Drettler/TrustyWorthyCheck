@@ -114,7 +114,7 @@ export function UrlChecker() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        {/* Government & Subscription Scam Preset */}
+        {/* Government & Subscription Alert Preset */}
         <button
           type="button"
           onClick={() => setShowGovScamAlert(!showGovScamAlert)}
@@ -143,7 +143,7 @@ export function UrlChecker() {
         </button>
       </motion.div>
 
-      {/* Government Scam Alert Banner */}
+      {/* Government Alert Banner */}
       <AnimatePresence>
         {showGovScamAlert && (
           <motion.div
@@ -159,7 +159,7 @@ export function UrlChecker() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-warning">Important: Government & Subscription Scam Warning</h3>
+                    <h3 className="font-semibold text-warning">Important: Government & Subscription Fraud Warning</h3>
                     <button 
                       onClick={() => setShowGovScamAlert(false)}
                       className="text-muted-foreground hover:text-foreground p-1"
@@ -172,7 +172,7 @@ export function UrlChecker() {
                   </p>
                   <ul className="text-sm text-muted-foreground mt-2 space-y-1">
                     <li>• The IRS will <strong>never</strong> call or email demanding immediate payment</li>
-                    <li>• Norton/McAfee renewal notices with "call this number" are almost always scams</li>
+                    <li>• Norton/McAfee renewal notices with "call this number" are almost always fraudulent</li>
                     <li>• When in doubt, go directly to the official website by typing it yourself</li>
                   </ul>
                 </div>
