@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Skull, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface TrustScoreGaugeProps {
   score: number;
@@ -37,17 +36,17 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
 
   const getVerdictLabel = () => {
     switch (verdict) {
-      case 'safe': return 'LEGIT';
-      case 'caution': return 'CAUTION';
-      case 'danger': return 'SCAM';
+      case 'safe': return 'Likely Legit';
+      case 'caution': return 'Mixed / Use Caution';
+      case 'danger': return 'High Risk / Not Verified';
     }
   };
 
   const getVerdictIcon = () => {
     switch (verdict) {
-      case 'safe': return <ShieldCheck className="w-4 h-4" />;
-      case 'caution': return <AlertTriangle className="w-4 h-4" />;
-      case 'danger': return <Skull className="w-5 h-5" />;
+      case 'safe': return <span className="text-base">✅</span>;
+      case 'caution': return <span className="text-base">⚠️</span>;
+      case 'danger': return <span className="text-base">❌</span>;
     }
   };
 
@@ -104,11 +103,11 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
       
       {/* Verdict badge */}
       <motion.div
-        className={`mt-4 px-4 py-1.5 rounded-full font-semibold text-sm uppercase tracking-wider flex items-center gap-2 ${
+        className={`mt-4 px-4 py-2 rounded-full font-semibold text-sm tracking-wide flex items-center gap-2 ${
           verdict === 'safe' ? 'bg-success/20 text-success' :
           verdict === 'caution' ? 'bg-warning/20 text-warning' :
           'bg-danger/20 text-danger'
-        } ${verdict === 'danger' ? 'animate-shake' : ''}`}
+        }`}
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8 }}
@@ -117,15 +116,15 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
         {getVerdictLabel()}
       </motion.div>
 
-      {/* Red flags count badge */}
+      {/* Concerns count badge */}
       {redFlagsCount > 0 && (
         <motion.div
-          className="mt-2 text-sm text-danger font-medium"
+          className="mt-2 text-sm text-muted-foreground font-medium"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          {redFlagsCount} Critical Red Flag{redFlagsCount !== 1 ? 's' : ''} Found
+          {redFlagsCount} area{redFlagsCount !== 1 ? 's' : ''} requiring review
         </motion.div>
       )}
     </motion.div>

@@ -132,9 +132,14 @@ export function UrlChecker() {
             />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground text-center">
-          Optional fields help provide context but are not required for analysis
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Optional fields help provide context but are not required for analysis
+          </p>
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium text-primary">1 free check per day</span> • Upgrade for unlimited
+          </p>
+        </div>
       </motion.form>
 
 
@@ -163,20 +168,18 @@ export function UrlChecker() {
             {/* Trust Score Header */}
             <div className={`rounded-2xl p-8 text-center border-2 ${
               result.verdict === 'danger' 
-                ? 'bg-yellow-400 border-red-600 shadow-[0_0_50px_rgba(250,204,21,0.5)]' 
+                ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-400 dark:border-amber-600' 
                 : result.verdict === 'caution'
-                ? 'bg-amber-950/30 border-amber-500/30'
-                : 'glass-card border-transparent'
+                ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-500/30'
+                : 'glass-card border-success/30'
             }`}>
               {result.verdict === 'danger' && (
                 <motion.div 
-                  className="flex items-center justify-center gap-2 mb-4 text-red-600 font-bold"
+                  className="flex items-center justify-center gap-2 mb-4 text-amber-700 dark:text-amber-400 font-medium"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                  <span className="uppercase tracking-wide text-sm">High Risk Indicators Detected — Review Details Below</span>
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <span className="tracking-wide text-sm">Unable to verify key trust indicators — review details below</span>
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-4">
@@ -186,14 +189,14 @@ export function UrlChecker() {
                   redFlagsCount={result.details.redFlags?.length || 0}
                 />
                 <div className="text-center max-w-2xl">
-                  <h2 className={`font-display text-xl font-bold mb-2 ${result.verdict === 'danger' ? 'text-red-700' : ''}`}>
+                  <h2 className="font-display text-xl font-bold mb-2">
                     {result.scrapedData?.title || result.details.domain.name}
                   </h2>
-                  <div className={`flex items-center justify-center gap-2 text-sm ${result.verdict === 'danger' ? 'text-red-600' : 'text-muted-foreground'}`}>
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Globe className="w-4 h-4" />
                     <span>{result.details.domain.name}</span>
                     {result.details.domain.ssl && (
-                      <span className={`flex items-center gap-1 ${result.verdict === 'danger' ? 'text-red-700' : 'text-success'}`}>
+                      <span className="flex items-center gap-1 text-success">
                         <Shield className="w-3 h-3" />
                         SSL
                       </span>
@@ -249,13 +252,26 @@ export function UrlChecker() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-6 pt-2">
-                    {/* Summary */}
-                    <div className="glass-card rounded-2xl p-6">
+                    {/* Summary - Free Preview */}
+                    <div className="glass-card rounded-2xl p-6 relative overflow-hidden">
+                      <div className="absolute top-3 right-3">
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                          Free Preview
+                        </span>
+                      </div>
                       <h3 className="font-display text-lg font-semibold mb-3">Analysis Summary</h3>
                       <p className="text-muted-foreground">{result.summary}</p>
                       <p className="text-xs text-muted-foreground/70 mt-4 border-t border-border pt-3">
-                        This assessment is based on automated checks and content analysis. We recommend reviewing the details below and conducting your own verification for important purchases.
+                        This assessment is based on automated checks and publicly available information. We recommend reviewing the details below and conducting your own verification before making purchases.
                       </p>
+                      
+                      {/* Monetization teaser */}
+                      <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">Want deeper analysis?</span> Full reports include WHOIS history, reputation database checks, and comparative market analysis.
+                          <span className="text-primary font-medium ml-1">Coming soon</span>
+                        </p>
+                      </div>
                     </div>
 
                     {/* Screenshot */}
