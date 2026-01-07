@@ -115,7 +115,7 @@ export function UrlChecker() {
           }`}
         >
           <Heart className="w-4 h-4" />
-          Check this for a parent or relative
+          Check a site for a parent or relative
         </button>
       </motion.div>
 
