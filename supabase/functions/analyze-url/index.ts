@@ -155,12 +155,32 @@ function analyzeUrgencyTactics(content: string): { hasUrgencyTactics: boolean; c
   };
 }
 
-// Check for suspicious contact info
+// Check for suspicious contact info and extract address/phone for validation
 function analyzeContactInfo(content: string, links: string[]): { 
   hasProfessionalEmail: boolean; 
   hasPhoneNumber: boolean;
   hasGenericEmail: boolean;
   emailDomain?: string;
+  hasPhysicalAddress: boolean;
+  extractedAddresses: string[];
+  extractedPhones: string[];
+  addressAnalysis: {
+    found: boolean;
+    looksLegitimate: boolean;
+    isPoBox: boolean;
+    hasStreetNumber: boolean;
+    hasCity: boolean;
+    hasStateOrCountry: boolean;
+    hasPostalCode: boolean;
+    suspiciousPatterns: string[];
+  };
+  phoneAnalysis: {
+    found: boolean;
+    looksLegitimate: boolean;
+    hasCountryCode: boolean;
+    isValidFormat: boolean;
+    suspiciousPatterns: string[];
+  };
 } {
   // Check for email addresses
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
@@ -180,11 +200,132 @@ function analyzeContactInfo(content: string, links: string[]): {
     }
   }
   
-  // Check for phone numbers
-  const phoneRegex = /(\+?1?[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
-  const hasPhoneNumber = phoneRegex.test(content);
+  // Enhanced phone number extraction
+  const phonePatterns = [
+    /(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, // US/Canada
+    /(?:\+44[-.\s]?)?\d{4}[-.\s]?\d{6}/g, // UK
+    /(?:\+61[-.\s]?)?\d{1}[-.\s]?\d{4}[-.\s]?\d{4}/g, // Australia
+    /(?:\+\d{1,3}[-.\s]?)?\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{3,4}/g, // International
+  ];
   
-  return { hasProfessionalEmail, hasPhoneNumber, hasGenericEmail, emailDomain };
+  const extractedPhones: string[] = [];
+  for (const pattern of phonePatterns) {
+    const matches = content.match(pattern) || [];
+    for (const match of matches) {
+      const cleaned = match.replace(/[^\d+]/g, '');
+      if (cleaned.length >= 10 && cleaned.length <= 15 && !extractedPhones.includes(match)) {
+        extractedPhones.push(match.trim());
+      }
+    }
+  }
+  
+  // Phone legitimacy analysis
+  const phoneAnalysis = {
+    found: extractedPhones.length > 0,
+    looksLegitimate: false,
+    hasCountryCode: false,
+    isValidFormat: false,
+    suspiciousPatterns: [] as string[]
+  };
+  
+  if (extractedPhones.length > 0) {
+    const firstPhone = extractedPhones[0];
+    phoneAnalysis.hasCountryCode = /^\+\d/.test(firstPhone);
+    phoneAnalysis.isValidFormat = /^[\d\s\-\(\)\+\.]+$/.test(firstPhone);
+    
+    // Check for suspicious phone patterns
+    const digitsOnly = firstPhone.replace(/\D/g, '');
+    if (/^(\d)\1{6,}$/.test(digitsOnly)) {
+      phoneAnalysis.suspiciousPatterns.push('Repeating digits pattern');
+    }
+    if (/^(123|234|345|456|567|678|789)/.test(digitsOnly)) {
+      phoneAnalysis.suspiciousPatterns.push('Sequential number pattern');
+    }
+    if (digitsOnly === '0000000000' || digitsOnly === '1111111111') {
+      phoneAnalysis.suspiciousPatterns.push('Placeholder number detected');
+    }
+    
+    phoneAnalysis.looksLegitimate = phoneAnalysis.isValidFormat && phoneAnalysis.suspiciousPatterns.length === 0;
+  }
+  
+  // Enhanced address extraction
+  const addressPatterns = [
+    // Full address patterns
+    /\d{1,5}\s+[\w\s]+(?:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|lane|ln|way|court|ct|place|pl|circle|cir)[\s,]+[\w\s]+,?\s*(?:[A-Z]{2})?\s*\d{5}(?:-\d{4})?/gi,
+    // Street address
+    /\d{1,5}\s+[\w\s]{2,30}(?:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|lane|ln|way|court|ct|place|pl|circle|cir)/gi,
+    // PO Box
+    /p\.?o\.?\s*box\s*\d+/gi,
+    // UK postcodes with address
+    /[\w\s]+,?\s*[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/gi,
+    // Generic with city, state, zip
+    /[\w\s]+,\s*[\w\s]+,?\s*[A-Z]{2}\s*\d{5}/gi,
+  ];
+  
+  const extractedAddresses: string[] = [];
+  for (const pattern of addressPatterns) {
+    const matches = content.match(pattern) || [];
+    for (const match of matches) {
+      const cleaned = match.trim();
+      if (cleaned.length > 10 && cleaned.length < 200 && !extractedAddresses.includes(cleaned)) {
+        extractedAddresses.push(cleaned);
+      }
+    }
+  }
+  
+  // Address legitimacy analysis
+  const addressAnalysis = {
+    found: extractedAddresses.length > 0,
+    looksLegitimate: false,
+    isPoBox: false,
+    hasStreetNumber: false,
+    hasCity: false,
+    hasStateOrCountry: false,
+    hasPostalCode: false,
+    suspiciousPatterns: [] as string[]
+  };
+  
+  if (extractedAddresses.length > 0) {
+    const firstAddress = extractedAddresses[0].toLowerCase();
+    
+    addressAnalysis.isPoBox = /p\.?o\.?\s*box/i.test(firstAddress);
+    addressAnalysis.hasStreetNumber = /^\d+\s/.test(firstAddress);
+    addressAnalysis.hasCity = /,\s*[\w\s]+/.test(firstAddress);
+    addressAnalysis.hasStateOrCountry = /[A-Z]{2}\s*\d{5}|[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/i.test(extractedAddresses[0]);
+    addressAnalysis.hasPostalCode = /\d{5}(-\d{4})?|[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/i.test(extractedAddresses[0]);
+    
+    // Suspicious address patterns
+    if (addressAnalysis.isPoBox) {
+      addressAnalysis.suspiciousPatterns.push('PO Box instead of physical address');
+    }
+    if (/123\s*(main|test|fake)/i.test(firstAddress)) {
+      addressAnalysis.suspiciousPatterns.push('Placeholder/fake address pattern');
+    }
+    if (/lorem|ipsum|example|test\s*address/i.test(firstAddress)) {
+      addressAnalysis.suspiciousPatterns.push('Test/placeholder text in address');
+    }
+    if (!addressAnalysis.hasStreetNumber && !addressAnalysis.isPoBox) {
+      addressAnalysis.suspiciousPatterns.push('Missing street number');
+    }
+    
+    addressAnalysis.looksLegitimate = 
+      !addressAnalysis.isPoBox && 
+      addressAnalysis.hasStreetNumber && 
+      addressAnalysis.suspiciousPatterns.length === 0 &&
+      (addressAnalysis.hasCity || addressAnalysis.hasPostalCode);
+  }
+  
+  return { 
+    hasProfessionalEmail, 
+    hasPhoneNumber: extractedPhones.length > 0, 
+    hasGenericEmail, 
+    emailDomain,
+    hasPhysicalAddress: extractedAddresses.length > 0 && !addressAnalysis.isPoBox,
+    extractedAddresses: extractedAddresses.slice(0, 3),
+    extractedPhones: extractedPhones.slice(0, 3),
+    addressAnalysis,
+    phoneAnalysis
+  };
 }
 
 // Analyze payment methods mentioned
@@ -551,6 +692,16 @@ PRE-ANALYSIS FINDINGS (incorporate these into your analysis):
 - Social Media Links: ${linkAnalysis.hasSocialLinks ? linkAnalysis.socialPlatforms.join(', ') : 'None found'}
 - External Reviews: ${linkAnalysis.hasExternalReviews ? linkAnalysis.reviewPlatforms.join(', ') : 'None found'}
 - Suspicious Redirects: ${linkAnalysis.suspiciousRedirects ? '⚠️ Uses URL shorteners' : 'No'}
+
+ADDRESS & PHONE VERIFICATION:
+- Addresses Found: ${contactAnalysis.extractedAddresses.length > 0 ? contactAnalysis.extractedAddresses.join(' | ') : 'None detected'}
+- Address Analysis: ${contactAnalysis.addressAnalysis.found ? 
+    `Found=${contactAnalysis.addressAnalysis.found}, Legit=${contactAnalysis.addressAnalysis.looksLegitimate}, POBox=${contactAnalysis.addressAnalysis.isPoBox}, HasStreetNum=${contactAnalysis.addressAnalysis.hasStreetNumber}, HasCity=${contactAnalysis.addressAnalysis.hasCity}, HasPostal=${contactAnalysis.addressAnalysis.hasPostalCode}${contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.addressAnalysis.suspiciousPatterns.join(', ') : ''}` 
+    : 'No address found - MAJOR RED FLAG for business'}
+- Phones Found: ${contactAnalysis.extractedPhones.length > 0 ? contactAnalysis.extractedPhones.join(' | ') : 'None detected'}
+- Phone Analysis: ${contactAnalysis.phoneAnalysis.found ? 
+    `Found=${contactAnalysis.phoneAnalysis.found}, Legit=${contactAnalysis.phoneAnalysis.looksLegitimate}, HasCountryCode=${contactAnalysis.phoneAnalysis.hasCountryCode}, ValidFormat=${contactAnalysis.phoneAnalysis.isValidFormat}${contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.phoneAnalysis.suspiciousPatterns.join(', ') : ''}` 
+    : 'No phone number found'}
 `;
 
     console.log('Analyzing with AI...');
@@ -585,11 +736,27 @@ Perform a COMPREHENSIVE analysis covering ALL of the following:
 
 ## BUSINESS VERIFICATION
 - Physical address present and appears legitimate (not a PO Box or fake address)?
-- Can you identify the actual business location/country?
+- Does the address include: street number, street name, city, state/region, postal code?
+- Does the address look real (not "123 Main St" placeholder patterns)?
+- Can you identify the actual business location/country from the address?
+- Phone number present and in valid format?
+- Does the phone have proper country code and area code?
+- Is the phone a real-looking number (not 000-000-0000 or repeating digits)?
+- Do the address and phone match the claimed country of operation?
 - Business registration/company info mentioned?
 - How long has this business likely been operating?
 - Contact methods: professional email (not Gmail/Yahoo), phone, live chat?
 - About page with real team/company info and photos?
+
+## ADDRESS & PHONE LEGITIMACY (CRITICAL)
+Evaluate the extracted address and phone information:
+- Is there a complete physical street address (not just city/country)?
+- Does the address format match the claimed country?
+- Are there signs of fake addresses (123 Test St, Lorem Ipsum, etc.)?
+- Is the phone number in a valid format for the claimed region?
+- Do the phone area code and address location match geographically?
+- For businesses claiming to be US-based: is there a US phone number and US address?
+- Missing both address AND phone is a MAJOR red flag for any business
 
 ## LEGITIMACY INDICATORS
 - Privacy policy present and comprehensive (not copied/generic)?
@@ -679,7 +846,15 @@ Return ONLY valid JSON in this exact format:
     "business": {
       "hasContactInfo": <boolean>,
       "hasPhysicalAddress": <boolean>,
-      "addressVerification": "<verified|suspicious|not_found|po_box>",
+      "addressVerification": "<verified|suspicious|not_found|po_box|placeholder>",
+      "extractedAddress": "<the address found or null>",
+      "addressLegitimacyScore": "<legitimate|suspicious|fake|not_found>",
+      "addressIssues": ["<issue1>", "<issue2>"],
+      "hasPhoneNumber": <boolean>,
+      "extractedPhone": "<the phone found or null>",
+      "phoneLegitimacyScore": "<legitimate|suspicious|fake|not_found>",
+      "phoneIssues": ["<issue1>", "<issue2>"],
+      "contactInfoMatchesLocation": <boolean>,
       "businessAge": "<estimated years or 'unknown'>",
       "hasAboutPage": <boolean>,
       "hasPrivacyPolicy": <boolean>,
@@ -687,7 +862,6 @@ Return ONLY valid JSON in this exact format:
       "hasReturnPolicy": <boolean>,
       "hasShippingInfo": <boolean>,
       "hasProfessionalEmail": <boolean>,
-      "hasPhoneNumber": <boolean>,
       "identifiedCountry": "<country or 'unknown'>"
     },
     "dropshipperIndicators": {
@@ -847,6 +1021,37 @@ Return ONLY valid JSON in this exact format:
           }
         }
         
+        // Add address/phone red flags
+        if (!contactAnalysis.addressAnalysis.found && !contactAnalysis.phoneAnalysis.found) {
+          analysisResult.details.redFlags.push('No physical address or phone number found');
+          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
+        } else {
+          if (contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
+            for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
+              analysisResult.details.redFlags.push(`Address issue: ${issue}`);
+            }
+            analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 10);
+          }
+          if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
+            for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
+              analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
+            }
+            analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 10);
+          }
+          if (contactAnalysis.addressAnalysis.isPoBox) {
+            analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
+            analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 5);
+          }
+        }
+        
+        // Merge extracted address/phone into business details
+        if (analysisResult.details.business) {
+          analysisResult.details.business.extractedAddress = contactAnalysis.extractedAddresses[0] || null;
+          analysisResult.details.business.extractedPhone = contactAnalysis.extractedPhones[0] || null;
+          analysisResult.details.business.hasPhysicalAddress = contactAnalysis.hasPhysicalAddress;
+          analysisResult.details.business.hasPhoneNumber = contactAnalysis.hasPhoneNumber;
+        }
+        
         // Adjust trust score based on critical findings
         if (typosquattingCheck.isSuspicious) {
           analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 30);
@@ -854,6 +1059,13 @@ Return ONLY valid JSON in this exact format:
         }
         if (paymentAnalysis.onlyAcceptsUnusualMethods) {
           analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 20);
+        }
+        
+        // Recalculate verdict based on adjusted score
+        if (analysisResult.trustScore < 40) {
+          analysisResult.verdict = 'danger';
+        } else if (analysisResult.trustScore < 70) {
+          analysisResult.verdict = 'caution';
         }
       }
       
