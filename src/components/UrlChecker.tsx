@@ -219,9 +219,9 @@ export function UrlChecker() {
               </motion.div>
             )}
             {/* Results Header Card */}
-            <div className="glass-card rounded-2xl overflow-hidden">
+            <div className="rounded-2xl overflow-hidden border border-border/60">
               {/* Website Info Header */}
-              <div className="px-6 py-4 border-b border-border/50 bg-muted/30">
+              <div className="px-6 py-4 bg-foreground/[0.03] dark:bg-foreground/[0.08] border-b border-border/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center">
