@@ -203,7 +203,7 @@ export function MissionControlCard() {
                 </Button>
 
                 {/* Detailed Report Upsell */}
-                <DetailedReportUpsell url={url} trustScore={result.trustScore} />
+                <DetailedReportUpsell url={url} trustScore={result.trustScore} analysisResult={result} />
               </motion.div>
             ) : (
               <motion.form

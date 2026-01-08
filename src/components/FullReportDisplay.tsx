@@ -463,6 +463,89 @@ export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProp
         </div>
       </AnalysisCard>
 
+      {/* What To Do Next - Plain English Recommendation */}
+      <motion.div 
+        className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65 }}
+      >
+        <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
+          ✅ What To Do Next
+        </h3>
+        <div className="space-y-4">
+          {result.trustScore >= 70 ? (
+            <>
+              <p className="text-muted-foreground">
+                This site appears <span className="text-success font-semibold">relatively safe</span> based on our analysis. Here's what we recommend:
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <span>You can proceed with caution — use a credit card (not debit) for purchase protection</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <span>Save screenshots of your order confirmation and payment</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <span>Check reviews on third-party sites like Trustpilot before buying</span>
+                </li>
+              </ul>
+            </>
+          ) : result.trustScore >= 40 ? (
+            <>
+              <p className="text-muted-foreground">
+                This site has <span className="text-warning font-semibold">some concerns</span>. We recommend caution:
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <span>Research the company name + "reviews" or "scam" on Google before buying</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <span>If you proceed, use PayPal or a credit card with buyer protection</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <span>Be cautious of deals that seem too good to be true</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <span>Consider shopping at a more established retailer instead</span>
+                </li>
+              </ul>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground">
+                This site has <span className="text-danger font-semibold">significant red flags</span>. Here's what you should do:
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                  <span><strong>Do not</strong> enter payment information on this website</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                  <span>If you already paid, contact your bank or credit card company immediately</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                  <span>Report the site to the FTC at reportfraud.ftc.gov</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                  <span>Find the product at a verified retailer like Amazon, Target, or official brand stores</span>
+                </li>
+              </ul>
+            </>
+          )}
+        </div>
+      </motion.div>
+
       {/* Footer */}
       <motion.div 
         className="text-center py-6 border-t border-border"

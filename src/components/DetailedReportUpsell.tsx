@@ -4,6 +4,7 @@ import { FileText, History, Shield, AlertTriangle, CheckCircle, Loader2, Externa
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { AnalysisResult } from '@/lib/api/url-check';
 
 const features = [
   { icon: History, text: 'Full WHOIS history' },
@@ -16,15 +17,20 @@ const features = [
 interface DetailedReportUpsellProps {
   url: string;
   trustScore: number;
+  analysisResult: AnalysisResult;
 }
 
-export function DetailedReportUpsell({ url, trustScore }: DetailedReportUpsellProps) {
+export function DetailedReportUpsell({ url, trustScore, analysisResult }: DetailedReportUpsellProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
+      // Store the analysis result in sessionStorage for retrieval after payment
+      sessionStorage.setItem('pendingAnalysisResult', JSON.stringify(analysisResult));
+      sessionStorage.setItem('pendingAnalysisUrl', url);
+
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { url },
       });
