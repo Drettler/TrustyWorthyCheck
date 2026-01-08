@@ -1186,7 +1186,14 @@ function analyzeContactInfo(content: string, links: string[]): {
     const matches = content.match(pattern) || [];
     for (const match of matches) {
       const cleaned = match.trim();
-      if (cleaned.length > 10 && cleaned.length < 200 && !extractedAddresses.includes(cleaned)) {
+      // Filter out garbage: hex strings, base64, UUIDs, and strings without spaces
+      const isGarbage = /^[a-f0-9]{20,}$/i.test(cleaned) || // Hex string
+        /^[A-Za-z0-9+/=]{20,}$/.test(cleaned) || // Base64-like
+        /^[a-f0-9]{8}-[a-f0-9]{4}-/i.test(cleaned) || // UUID
+        !/\s/.test(cleaned) || // No spaces = not a real address
+        /^[A-Z0-9]{15,}$/i.test(cleaned); // Long alphanumeric without spaces
+      
+      if (cleaned.length > 10 && cleaned.length < 200 && !extractedAddresses.includes(cleaned) && !isGarbage) {
         extractedAddresses.push(cleaned);
       }
     }
@@ -2212,12 +2219,17 @@ Return ONLY valid JSON in this exact format:
         }
         
         // === BUSINESS TRANSPARENCY (15%) ===
-        // No physical address: -20
-        if (!contactAnalysis.hasPhysicalAddress) {
+        // Only apply address penalties if we have meaningful address data
+        // Skip penalties if extractedAddresses is empty or looks like garbage was filtered out
+        const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
+          contactAnalysis.extractedAddresses.some((addr: string) => /\s/.test(addr) && addr.length > 15);
+        
+        // No physical address: -20 (only for e-commerce sites)
+        if (!contactAnalysis.hasPhysicalAddress && !isLikelySaaS) {
           trustScore -= 20;
           analysisResult.details.redFlags.push('No physical address found');
-        } else if (contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
-          // Address fake / residential mismatch: -15
+        } else if (hasValidAddressData && contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
+          // Address fake / residential mismatch: -15 (only if we have valid address data)
           trustScore -= 15;
           for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
             analysisResult.details.redFlags.push(`Address issue: ${issue}`);
