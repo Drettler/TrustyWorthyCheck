@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { Shield, Search, Zap, GraduationCap } from 'lucide-react';
+import { Shield, Search, Zap, GraduationCap, UserCheck, Lock, CreditCard, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MissionControlCard } from '@/components/MissionControlCard';
 import { FeatureCard } from '@/components/FeatureCard';
 import { StepGuide } from '@/components/StepGuide';
+import { Button } from '@/components/ui/button';
 
 const features = [
   {
@@ -226,6 +227,73 @@ export default function Index() {
               No jargon. No confusing reports. Just honest answers about whether a website is safe to buy from.
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Extra Protection Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              🧠 Want Extra Protection?
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Go beyond checking websites — protect yourself everywhere online.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              {
+                icon: UserCheck,
+                emoji: '🛡',
+                title: 'Identity Protection',
+                description: 'Protect your identity and credit if a site feels unsafe.',
+                button: 'Protect My Identity',
+                href: '#',
+              },
+              {
+                icon: Lock,
+                emoji: '🔐',
+                title: 'Password Security',
+                description: 'Stop password leaks and account takeovers.',
+                button: 'Secure My Accounts',
+                href: '#',
+              },
+              {
+                icon: CreditCard,
+                emoji: '💳',
+                title: 'Payment Safety',
+                description: 'Use protected payments when buying online.',
+                button: 'Protect My Payment',
+                href: '#',
+              },
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-card rounded-2xl p-6 border border-border shadow-soft hover:shadow-card transition-shadow text-center"
+              >
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">{item.emoji}</span>
+                </div>
+                <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
+                <Button variant="outline" size="sm" className="w-full group">
+                  {item.button}
+                  <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </Button>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
