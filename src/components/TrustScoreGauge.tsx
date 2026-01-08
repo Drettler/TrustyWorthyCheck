@@ -1,17 +1,28 @@
 import { motion } from 'framer-motion';
-import { ShieldCheck, ShieldAlert, ShieldX, Check, Octagon } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldX, Check, Octagon, Info } from 'lucide-react';
+import type { ConfidenceData } from '@/lib/api/url-check';
 
 interface TrustScoreGaugeProps {
   score: number;
   verdict: 'safe' | 'caution' | 'danger';
   redFlagsCount?: number;
+  confidence?: ConfidenceData;
 }
 
-export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScoreGaugeProps) {
+export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence }: TrustScoreGaugeProps) {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (score / 100) * circumference;
   const isTrustworthy = score >= 85; // Updated threshold: 85-100 = Likely Legit
   const isHighRisk = verdict === 'danger';
+  
+  const getConfidenceColor = () => {
+    if (!confidence) return '';
+    switch (confidence.level) {
+      case 'high': return 'text-success bg-success/10 border-success/25';
+      case 'medium': return 'text-warning bg-warning/10 border-warning/25';
+      case 'low': return 'text-muted-foreground bg-muted border-border';
+    }
+  };
   
   const getVerdictColor = () => {
     switch (verdict) {
@@ -187,6 +198,33 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
           >
             {redFlagsCount} issue{redFlagsCount !== 1 ? 's' : ''} identified
           </motion.div>
+        )}
+
+        {/* Confidence indicator */}
+        {confidence && (
+          <motion.div
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full mt-2 border ${getConfidenceColor()}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            title={`Verified: ${confidence.verifiedSources.join(', ')}`}
+          >
+            <Info className="w-3 h-3" />
+            <span className="capitalize">{confidence.level} confidence</span>
+            <span className="opacity-60">({confidence.checksVerified}/{confidence.totalPossibleChecks})</span>
+          </motion.div>
+        )}
+
+        {/* Low confidence message */}
+        {confidence && confidence.level === 'low' && (
+          <motion.p
+            className="text-xs text-muted-foreground text-center max-w-[200px] mt-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            {confidence.message}
+          </motion.p>
         )}
       </motion.div>
     </motion.div>

@@ -462,6 +462,7 @@ export function UrlChecker() {
                   score={result.trustScore} 
                   verdict={result.verdict} 
                   redFlagsCount={result.details.redFlags?.length || 0}
+                  confidence={result.confidence}
                 />
               </div>
             </div>
