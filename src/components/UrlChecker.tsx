@@ -524,72 +524,28 @@ export function UrlChecker() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-6 pt-2">
-                    {/* Combined Summary & Concerns Card */}
-                    <div className="glass-card rounded-2xl overflow-hidden">
-                      {/* Analysis Summary */}
-                      <div className="p-6 border-b border-border/50">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            result.verdict === 'safe' 
-                              ? 'bg-success/10' 
-                              : result.verdict === 'caution' 
-                              ? 'bg-warning/10' 
-                              : 'bg-danger/10'
-                          }`}>
-                            {result.verdict === 'safe' ? (
-                              <CheckCircle className={`w-5 h-5 text-success`} />
-                            ) : (
-                              <AlertTriangle className={`w-5 h-5 ${result.verdict === 'caution' ? 'text-warning' : 'text-danger'}`} />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-display text-lg font-semibold">Analysis Summary</h3>
-                            <p className="text-xs text-muted-foreground">Based on automated security checks</p>
-                          </div>
-                        </div>
-                        <p className="text-foreground/90 leading-relaxed">{result.summary}</p>
-                      </div>
-
-                      {/* Concerns Found - Only show if verdict is NOT safe */}
-                      {result.verdict !== 'safe' && (
-                        <div className="p-6">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              result.details.redFlags.length > 0 ? 'bg-danger/10' : 'bg-success/10'
-                            }`}>
-                              {result.details.redFlags.length > 0 ? (
-                                <AlertTriangle className="w-5 h-5 text-danger" />
-                              ) : (
-                                <CheckCircle className="w-5 h-5 text-success" />
-                              )}
-                            </div>
-                            <div>
-                              <h3 className="font-display text-lg font-semibold">
-                                {result.details.redFlags.length > 0 
-                                  ? `${result.details.redFlags.length} Concern${result.details.redFlags.length > 1 ? 's' : ''} Found`
-                                  : 'No Concerns Found'
-                                }
-                              </h3>
-                              <p className="text-xs text-muted-foreground">
-                                {result.details.redFlags.length > 0 
-                                  ? 'Issues that may require attention'
-                                  : 'No significant red flags detected'
-                                }
-                              </p>
-                            </div>
-                          </div>
-                          {result.details.redFlags.length > 0 ? (
-                            <FlagsList items={result.details.redFlags} type="red" />
+                    {/* Analysis Summary Card */}
+                    <div className="glass-card rounded-2xl overflow-hidden p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          result.verdict === 'safe' 
+                            ? 'bg-success/10' 
+                            : result.verdict === 'caution' 
+                            ? 'bg-warning/10' 
+                            : 'bg-danger/10'
+                        }`}>
+                          {result.verdict === 'safe' ? (
+                            <CheckCircle className={`w-5 h-5 text-success`} />
                           ) : (
-                            <div className="flex items-center gap-2 p-4 rounded-xl bg-success/5 border border-success/20">
-                              <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
-                              <p className="text-sm text-foreground/80">
-                                Our automated checks found no significant concerns with this website.
-                              </p>
-                            </div>
+                            <AlertTriangle className={`w-5 h-5 ${result.verdict === 'caution' ? 'text-warning' : 'text-danger'}`} />
                           )}
                         </div>
-                      )}
+                        <div>
+                          <h3 className="font-display text-lg font-semibold">Analysis Summary</h3>
+                          <p className="text-xs text-muted-foreground">Based on automated security checks</p>
+                        </div>
+                      </div>
+                      <p className="text-foreground/90 leading-relaxed">{result.summary}</p>
                     </div>
 
                     {/* Unlock Full Report CTA */}
