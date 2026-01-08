@@ -1,15 +1,17 @@
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, 
   Users, Image, Lock, FileText, ShieldCheck, Calendar, TrendingDown,
   ExternalLink, MapPin, Phone, Mail, Clock, Server, Eye, Download,
-  Printer, Share2
+  Printer, Share2, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TrustScoreGauge } from './TrustScoreGauge';
 import { AnalysisCard } from './AnalysisCard';
 import { FlagsList } from './FlagsList';
 import type { AnalysisResult } from '@/lib/api/url-check';
+import { useToast } from '@/hooks/use-toast';
 
 interface FullReportDisplayProps {
   result: AnalysisResult;
@@ -18,8 +20,80 @@ interface FullReportDisplayProps {
 }
 
 export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProps) {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!reportRef.current) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).default;
+
+      // Capture the report content
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      
+      // Calculate pages needed
+      const pageHeight = pdfHeight / ratio;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // First page
+      pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
+      heightLeft -= pageHeight;
+
+      // Additional pages if needed
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pageHeight;
+      }
+
+      // Generate filename
+      const domain = result.details.domain.name.replace(/[^a-z0-9]/gi, '-');
+      const date = new Date().toISOString().split('T')[0];
+      pdf.save(`TrustWorthy-Report-${domain}-${date}.pdf`);
+
+      toast({
+        title: 'PDF Downloaded!',
+        description: 'Your detailed report has been saved.',
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: 'Download Failed',
+        description: 'Could not generate PDF. Try using Print instead.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -34,13 +108,33 @@ export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProp
           ← Back to Checker
         </Button>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </>
+            )}
+          </Button>
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
-            Print Report
+            Print
           </Button>
         </div>
       </motion.div>
 
+      {/* Report Content - wrapped in ref for PDF capture */}
+      <div ref={reportRef} className="space-y-6 print:space-y-4">
       {/* Report Header */}
       <motion.div 
         className="rounded-2xl border border-border bg-card p-6"
@@ -560,6 +654,7 @@ export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProp
           Check Another Website
         </Button>
       </motion.div>
+      </div>
     </div>
   );
 }
