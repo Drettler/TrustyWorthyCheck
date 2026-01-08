@@ -249,10 +249,7 @@ export default function Index() {
               Built for Real People
             </h2>
             <p className="text-lg text-muted-foreground mb-6">
-              We created this tool because too many people lose money to fake websites. Whether you're a teen making your first online purchase or a parent helping your family stay safe — we've got your back.
-            </p>
-            <p className="text-muted-foreground">
-              No jargon. No confusing reports. Just honest answers about whether a website is safe to buy from.
+              We built this tool because too many families lose money to fake websites every day. We are trying to help that! Whether you're a teen buying something online, or a parent protecting your household, we will try to help.
             </p>
           </motion.div>
         </div>
