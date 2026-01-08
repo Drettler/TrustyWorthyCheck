@@ -66,8 +66,8 @@ export default function Index() {
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Spot scams and red flags before your money is gone —{' '}
-              <span className="text-foreground font-medium">in under 3 minutes.</span>
+              Spot scams and red flags before they cost you —{' '}
+              <span className="text-foreground font-medium">in under 2 minutes.</span>
             </p>
 
             {/* Pill Badges */}
