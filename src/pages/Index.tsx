@@ -1,36 +1,37 @@
-import { motion } from 'framer-motion';
-import { Shield, Search, Zap, GraduationCap, UserCheck, Lock, CreditCard, ExternalLink } from 'lucide-react';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { MissionControlCard } from '@/components/MissionControlCard';
-import { FeatureCard } from '@/components/FeatureCard';
-import { StepGuide } from '@/components/StepGuide';
-import { Button } from '@/components/ui/button';
+import { motion } from "framer-motion";
+import { Shield, Search, Zap, GraduationCap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { MissionControlCard } from "@/components/MissionControlCard";
+import { FeatureCard } from "@/components/FeatureCard";
+import { StepGuide } from "@/components/StepGuide";
+import { Button } from "@/components/ui/button";
 
 const features = [
   {
-    emoji: '🛡️',
+    emoji: "🛡️",
     icon: Shield,
-    title: 'Security Shield',
-    description: 'We check if the website has proper security certificates, safe payment processing, and data protection.',
+    title: "Security Shield",
+    description:
+      "We check if the website has proper security certificates, safe payment processing, and data protection.",
   },
   {
-    emoji: '🔍',
+    emoji: "🔍",
     icon: Search,
-    title: 'Business X-Ray',
-    description: 'We look up who owns the website, how long it\'s been around, and if the business info checks out.',
+    title: "Business X-Ray",
+    description: "We look up who owns the website, how long it's been around, and if the business info checks out.",
   },
   {
-    emoji: '🧠',
+    emoji: "🧠",
     icon: Zap,
-    title: 'Truth Meter',
-    description: 'Our system spots red flags like fake reviews, copied content, and suspicious pricing patterns.',
+    title: "Truth Meter",
+    description: "Our system spots red flags like fake reviews, copied content, and suspicious pricing patterns.",
   },
   {
-    emoji: '🎓',
+    emoji: "🎓",
     icon: GraduationCap,
-    title: 'Scam School',
-    description: 'Learn the warning signs so you can spot sketchy sites on your own — knowledge is your best defense!',
+    title: "Scam School",
+    description: "Learn the warning signs so you can spot sketchy sites on your own — knowledge is your best defense!",
   },
 ];
 
@@ -55,29 +56,27 @@ export default function Index() {
         {/* Soft gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-secondary/5 to-background pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-primary/10 to-transparent rounded-full blur-[120px] pointer-events-none" />
-        
+
         {/* Animated gradient blobs */}
         <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="absolute w-[500px] h-[500px] -left-[250px] -top-[100px] bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full blur-[80px] animate-blob-drift" />
           <div className="absolute w-[400px] h-[400px] -left-[100px] -top-[50px] bg-gradient-to-br from-secondary/15 via-secondary/5 to-transparent rounded-full blur-[60px] animate-blob-drift-reverse" />
-          <div className="absolute w-[300px] h-[300px] left-[50px] top-[50px] bg-gradient-to-br from-primary/15 to-secondary/10 rounded-full blur-[70px] animate-blob-drift" style={{ animationDelay: '-4s' }} />
+          <div
+            className="absolute w-[300px] h-[300px] left-[50px] top-[50px] bg-gradient-to-br from-primary/15 to-secondary/10 rounded-full blur-[70px] animate-blob-drift"
+            style={{ animationDelay: "-4s" }}
+          />
         </div>
 
         <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-20">
-          <motion.div
-            className="text-center mb-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             {/* Headline */}
             <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight">
-              Should I Trust This Site?{' '}
-              <span className="inline-block hover-wiggle">🛡️</span>
+              Should I Trust This Site? <span className="inline-block hover-wiggle">🛡️</span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Spot scams and red flags before they cost you —{' '}
+              Avoid scams and fake stores before they cost you money —{" "}
               <span className="text-foreground font-medium">in under 2 minutes.</span>
             </p>
 
@@ -125,7 +124,7 @@ export default function Index() {
             transition={{ delay: 0.5 }}
             className="text-center text-sm text-muted-foreground mt-10 max-w-md mx-auto"
           >
-            💚 We never take money to change results. Ever.{' '}
+            💚 We never take money to change results. Ever.{" "}
             <span className="font-medium text-foreground">Your safety comes first.</span>
           </motion.p>
 
@@ -150,11 +149,10 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              🔒 How We Help
-            </h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">🔒 How We Help</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We combine real-world scam patterns, security checks, and transparency signals to give you a clear, unbiased verdict.
+              We combine real-world scam patterns, security checks, and transparency signals to give you a clear,
+              unbiased verdict.
             </p>
           </motion.div>
 
@@ -182,9 +180,7 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Simple as 1-2-3
-            </h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Simple as 1-2-3</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               No complicated steps. Just paste, wait, and know if it's safe.
             </p>
@@ -193,22 +189,22 @@ export default function Index() {
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
               {
-                step: '1',
-                emoji: '📋',
-                title: 'Paste the Link',
-                description: 'Copy the website address from your browser or message and paste it in our checker.',
+                step: "1",
+                emoji: "📋",
+                title: "Paste the Link",
+                description: "Copy the website address from your browser or message and paste it in our checker.",
               },
               {
-                step: '2',
-                emoji: '🔬',
-                title: 'We Do the Work',
-                description: 'Our system checks security, reviews business info, and scans for common scam patterns.',
+                step: "2",
+                emoji: "🔬",
+                title: "We Do the Work",
+                description: "Our system checks security, reviews business info, and scans for common scam patterns.",
               },
               {
-                step: '3',
-                emoji: '✅',
-                title: 'Get Your Answer',
-                description: 'See a clear, simple verdict with explanations you can actually understand.',
+                step: "3",
+                emoji: "✅",
+                title: "Get Your Answer",
+                description: "See a clear, simple verdict with explanations you can actually understand.",
               },
             ].map((item, index) => (
               <motion.div
@@ -245,11 +241,13 @@ export default function Index() {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25">
               <Shield className="w-8 h-8 text-white" />
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Built for Real People
-            </h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Built for Real People</h2>
             <p className="text-lg text-muted-foreground mb-6">
-              We built this tool because too many families lose money to fake websites every day. We are trying to help that! Whether you're a teen buying something online, or a parent protecting your household, we will try to help.
+              We created this tool because too many people lose money to fake websites. Whether you're a teen making
+              your first online purchase or a parent helping your family stay safe — we've got your back.
+            </p>
+            <p className="text-muted-foreground">
+              No jargon. No confusing reports. Just honest answers about whether a website is safe to buy from.
             </p>
           </motion.div>
         </div>
@@ -264,9 +262,7 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              🧠 Want Extra Protection?
-            </h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">🧠 Want Extra Protection?</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Go beyond checking websites — protect yourself everywhere online.
             </p>
@@ -276,27 +272,27 @@ export default function Index() {
             {[
               {
                 icon: UserCheck,
-                emoji: '🛡',
-                title: 'Identity Protection',
-                description: 'Protect your identity and credit if a site feels unsafe.',
-                button: 'Protect My Identity',
-                href: 'https://www.identityguard.com/',
+                emoji: "🛡",
+                title: "Identity Protection",
+                description: "Protect your identity and credit if a site feels unsafe.",
+                button: "Protect My Identity",
+                href: "https://www.identityguard.com/",
               },
               {
                 icon: Lock,
-                emoji: '🔐',
-                title: 'Password Security',
-                description: 'Stop password leaks and account takeovers.',
-                button: 'Secure My Accounts',
-                href: 'https://bitwarden.com/',
+                emoji: "🔐",
+                title: "Password Security",
+                description: "Stop password leaks and account takeovers.",
+                button: "Secure My Accounts",
+                href: "https://bitwarden.com/",
               },
               {
                 icon: CreditCard,
-                emoji: '💳',
-                title: 'Payment Safety',
-                description: 'Use protected payments when buying online.',
-                button: 'Protect My Payment',
-                href: 'https://privacy.com/',
+                emoji: "💳",
+                title: "Payment Safety",
+                description: "Use protected payments when buying online.",
+                button: "Protect My Payment",
+                href: "https://privacy.com/",
               },
             ].map((item, index) => (
               <motion.div
@@ -312,11 +308,11 @@ export default function Index() {
                 </div>
                 <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full group"
-                  onClick={() => window.open(item.href, '_blank', 'noopener,noreferrer')}
+                  onClick={() => window.open(item.href, "_blank", "noopener,noreferrer")}
                 >
                   {item.button}
                   <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
