@@ -2227,10 +2227,15 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
         }
         
-        // No phone number: -10
+        // No phone number: -10 for e-commerce, -3 for SaaS (many SaaS companies use chat/email support)
         if (!contactAnalysis.hasPhoneNumber) {
-          trustScore -= 10;
-          analysisResult.details.redFlags.push('No phone number found');
+          if (isLikelySaaS) {
+            trustScore -= 3;
+            // Don't add red flag for SaaS - chat/email support is common
+          } else {
+            trustScore -= 10;
+            analysisResult.details.redFlags.push('No phone number found');
+          }
         } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
           // Suspicious phone pattern: -10
           trustScore -= 10;
@@ -2325,10 +2330,16 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('Possibly fake security/trust badges');
         }
         
-        // URL shortener redirect: -10
+        // URL shortener redirect: -10, but only -3 for professional sites (marketing tracking is common)
         if (linkAnalysis.suspiciousRedirects) {
-          trustScore -= 10;
-          analysisResult.details.redFlags.push('Uses URL shorteners which may hide true destinations');
+          const professionalismCheck = analysisResult.details.websiteQuality?.overallProfessionalism;
+          if (professionalismCheck === 'high' || isLikelySaaS) {
+            trustScore -= 3;
+            // Don't add red flag - URL shorteners for marketing/tracking are common on professional sites
+          } else {
+            trustScore -= 10;
+            analysisResult.details.redFlags.push('Uses URL shorteners which may hide true destinations');
+          }
         }
         
         // Plagiarized content: -10 (from AI analysis websiteQuality)
@@ -2382,6 +2393,34 @@ Return ONLY valid JSON in this exact format:
         if (linkAnalysis.hasExternalReviews && linkAnalysis.reviewPlatforms.length >= 2) {
           trustScore += 5;
           analysisResult.details.positiveSignals.push('Listed on external review platforms');
+        }
+        
+        // === PROFESSIONALISM BONUS ===
+        // High professionalism + many positive signals = legitimate site
+        const professionalismLevel = analysisResult.details.websiteQuality?.overallProfessionalism;
+        const positiveSignalCount = analysisResult.details.positiveSignals?.length || 0;
+        const redFlagCount = analysisResult.details.redFlags?.length || 0;
+        
+        // Professional site with strong positive signals: +15
+        if (professionalismLevel === 'high' && positiveSignalCount >= 8 && positiveSignalCount > redFlagCount * 2) {
+          trustScore += 15;
+          analysisResult.details.positiveSignals.push('High professionalism with strong positive indicators');
+        } else if (professionalismLevel === 'high' && positiveSignalCount >= 5) {
+          // Professional site with good signals: +8
+          trustScore += 8;
+        }
+        
+        // SaaS/Software bonus: +5 (these sites have different trust indicators than e-commerce)
+        if (isLikelySaaS && professionalismLevel === 'high') {
+          trustScore += 5;
+          analysisResult.details.positiveSignals.push('Established software/SaaS platform');
+        }
+        
+        // Clean VirusTotal scan bonus: +5
+        if (!virusTotalResult.error && virusTotalResult.totalEngines > 50 && 
+            virusTotalResult.maliciousCount === 0 && virusTotalResult.suspiciousCount === 0) {
+          trustScore += 5;
+          analysisResult.details.positiveSignals.push('Clean security scan from 50+ engines');
         }
         
         // === HARD CAPS - CRITICAL ISSUES ===
