@@ -30,55 +30,19 @@ export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProp
 
   const handleDownloadPdf = async () => {
     if (!reportRef.current) return;
-    
+
     setIsGeneratingPdf(true);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).default;
+      const { generateReportPdf } = await import('@/lib/pdf/generate-report-pdf');
 
-      // Capture the report content
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      
-      // Calculate pages needed
-      const pageHeight = pdfHeight / ratio;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // First page
-      pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
-      heightLeft -= pageHeight;
-
-      // Additional pages if needed
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
-        heightLeft -= pageHeight;
-      }
-
-      // Generate filename
-      const domain = result.details.domain.name.replace(/[^a-z0-9]/gi, '-');
+      const domain = (result.details?.domain?.name || url || 'report').replace(/[^a-z0-9]/gi, '-');
       const date = new Date().toISOString().split('T')[0];
-      pdf.save(`TrustWorthy-Report-${domain}-${date}.pdf`);
+      const filename = `TrustWorthy-Report-${domain}-${date}.pdf`;
+
+      await (generateReportPdf as (el: HTMLElement, opts: { filename: string }) => Promise<void>)(
+        reportRef.current,
+        { filename },
+      );
 
       toast({
         title: 'PDF Downloaded!',
