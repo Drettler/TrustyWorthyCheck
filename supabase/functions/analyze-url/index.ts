@@ -114,6 +114,13 @@ interface SSLAnalysis {
   grade?: 'A' | 'B' | 'C' | 'D' | 'F';
 }
 
+interface HttpsSecurityCheck {
+  hasHttps: boolean;
+  httpRedirectsToHttps: boolean;
+  tlsOk: boolean;
+  error?: string;
+}
+
 interface BusinessVerification {
   hasVATNumber: boolean;
   hasCompanyRegNumber: boolean;
@@ -180,6 +187,87 @@ interface PriceComparisonResult {
   comparisonNotes: string[];
   marketPosition: 'much_lower' | 'slightly_lower' | 'normal' | 'higher';
   redFlags: string[];
+}
+
+// HTTPS/TLS Security Check
+async function checkHttpsSecurity(domain: string): Promise<HttpsSecurityCheck> {
+  const result: HttpsSecurityCheck = {
+    hasHttps: false,
+    httpRedirectsToHttps: false,
+    tlsOk: false,
+  };
+
+  try {
+    // Step 1: Try HTTPS first
+    console.log('Testing HTTPS for domain:', domain);
+    const httpsUrl = `https://${domain}`;
+    
+    try {
+      const httpsResponse = await fetch(httpsUrl, {
+        method: 'HEAD',
+        redirect: 'manual', // Don't follow redirects automatically
+      });
+      
+      // If we get any response (even redirect), TLS handshake succeeded
+      result.hasHttps = true;
+      result.tlsOk = true;
+      console.log('HTTPS check passed:', httpsResponse.status);
+    } catch (httpsError) {
+      // HTTPS failed - could be TLS error, certificate issue, or no HTTPS support
+      console.log('HTTPS check failed:', httpsError instanceof Error ? httpsError.message : 'Unknown error');
+      result.error = httpsError instanceof Error ? httpsError.message : 'HTTPS connection failed';
+      
+      // TLS error indicators
+      const errorMsg = (httpsError instanceof Error ? httpsError.message : '').toLowerCase();
+      if (errorMsg.includes('certificate') || errorMsg.includes('ssl') || errorMsg.includes('tls')) {
+        result.hasHttps = false;
+        result.tlsOk = false;
+      }
+    }
+
+    // Step 2: Check if HTTP redirects to HTTPS (only if HTTPS didn't work or to verify redirect)
+    if (!result.hasHttps) {
+      try {
+        console.log('Testing HTTP redirect for domain:', domain);
+        const httpUrl = `http://${domain}`;
+        
+        const httpResponse = await fetch(httpUrl, {
+          method: 'HEAD',
+          redirect: 'manual',
+        });
+        
+        // Check if it redirects to HTTPS
+        const location = httpResponse.headers.get('location');
+        if (httpResponse.status >= 300 && httpResponse.status < 400 && location) {
+          if (location.startsWith('https://')) {
+            result.httpRedirectsToHttps = true;
+            result.hasHttps = true;
+            
+            // Now verify the HTTPS endpoint works
+            try {
+              const redirectedResponse = await fetch(location, {
+                method: 'HEAD',
+                redirect: 'manual',
+              });
+              result.tlsOk = true;
+              console.log('HTTP redirects to HTTPS, TLS verified');
+            } catch (redirectError) {
+              result.tlsOk = false;
+              console.log('HTTP redirects to HTTPS but TLS failed');
+            }
+          }
+        }
+      } catch (httpError) {
+        console.log('HTTP check failed:', httpError instanceof Error ? httpError.message : 'Unknown error');
+      }
+    }
+  } catch (error) {
+    console.error('HTTPS security check error:', error);
+    result.error = error instanceof Error ? error.message : 'Security check failed';
+  }
+
+  console.log('HTTPS security check result:', result);
+  return result;
 }
 
 // VirusTotal API integration
@@ -1504,9 +1592,10 @@ Deno.serve(async (req) => {
     
     // Run external API checks in parallel
     console.log('Running external security checks...');
-    const [virusTotalResult, whoisResult] = await Promise.all([
+    const [virusTotalResult, whoisResult, httpsSecurityCheck] = await Promise.all([
       checkVirusTotal(domain),
       lookupWhois(domain),
+      checkHttpsSecurity(domain),
     ]);
     
     console.log('Urgency tactics:', urgencyAnalysis);
@@ -1521,6 +1610,7 @@ Deno.serve(async (req) => {
     console.log('Compliance indicators:', complianceAnalysis);
     console.log('VirusTotal:', virusTotalResult);
     console.log('WHOIS:', whoisResult);
+    console.log('HTTPS Security:', httpsSecurityCheck);
 
     // Build enhanced context for AI
     const preAnalysisFindings = {
@@ -1938,7 +2028,8 @@ Return ONLY valid JSON in this exact format:
         // Start at 100 and apply penalties/bonuses
         // ==========================================
         let trustScore = 100;
-        const hasNoHttps = !formattedUrl.startsWith('https');
+        const hasNoHttps = !httpsSecurityCheck.hasHttps;
+        const hasTlsIssue = httpsSecurityCheck.hasHttps && !httpsSecurityCheck.tlsOk;
         const hasFakeAddress = contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0;
         const hasCryptoWireOnly = paymentAnalysis.onlyAcceptsUnusualMethods && 
           (paymentAnalysis.acceptsCrypto || paymentAnalysis.methods.some((m: string) => 
@@ -1977,16 +2068,26 @@ Return ONLY valid JSON in this exact format:
         }
         
         // === SECURITY (20%) ===
-        // No HTTPS: -40
+        // No HTTPS: -40 (tested via actual connection, not just URL)
         if (hasNoHttps) {
           trustScore -= 40;
           analysisResult.details.redFlags.push('No HTTPS - connection is not secure');
+        } else if (httpsSecurityCheck.httpRedirectsToHttps) {
+          // HTTP redirects to HTTPS is good, no penalty
+          analysisResult.details.positiveSignals.push('HTTP properly redirects to HTTPS');
         }
         
-        // Invalid SSL / mismatch: -25 (from AI analysis)
-        if (analysisResult.details.domain && !analysisResult.details.domain.ssl && formattedUrl.startsWith('https')) {
+        // Invalid SSL / TLS misconfigured: -25
+        if (hasTlsIssue) {
           trustScore -= 25;
-          analysisResult.details.redFlags.push('SSL certificate issue detected');
+          analysisResult.details.redFlags.push('TLS/SSL certificate issue detected - connection may not be secure');
+        }
+        
+        // Add security info to domain details
+        if (analysisResult.details.domain) {
+          analysisResult.details.domain.ssl = httpsSecurityCheck.tlsOk;
+          analysisResult.details.domain.httpsAvailable = httpsSecurityCheck.hasHttps;
+          analysisResult.details.domain.httpRedirectsToHttps = httpsSecurityCheck.httpRedirectsToHttps;
         }
         
         // === REPUTATION (20%) ===
@@ -2268,7 +2369,12 @@ Return ONLY valid JSON in this exact format:
       urgencyTacticsFound: urgencyAnalysis.count,
       paymentMethodsDetected: paymentAnalysis.methods,
       socialLinksFound: linkAnalysis.socialPlatforms,
-      reviewPlatformsFound: linkAnalysis.reviewPlatforms
+      reviewPlatformsFound: linkAnalysis.reviewPlatforms,
+      httpsCheck: {
+        hasHttps: httpsSecurityCheck.hasHttps,
+        httpRedirectsToHttps: httpsSecurityCheck.httpRedirectsToHttps,
+        tlsOk: httpsSecurityCheck.tlsOk,
+      },
     };
 
     // Add scam indicators for UI banners
