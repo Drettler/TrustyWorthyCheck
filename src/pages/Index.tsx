@@ -1,402 +1,235 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, Zap, Instagram, Facebook, ShoppingBag, Users, Clock, TrendingUp, BadgeCheck, Bot, Image, UserSearch, Globe, Linkedin, ChevronDown, ChevronUp } from "lucide-react";
-import { UrlChecker } from "@/components/UrlChecker";
-import { SocialSellerChecker } from "@/components/SocialSellerChecker";
-import { Button } from "@/components/ui/button";
+import { motion } from 'framer-motion';
+import { Shield, Search, Zap, GraduationCap } from 'lucide-react';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { MissionControlCard } from '@/components/MissionControlCard';
+import { FeatureCard } from '@/components/FeatureCard';
+import { StepGuide } from '@/components/StepGuide';
 
 const features = [
   {
+    emoji: '🛡️',
     icon: Shield,
-    title: "Security Checks",
-    description: "SSL certificates, domain age, and encryption verification",
+    title: 'Security Shield',
+    description: 'We check if the website has proper security certificates, safe payment processing, and data protection.',
   },
   {
-    icon: AlertTriangle,
-    title: "Transparency Indicators",
-    description: "Business contact info, policies, and registration details",
+    emoji: '🔍',
+    icon: Search,
+    title: 'Business X-Ray',
+    description: 'We look up who owns the website, how long it\'s been around, and if the business info checks out.',
   },
   {
-    icon: CheckCircle,
-    title: "Trust Assessment",
-    description: "Evidence-based scoring with detailed breakdown",
-  },
-  {
+    emoji: '🧠',
     icon: Zap,
-    title: "Educational Guidance",
-    description: "Learn what to look for when evaluating websites",
+    title: 'Truth Meter',
+    description: 'Our system spots red flags like fake reviews, copied content, and suspicious pricing patterns.',
   },
-];
-
-const platforms = [
-  "Facebook", "Instagram", "TikTok", "Pinterest", "Twitter/X", 
-  "eBay", "Etsy", "Amazon", "Shopify Stores"
+  {
+    emoji: '🎓',
+    icon: GraduationCap,
+    title: 'Scam School',
+    description: 'Learn the warning signs so you can spot sketchy sites on your own — knowledge is your best defense!',
+  },
 ];
 
 export default function Index() {
-  const [showSocialChecker, setShowSocialChecker] = useState(false);
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* ===================== WEBSITE CHECKER SECTION ===================== */}
-      <div className="relative overflow-hidden">
-        {/* Background glow effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[120px]" />
-        </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header />
 
-        <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-16">
-          {/* Main Header */}
-          <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
-              <Shield className="w-4 h-4" />
-              Research Before You Purchase
-            </div>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        {/* Soft gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-secondary/5 to-background pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-primary/10 to-transparent rounded-full blur-[120px] pointer-events-none" />
 
-            <h1 className="font-display text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Is This Website
-              <span className="text-primary"> Trustworthy?</span>
+        <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-20">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {/* Headline */}
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight">
+              Should I Trust This Site?{' '}
+              <span className="inline-block hover-wiggle">🛡️</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Spot red flags before you submit payment in 3 minutes.
+            {/* Subheadline */}
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Spot scams and red flags before your money is gone —{' '}
+              <span className="text-foreground font-medium">in under 3 minutes.</span>
+            </p>
+
+            {/* Pill Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/10 border border-success/30 text-success font-medium text-sm"
+              >
+                🧒 Teen-Safe
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.15 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-medium text-sm"
+              >
+                👪 Parent-Approved
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-medium text-sm"
+              >
+                🧠 No Tech Skills Needed
+              </motion.span>
+            </div>
+          </motion.div>
+
+          {/* Mission Control Card */}
+          <div id="checker">
+            <MissionControlCard />
+          </div>
+
+          {/* Step Guide */}
+          <StepGuide />
+
+          {/* Trust Statement */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-sm text-muted-foreground mt-10 max-w-md mx-auto"
+          >
+            💚 We never take money to change results. Ever.{' '}
+            <span className="font-medium text-foreground">Your safety comes first.</span>
+          </motion.p>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="learn" className="py-20 bg-muted/30">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              How We Protect You
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Our friendly safety checks look at everything — so you don't have to be a tech expert.
             </p>
           </motion.div>
 
-          {/* Website Checker Tool */}
-          <div id="website-checker">
-            <UrlChecker />
-            
-            <motion.div 
-              className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground mt-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                Online Stores
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
-                <Instagram className="w-3.5 h-3.5" />
-                Social Links
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50">
-                <Facebook className="w-3.5 h-3.5" />
-                Marketplaces
-              </span>
-            </motion.div>
-            <p className="text-xs text-muted-foreground/70 mt-2 text-center">
-              Works with {platforms.slice(0, 5).join(", ")} & more
-            </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={feature.title}
+                icon={feature.icon}
+                emoji={feature.emoji}
+                title={feature.title}
+                description={feature.description}
+                index={index}
+              />
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* Website Checker Features */}
-      <section className="container px-4 py-12">
-        <motion.div
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              className="glass-card rounded-xl p-6 text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <feature.icon className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-display font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
-            </motion.div>
-          ))}
-        </motion.div>
       </section>
 
-      {/* ===================== SOCIAL SELLER CHECKER TOGGLE ===================== */}
-      <section className="container px-4 py-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          onClick={() => setShowSocialChecker(!showSocialChecker)}
-          className="relative cursor-pointer group max-w-2xl mx-auto"
-        >
-          <div className={`flex items-center justify-between gap-4 p-5 rounded-2xl border-2 transition-all duration-300 ${
-            showSocialChecker 
-              ? 'bg-primary/10 border-primary/30' 
-              : 'bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10'
-          }`}>
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                showSocialChecker ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-              }`}>
-                <UserSearch className="w-6 h-6" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-display font-semibold text-lg">
-                  {showSocialChecker ? "Social Seller Checker" : "Need to check a social media seller?"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Evaluate sellers on Instagram, TikTok, Facebook & more
-                </p>
-              </div>
-            </div>
-            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-              showSocialChecker 
-                ? 'bg-primary/20 text-primary rotate-180' 
-                : 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'
-            }`}>
-              <ChevronDown className="w-5 h-5 transition-transform duration-300" />
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ===================== SOCIAL SELLER CHECKER SECTION ===================== */}
-      <AnimatePresence>
-        {showSocialChecker && (
-          <motion.section
-            id="social-seller-checker"
-            className="relative bg-muted/30 border-y border-border"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
+      {/* How It Works Section (detailed) */}
+      <section id="reports" className="py-20">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            {/* Background accent */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
-            </div>
-            
-            <div className="container relative z-10 px-4 py-16 md:py-20">
-              <motion.div
-                className="text-center mb-10"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
-                  <UserSearch className="w-3 h-3" />
-                  Social Seller Analysis
-                </div>
-                <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Evaluate Social Media Sellers</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Considering a purchase from someone on Instagram, TikTok, Facebook Marketplace, or LinkedIn? Enter their username or bio text to review common trust indicators.
-                </p>
-              </motion.div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              Simple as 1-2-3
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              No complicated steps. Just paste, wait, and know if it's safe.
+            </p>
+          </motion.div>
 
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {[
+              {
+                step: '1',
+                emoji: '📋',
+                title: 'Paste the Link',
+                description: 'Copy the website address from your browser or message and paste it in our checker.',
+              },
+              {
+                step: '2',
+                emoji: '🔬',
+                title: 'We Do the Work',
+                description: 'Our system checks security, reviews business info, and scans for common scam patterns.',
+              },
+              {
+                step: '3',
+                emoji: '✅',
+                title: 'Get Your Answer',
+                description: 'See a clear, simple verdict with explanations you can actually understand.',
+              },
+            ].map((item, index) => (
               <motion.div
+                key={item.step}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto bg-background/80 backdrop-blur-sm"
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                className="text-center"
               >
-                <SocialSellerChecker />
-              </motion.div>
-              
-              <motion.div 
-                className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground mt-8"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-                  <Instagram className="w-3.5 h-3.5" />
-                  Instagram
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-                  <Facebook className="w-3.5 h-3.5" />
-                  Facebook
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-                  <Linkedin className="w-3.5 h-3.5" />
-                  LinkedIn
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-                  TikTok
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background/50 border border-border/50">
-                  Marketplace Sellers
-                </span>
-              </motion.div>
-
-              {/* Social Media Tips */}
-              <div className="mt-12 pt-8 border-t border-border/50">
-                <h3 className="font-display text-xl font-bold text-center mb-6">What to Check Yourself</h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                  {[
-                    {
-                      icon: Clock,
-                      title: "Check Account Age",
-                      description: "New accounts selling expensive items are a major red flag",
-                    },
-                    {
-                      icon: Users,
-                      title: "Review Followers",
-                      description: "Check follower counts and ratios for signs of fake followers",
-                    },
-                    {
-                      icon: TrendingUp,
-                      title: "Examine Engagement",
-                      description: "Low engagement or generic comments may indicate bots",
-                    },
-                    {
-                      icon: BadgeCheck,
-                      title: "Look for Verification",
-                      description: "Verified badges add credibility to seller accounts",
-                    },
-                    {
-                      icon: Bot,
-                      title: "Spot Bot Patterns",
-                      description: "Repetitive posts or rapid follower growth suggest automation",
-                    },
-                    {
-                      icon: Image,
-                      title: "Check Post History",
-                      description: "Consistent posting over time indicates legitimacy",
-                    },
-                  ].map((check, index) => (
-                    <motion.div
-                      key={check.title}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/30"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + index * 0.05 }}
-                    >
-                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <check.icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm mb-0.5">{check.title}</h4>
-                        <p className="text-xs text-muted-foreground">{check.description}</p>
-                      </div>
-                    </motion.div>
-                  ))}
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-6 border-2 border-border">
+                  <span className="text-4xl">{item.emoji}</span>
                 </div>
-              </div>
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
-
-      {/* How It Works */}
-      <section className="container px-4 py-16 border-t border-border">
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="font-display text-3xl font-bold mb-4">How It Works</h2>
-          <p className="text-muted-foreground">Three simple steps to verify any website</p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {[
-            { step: "01", title: "Enter URL", description: "Paste the website link you want to evaluate" },
-            {
-              step: "02",
-              title: "Automated Analysis",
-              description: "We run security checks and gather transparency indicators automatically",
-            },
-            { step: "03", title: "Review Results", description: "Get an evidence-based assessment with clear explanations" },
-          ].map((item, index) => (
-            <motion.div
-              key={item.step}
-              className="text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
-            >
-              <div className="text-5xl font-display font-bold text-primary/20 mb-4">{item.step}</div>
-              <h3 className="font-display font-semibold text-lg mb-2">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Extra Protection Section */}
-      <section className="container px-4 py-16 border-t border-border">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto"
-        >
-          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-8">
-            <div className="flex items-center justify-center gap-2 mb-8">
-              <Shield className="w-6 h-6 text-primary" />
-              <h2 className="font-display text-2xl font-bold">Want Extra Protection?</h2>
-            </div>
-            
-            <div className="grid sm:grid-cols-3 gap-6">
-              {/* Identity Protection */}
-              <div className="rounded-xl border border-border/50 bg-background/50 p-5 text-center">
-                <div className="text-3xl mb-3">🛡</div>
-                <h3 className="font-semibold mb-2">Identity Protection</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Protect your identity and credit if a site feels unsafe.
-                </p>
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <a href="https://www.aura.com/lp/identity-theft-protection" target="_blank" rel="noopener noreferrer">
-                    Protect My Identity
-                  </a>
-                </Button>
-              </div>
-
-              {/* Password Security */}
-              <div className="rounded-xl border border-border/50 bg-background/50 p-5 text-center">
-                <div className="text-3xl mb-3">🔐</div>
-                <h3 className="font-semibold mb-2">Password Security</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Stop password leaks and account takeovers.
-                </p>
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <a href="https://www.dashlane.com/" target="_blank" rel="noopener noreferrer">
-                    Secure My Accounts
-                  </a>
-                </Button>
-              </div>
-
-              {/* Payment Safety */}
-              <div className="rounded-xl border border-border/50 bg-background/50 p-5 text-center">
-                <div className="text-3xl mb-3">💳</div>
-                <h3 className="font-semibold mb-2">Payment Safety</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Use protected payments when buying online.
-                </p>
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <a href="https://privacy.com/" target="_blank" rel="noopener noreferrer">
-                    Protect My Payment
-                  </a>
-                </Button>
-              </div>
-            </div>
+                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm mb-4">
+                  {item.step}
+                </div>
+                <h3 className="font-display font-bold text-xl mb-3">{item.title}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+              </motion.div>
+            ))}
           </div>
-        </motion.div>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="container px-4 text-center text-sm text-muted-foreground space-y-4">
-          <p>
-            This tool provides educational information to help you make informed decisions. Results are based on automated checks and should be used alongside your own research. Always verify important details before making purchases.
-          </p>
-          <p className="text-xs text-muted-foreground/60">
-            Powered by <span className="font-medium">TrustworthyCheck</span>
-          </p>
+      {/* About Section */}
+      <section id="about" className="py-20 bg-gradient-to-b from-muted/30 to-background">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              Built for Real People
+            </h2>
+            <p className="text-lg text-muted-foreground mb-6">
+              We created this tool because too many people lose money to fake websites. Whether you're a teen making your first online purchase or a parent helping your family stay safe — we've got your back.
+            </p>
+            <p className="text-muted-foreground">
+              No jargon. No confusing reports. Just honest answers about whether a website is safe to buy from.
+            </p>
+          </motion.div>
         </div>
-      </footer>
+      </section>
+
+      <Footer />
     </div>
   );
 }
