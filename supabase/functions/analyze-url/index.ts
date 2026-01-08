@@ -2146,6 +2146,43 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('Only uses generic email (Gmail/Yahoo) for business contact');
         }
         
+        // Missing essential pages penalties
+        let missingPagesCount = 0;
+        
+        // Missing privacy policy: -8
+        if (analysisResult.details.business && !analysisResult.details.business.hasPrivacyPolicy) {
+          trustScore -= 8;
+          missingPagesCount++;
+          analysisResult.details.redFlags.push('No privacy policy found');
+        }
+        
+        // Missing terms: -6
+        if (analysisResult.details.business && !analysisResult.details.business.hasTerms) {
+          trustScore -= 6;
+          missingPagesCount++;
+          analysisResult.details.redFlags.push('No terms of service found');
+        }
+        
+        // Missing shipping info: -8
+        if (analysisResult.details.business && !analysisResult.details.business.hasShippingInfo) {
+          trustScore -= 8;
+          missingPagesCount++;
+          analysisResult.details.redFlags.push('No shipping information found');
+        }
+        
+        // Missing about page: -5
+        if (analysisResult.details.business && !analysisResult.details.business.hasAboutPage) {
+          trustScore -= 5;
+          missingPagesCount++;
+          analysisResult.details.redFlags.push('No about page found');
+        }
+        
+        // If 2+ essential pages missing: additional -5
+        if (missingPagesCount >= 2) {
+          trustScore -= 5;
+          analysisResult.details.redFlags.push('Multiple essential business pages missing');
+        }
+        
         // === PAYMENT RISK (15%) ===
         // Crypto/wire only: -30
         if (hasCryptoWireOnly) {
