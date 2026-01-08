@@ -9,6 +9,7 @@ import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
 import { FullReportDisplay } from './FullReportDisplay';
+import { DetailedReportUpsell } from './DetailedReportUpsell';
 import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
@@ -200,6 +201,9 @@ export function MissionControlCard() {
                 <Button onClick={handleNewCheck} variant="outline" className="w-full">
                   Check Another Website
                 </Button>
+
+                {/* Detailed Report Upsell */}
+                <DetailedReportUpsell url={url} trustScore={result.trustScore} />
               </motion.div>
             ) : (
               <motion.form
