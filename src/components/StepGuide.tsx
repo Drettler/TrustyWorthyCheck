@@ -23,19 +23,19 @@ const steps = [
 
 export function StepGuide() {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-8">
+    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 mt-6">
       {steps.map((step, index) => (
         <motion.div
           key={step.number}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 + index * 0.1 }}
-          className="flex items-center gap-3"
+          transition={{ delay: 0.4 + index * 0.1 }}
+          className="flex items-center gap-1.5 md:gap-2"
         >
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/60 shadow-sm">
-            <span className="text-lg font-bold text-primary">{step.number}</span>
-            <span className="text-xl">{step.emoji}</span>
-            <span className="text-sm font-medium text-foreground">{step.title}</span>
+          <div className="flex items-center gap-1 md:gap-2 px-2.5 py-1.5 md:px-4 md:py-2 rounded-full bg-card border border-border/60 shadow-sm">
+            <span className="text-sm md:text-lg font-bold text-primary">{step.number}</span>
+            <span className="text-base md:text-xl">{step.emoji}</span>
+            <span className="text-xs md:text-sm font-medium text-foreground">{step.title}</span>
           </div>
           
           {/* Connector arrow (hidden on mobile, hidden on last item) */}
