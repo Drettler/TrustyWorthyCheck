@@ -283,7 +283,7 @@ export default function Index() {
                 title: 'Identity Protection',
                 description: 'Protect your identity and credit if a site feels unsafe.',
                 button: 'Protect My Identity',
-                href: '#',
+                href: 'https://www.identityguard.com/',
               },
               {
                 icon: Lock,
@@ -291,7 +291,7 @@ export default function Index() {
                 title: 'Password Security',
                 description: 'Stop password leaks and account takeovers.',
                 button: 'Secure My Accounts',
-                href: '#',
+                href: 'https://bitwarden.com/',
               },
               {
                 icon: CreditCard,
@@ -299,7 +299,7 @@ export default function Index() {
                 title: 'Payment Safety',
                 description: 'Use protected payments when buying online.',
                 button: 'Protect My Payment',
-                href: '#',
+                href: 'https://privacy.com/',
               },
             ].map((item, index) => (
               <motion.div
@@ -315,7 +315,12 @@ export default function Index() {
                 </div>
                 <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
-                <Button variant="outline" size="sm" className="w-full group">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full group"
+                  onClick={() => window.open(item.href, '_blank', 'noopener,noreferrer')}
+                >
                   {item.button}
                   <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </Button>
