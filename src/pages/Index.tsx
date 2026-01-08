@@ -39,6 +39,17 @@ export default function Index() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
+      {/* Friendly helper in corner */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.4 }}
+        className="fixed bottom-6 right-6 z-50 hidden md:flex items-center gap-2 bg-card/95 backdrop-blur-sm px-4 py-3 rounded-full shadow-lg border border-border hover:shadow-xl transition-shadow cursor-default"
+      >
+        <span className="text-2xl hover-wiggle">🛡️</span>
+        <span className="text-sm font-medium text-muted-foreground">I'll help you spot sketchy sites.</span>
+      </motion.div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Soft gradient background */}
