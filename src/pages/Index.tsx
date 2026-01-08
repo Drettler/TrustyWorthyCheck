@@ -59,7 +59,7 @@ export default function Index() {
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Make informed decisions before purchasing online. Our tool helps you evaluate website legitimacy through security checks and transparency indicators.
+              Spot red flags before you submit payment in 3 minutes.
             </p>
           </motion.div>
 
