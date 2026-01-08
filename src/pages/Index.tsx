@@ -130,7 +130,7 @@ export default function Index() {
             className="text-center mb-12"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              How We Protect You
+              How We Help You
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Our friendly safety checks look at everything — so you don't have to be a tech expert.
