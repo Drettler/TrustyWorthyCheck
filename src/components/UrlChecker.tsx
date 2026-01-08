@@ -291,80 +291,90 @@ export function UrlChecker() {
         )}
       </AnimatePresence>
 
-      {/* Search Form */}
-      <motion.form
-        onSubmit={handleSubmit}
-        className="mb-4 space-y-3"
+      {/* Search Form Card */}
+      <motion.div
+        className="mb-4 p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-lg"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        {/* URL Input - Required */}
-        <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <Globe className="w-5 h-5" />
+        {/* Card Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+            <Shield className="w-5 h-5 text-primary" />
           </div>
-          <Input
-            type="text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Enter website URL (e.g., example-shop.com)"
-            className="pl-12 pr-32 h-14 text-lg bg-card border-border focus:border-primary rounded-xl"
-            disabled={isLoading}
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <Button
-              type="submit"
-              variant="hero"
-              size="lg"
-              disabled={isLoading || !url.trim()}
-              className="rounded-lg"
-            >
-              {isLoading ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <Shield className="w-5 h-5" />
-                  </motion.div>
-                  Analyzing
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  Analyze
-                </>
-              )}
-            </Button>
+          <div>
+            <h2 className="font-display font-bold text-lg">Start Your Safety Check</h2>
+            <p className="text-sm text-muted-foreground">Takes less than 3 minutes</p>
           </div>
         </div>
 
-        {/* Optional Fields */}
-        <div className="flex gap-3">
-          <div className="flex-1">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* URL Input - Required */}
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <Globe className="w-5 h-5" />
+            </div>
             <Input
               type="text"
-              placeholder="Business name (optional)"
-              className="h-10 text-sm bg-card border-border focus:border-primary rounded-lg"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Paste the site link here 👆"
+              className="pl-12 h-14 text-base bg-background border-border focus:border-primary rounded-xl"
               disabled={isLoading}
             />
           </div>
-          <div className="flex-1">
-            <Input
-              type="text"
-              placeholder="Country (optional)"
-              className="h-10 text-sm bg-card border-border focus:border-primary rounded-lg"
-              disabled={isLoading}
-            />
+
+          {/* Optional Fields */}
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <FileText className="w-4 h-4" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Optional — helps us be extra accurate"
+                className="pl-10 h-11 text-sm bg-background border-border focus:border-primary rounded-xl"
+                disabled={isLoading}
+              />
+            </div>
+            <div className="flex-1 relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <Building2 className="w-4 h-4" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Where the business says it's located"
+                className="pl-10 h-11 text-sm bg-background border-border focus:border-primary rounded-xl"
+                disabled={isLoading}
+              />
+            </div>
           </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            Optional fields help provide context but are not required for analysis
-          </p>
-        </div>
-      </motion.form>
+
+          {/* Submit Button - Full Width Gradient */}
+          <Button
+            type="submit"
+            disabled={isLoading || !url.trim()}
+            className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary via-primary to-secondary hover:opacity-90 transition-opacity shadow-lg"
+          >
+            {isLoading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Shield className="w-5 h-5 mr-2" />
+                </motion.div>
+                Analyzing...
+              </>
+            ) : (
+              <>
+                Run Safety Check 🚀
+              </>
+            )}
+          </Button>
+        </form>
+      </motion.div>
 
 
       {/* Loading State */}
