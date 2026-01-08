@@ -44,6 +44,13 @@ export default function Index() {
         {/* Soft gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-secondary/5 to-background pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-primary/10 to-transparent rounded-full blur-[120px] pointer-events-none" />
+        
+        {/* Animated gradient blobs */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none">
+          <div className="absolute w-[500px] h-[500px] -left-[250px] -top-[100px] bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full blur-[80px] animate-blob-drift" />
+          <div className="absolute w-[400px] h-[400px] -left-[100px] -top-[50px] bg-gradient-to-br from-secondary/15 via-secondary/5 to-transparent rounded-full blur-[60px] animate-blob-drift-reverse" />
+          <div className="absolute w-[300px] h-[300px] left-[50px] top-[50px] bg-gradient-to-br from-primary/15 to-secondary/10 rounded-full blur-[70px] animate-blob-drift" style={{ animationDelay: '-4s' }} />
+        </div>
 
         <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-20">
           <motion.div
