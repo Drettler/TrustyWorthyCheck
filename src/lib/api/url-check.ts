@@ -36,10 +36,19 @@ export interface PriceComparisonData {
   redFlags: string[];
 }
 
+export interface ConfidenceData {
+  level: 'high' | 'medium' | 'low';
+  message: string;
+  checksVerified: number;
+  totalPossibleChecks: number;
+  verifiedSources: string[];
+}
+
 export interface AnalysisResult {
   trustScore: number;
   verdict: 'safe' | 'caution' | 'danger';
   summary: string;
+  confidence?: ConfidenceData;
   details: {
     domain: {
       name: string;
