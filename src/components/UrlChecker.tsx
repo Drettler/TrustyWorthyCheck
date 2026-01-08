@@ -539,44 +539,46 @@ export function UrlChecker() {
                         <p className="text-foreground/90 leading-relaxed">{result.summary}</p>
                       </div>
 
-                      {/* Concerns Found */}
-                      <div className="p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            result.details.redFlags.length > 0 ? 'bg-danger/10' : 'bg-success/10'
-                          }`}>
-                            {result.details.redFlags.length > 0 ? (
-                              <AlertTriangle className="w-5 h-5 text-danger" />
-                            ) : (
-                              <CheckCircle className="w-5 h-5 text-success" />
-                            )}
+                      {/* Concerns Found - Only show if verdict is NOT safe */}
+                      {result.verdict !== 'safe' && (
+                        <div className="p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                              result.details.redFlags.length > 0 ? 'bg-danger/10' : 'bg-success/10'
+                            }`}>
+                              {result.details.redFlags.length > 0 ? (
+                                <AlertTriangle className="w-5 h-5 text-danger" />
+                              ) : (
+                                <CheckCircle className="w-5 h-5 text-success" />
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="font-display text-lg font-semibold">
+                                {result.details.redFlags.length > 0 
+                                  ? `${result.details.redFlags.length} Concern${result.details.redFlags.length > 1 ? 's' : ''} Found`
+                                  : 'No Concerns Found'
+                                }
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {result.details.redFlags.length > 0 
+                                  ? 'Issues that may require attention'
+                                  : 'No significant red flags detected'
+                                }
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-display text-lg font-semibold">
-                              {result.details.redFlags.length > 0 
-                                ? `${result.details.redFlags.length} Concern${result.details.redFlags.length > 1 ? 's' : ''} Found`
-                                : 'No Concerns Found'
-                              }
-                            </h3>
-                            <p className="text-xs text-muted-foreground">
-                              {result.details.redFlags.length > 0 
-                                ? 'Issues that may require attention'
-                                : 'No significant red flags detected'
-                              }
-                            </p>
-                          </div>
+                          {result.details.redFlags.length > 0 ? (
+                            <FlagsList items={result.details.redFlags} type="red" />
+                          ) : (
+                            <div className="flex items-center gap-2 p-4 rounded-xl bg-success/5 border border-success/20">
+                              <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
+                              <p className="text-sm text-foreground/80">
+                                Our automated checks found no significant concerns with this website.
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {result.details.redFlags.length > 0 ? (
-                          <FlagsList items={result.details.redFlags} type="red" />
-                        ) : (
-                          <div className="flex items-center gap-2 p-4 rounded-xl bg-success/5 border border-success/20">
-                            <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
-                            <p className="text-sm text-foreground/80">
-                              Our automated checks found no significant concerns with this website.
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
 
                     {/* Unlock Full Report CTA */}
