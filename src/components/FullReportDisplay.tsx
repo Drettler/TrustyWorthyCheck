@@ -61,6 +61,7 @@ export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProp
               score={result.trustScore} 
               verdict={result.verdict}
               redFlagsCount={result.details.redFlags?.length || 0}
+              confidence={result.confidence}
             />
           </div>
           <div className="flex-1 text-center md:text-left">
