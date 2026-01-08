@@ -184,8 +184,8 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence 
           {getVerdictDescription()}
         </p>
 
-        {/* Issues count */}
-        {redFlagsCount > 0 && (
+        {/* Issues count - hide for "Likely Legit" results */}
+        {redFlagsCount > 0 && verdict !== 'safe' && (
           <motion.div
             className={`text-xs font-medium px-3 py-1 rounded-full mt-1 ${
               verdict === 'danger' 
