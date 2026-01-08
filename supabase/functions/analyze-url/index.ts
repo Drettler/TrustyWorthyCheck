@@ -1917,53 +1917,12 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.domain.mimickingBrand = typosquattingCheck.mimicking || null;
         }
         
-        // Add additional red flags from pre-analysis
+        // Initialize red flags array
         if (!analysisResult.details.redFlags) {
           analysisResult.details.redFlags = [];
         }
-        
-        if (typosquattingCheck.isSuspicious) {
-          analysisResult.details.redFlags.push(`Domain appears to mimic "${typosquattingCheck.mimicking}"`);
-        }
-        if (suspiciousTLD) {
-          analysisResult.details.redFlags.push('Uses a commonly abused domain extension');
-        }
-        if (paymentAnalysis.onlyAcceptsUnusualMethods) {
-          analysisResult.details.redFlags.push('Only accepts unusual payment methods');
-        }
-        if (contactAnalysis.hasGenericEmail && !contactAnalysis.hasProfessionalEmail) {
-          analysisResult.details.redFlags.push('Only uses generic email (Gmail/Yahoo) for business contact');
-        }
-        if (linkAnalysis.suspiciousRedirects) {
-          analysisResult.details.redFlags.push('Uses URL shorteners which may hide true destinations');
-        }
-        for (const pattern of scamPatternAnalysis.suspiciousPatterns) {
-          if (!analysisResult.details.redFlags.includes(pattern)) {
-            analysisResult.details.redFlags.push(pattern);
-          }
-        }
-        
-        // Add address/phone red flags
-        if (!contactAnalysis.addressAnalysis.found && !contactAnalysis.phoneAnalysis.found) {
-          analysisResult.details.redFlags.push('No physical address or phone number found');
-          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
-        } else {
-          if (contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
-            for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
-              analysisResult.details.redFlags.push(`Address issue: ${issue}`);
-            }
-            analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 10);
-          }
-          if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
-            for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
-              analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
-            }
-            analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 10);
-          }
-          if (contactAnalysis.addressAnalysis.isPoBox) {
-            analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
-            analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 5);
-          }
+        if (!analysisResult.details.positiveSignals) {
+          analysisResult.details.positiveSignals = [];
         }
         
         // Merge extracted address/phone into business details
@@ -1974,27 +1933,75 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.business.hasPhoneNumber = contactAnalysis.hasPhoneNumber;
         }
         
-        // Adjust trust score based on critical findings
-        if (typosquattingCheck.isSuspicious) {
-          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 30);
-          if (analysisResult.trustScore < 30) analysisResult.verdict = 'danger';
-        }
-        if (paymentAnalysis.onlyAcceptsUnusualMethods) {
-          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 20);
+        // ==========================================
+        // NEW DETERMINISTIC SCORING SYSTEM
+        // Start at 100 and apply penalties/bonuses
+        // ==========================================
+        let trustScore = 100;
+        const hasNoHttps = !formattedUrl.startsWith('https');
+        const hasFakeAddress = contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0;
+        const hasCryptoWireOnly = paymentAnalysis.onlyAcceptsUnusualMethods && 
+          (paymentAnalysis.acceptsCrypto || paymentAnalysis.methods.some((m: string) => 
+            m.toLowerCase().includes('wire') || m.toLowerCase().includes('transfer') || m.toLowerCase().includes('bitcoin')
+          ));
+        
+        // === DOMAIN & IDENTITY (20%) ===
+        // Domain age < 6 months: -20
+        if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 180) {
+          trustScore -= 20;
+          analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - new domains are higher risk`);
         }
         
-        // Government scam detection - very severe penalty
+        // WHOIS hidden + new domain: -15
+        if (whoisResult.isPrivacyProtected && whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 365) {
+          trustScore -= 15;
+          analysisResult.details.redFlags.push('WHOIS privacy enabled on a new domain');
+        }
+        
+        // Country mismatch: -15
+        if (businessVerification.countriesMismatch) {
+          trustScore -= 15;
+          analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
+        }
+        
+        // Typosquatting detected: -25
+        if (typosquattingCheck.isSuspicious) {
+          trustScore -= 25;
+          analysisResult.details.redFlags.push(`Domain appears to mimic "${typosquattingCheck.mimicking}"`);
+        }
+        
+        // Suspicious TLD: -10
+        if (suspiciousTLD) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Uses a commonly abused domain extension (.top, .xyz, .shop, etc)');
+        }
+        
+        // === SECURITY (20%) ===
+        // No HTTPS: -40
+        if (hasNoHttps) {
+          trustScore -= 40;
+          analysisResult.details.redFlags.push('No HTTPS - connection is not secure');
+        }
+        
+        // Invalid SSL / mismatch: -25 (from AI analysis)
+        if (analysisResult.details.domain && !analysisResult.details.domain.ssl && formattedUrl.startsWith('https')) {
+          trustScore -= 25;
+          analysisResult.details.redFlags.push('SSL certificate issue detected');
+        }
+        
+        // === REPUTATION (20%) ===
+        // Government scam detected: -60
         if (governmentScamAnalysis.isLikelyGovScam) {
+          trustScore -= 60;
           analysisResult.details.redFlags.push('🚨 GOVERNMENT IMPERSONATION SCAM - Claims to be from ' + governmentScamAnalysis.mentionedAgencies.join(', '));
           for (const pattern of governmentScamAnalysis.suspiciousPatterns.slice(0, 3)) {
             analysisResult.details.redFlags.push(pattern);
           }
-          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 50);
-          analysisResult.verdict = 'danger';
         }
         
-        // Subscription/tech support scam detection - very severe penalty
+        // Tech support / subscription scam: -60
         if (subscriptionScamAnalysis.isLikelySubscriptionScam) {
+          trustScore -= 60;
           analysisResult.details.redFlags.push('🚨 SUBSCRIPTION/TECH SUPPORT SCAM - Impersonates ' + subscriptionScamAnalysis.mentionedBrands.join(', '));
           if (subscriptionScamAnalysis.hasPhoneCallPrompt) {
             analysisResult.details.redFlags.push('🚨 TECH SUPPORT SCAM - Prompts you to call a phone number');
@@ -2002,37 +2009,163 @@ Return ONLY valid JSON in this exact format:
           for (const pattern of subscriptionScamAnalysis.suspiciousPatterns.slice(0, 3)) {
             analysisResult.details.redFlags.push(pattern);
           }
-          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 50);
-          analysisResult.verdict = 'danger';
         }
         
-        // Business verification penalties
-        if (businessVerification.countriesMismatch) {
-          analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
-          analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
-        }
-        
-        // Positive compliance signals (slight boost for legitimate business practices)
-        if (complianceAnalysis.complianceScore >= 50) {
-          if (!analysisResult.details.positiveSignals) {
-            analysisResult.details.positiveSignals = [];
+        // === BUSINESS TRANSPARENCY (15%) ===
+        // No physical address: -20
+        if (!contactAnalysis.hasPhysicalAddress) {
+          trustScore -= 20;
+          analysisResult.details.redFlags.push('No physical address found');
+        } else if (contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
+          // Address fake / residential mismatch: -15
+          trustScore -= 15;
+          for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
+            analysisResult.details.redFlags.push(`Address issue: ${issue}`);
           }
+        } else if (contactAnalysis.addressAnalysis.isPoBox) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
+        }
+        
+        // No phone number: -10
+        if (!contactAnalysis.hasPhoneNumber) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('No phone number found');
+        } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
+          // Suspicious phone pattern: -10
+          trustScore -= 10;
+          for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
+            analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
+          }
+        }
+        
+        // Generic email only: -10
+        if (contactAnalysis.hasGenericEmail && !contactAnalysis.hasProfessionalEmail) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Only uses generic email (Gmail/Yahoo) for business contact');
+        }
+        
+        // === PAYMENT RISK (15%) ===
+        // Crypto/wire only: -30
+        if (hasCryptoWireOnly) {
+          trustScore -= 30;
+          analysisResult.details.redFlags.push('Only accepts cryptocurrency or wire transfer - no buyer protection');
+        } else if (paymentAnalysis.onlyAcceptsUnusualMethods) {
+          // Unusual payment methods only: -20
+          trustScore -= 20;
+          analysisResult.details.redFlags.push('Only accepts unusual payment methods');
+        }
+        
+        // No refund policy: -15 (from AI analysis)
+        if (analysisResult.details.business && !analysisResult.details.business.hasReturnPolicy) {
+          trustScore -= 15;
+          analysisResult.details.redFlags.push('No refund/return policy found');
+        }
+        
+        // === BEHAVIORAL RED FLAGS (10%) ===
+        // Countdown timers / fake urgency: -10
+        if (scamPatternAnalysis.hasCountdownTimer || urgencyAnalysis.hasUrgencyTactics) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Uses countdown timers or fake urgency tactics');
+        }
+        
+        // Fake trust badges: -10
+        if (scamPatternAnalysis.suspiciousPatterns.includes('Possibly fake security badge')) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Possibly fake security/trust badges');
+        }
+        
+        // URL shortener redirect: -10
+        if (linkAnalysis.suspiciousRedirects) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Uses URL shorteners which may hide true destinations');
+        }
+        
+        // Plagiarized content: -10 (from AI analysis websiteQuality)
+        if (analysisResult.details.websiteQuality?.isTemplatedSite || scamPatternAnalysis.hasCloneIndicators) {
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Website appears to use cloned/templated content');
+        }
+        
+        // Add remaining scam patterns as red flags
+        for (const pattern of scamPatternAnalysis.suspiciousPatterns) {
+          if (!analysisResult.details.redFlags.includes(pattern) && 
+              pattern !== 'Possibly fake security badge') {
+            analysisResult.details.redFlags.push(pattern);
+          }
+        }
+        
+        // === DOMAIN AGE MULTIPLIER ===
+        // If domain age < 1 year: trustScore = trustScore * 0.85
+        if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 365) {
+          trustScore = Math.round(trustScore * 0.85);
+          if (!analysisResult.details.redFlags.some((f: string) => f.includes('less than 1 year'))) {
+            analysisResult.details.redFlags.push(`Domain is less than 1 year old (${whoisResult.domainAge})`);
+          }
+        }
+        
+        // === BONUSES ===
+        // Valid business registration: +5
+        if (businessVerification.hasVATNumber || businessVerification.hasCompanyRegNumber || businessVerification.hasDUNS) {
+          trustScore += 5;
+          analysisResult.details.positiveSignals.push('Valid business registration found');
+        }
+        
+        // GDPR / cookie compliance: +5
+        if (complianceAnalysis.hasGDPRMention || complianceAnalysis.hasCookieNotice) {
+          trustScore += 5;
           if (complianceAnalysis.hasCookieNotice) {
             analysisResult.details.positiveSignals.push('Has cookie consent notice');
           }
           if (complianceAnalysis.hasGDPRMention) {
             analysisResult.details.positiveSignals.push('Mentions GDPR compliance');
           }
-          // Small trust boost for compliance
-          analysisResult.trustScore = Math.min(100, analysisResult.trustScore + 5);
         }
         
-        // Recalculate verdict based on adjusted score
-        if (analysisResult.trustScore < 40) {
-          analysisResult.verdict = 'danger';
-        } else if (analysisResult.trustScore < 70) {
-          analysisResult.verdict = 'caution';
+        // Consistent branding & contact info: +5
+        if (contactAnalysis.hasPhysicalAddress && contactAnalysis.hasPhoneNumber && contactAnalysis.hasProfessionalEmail) {
+          trustScore += 5;
+          analysisResult.details.positiveSignals.push('Consistent branding and contact information');
         }
+        
+        // High-quality independent reviews: +5
+        if (linkAnalysis.hasExternalReviews && linkAnalysis.reviewPlatforms.length >= 2) {
+          trustScore += 5;
+          analysisResult.details.positiveSignals.push('Listed on external review platforms');
+        }
+        
+        // === HARD CAPS - CRITICAL ISSUES ===
+        // If any of these are true → MAX SCORE = 45
+        const hasCriticalIssue = 
+          hasNoHttps ||
+          governmentScamAnalysis.isLikelyGovScam ||
+          subscriptionScamAnalysis.isLikelySubscriptionScam ||
+          hasCryptoWireOnly ||
+          hasFakeAddress;
+        
+        if (hasCriticalIssue && trustScore > 45) {
+          trustScore = 45;
+        }
+        
+        // Clamp score to 0-100
+        trustScore = Math.max(0, Math.min(100, trustScore));
+        
+        // === DETERMINE VERDICT ===
+        // 85-100: Likely Legit (safe)
+        // 60-84: Use Caution (caution)
+        // 0-59: High Risk (danger)
+        let verdict: 'safe' | 'caution' | 'danger';
+        if (trustScore >= 85) {
+          verdict = 'safe';
+        } else if (trustScore >= 60) {
+          verdict = 'caution';
+        } else {
+          verdict = 'danger';
+        }
+        
+        // Apply the deterministic score and verdict
+        analysisResult.trustScore = trustScore;
+        analysisResult.verdict = verdict;
       }
       
     } catch (parseError) {
@@ -2190,41 +2323,36 @@ Return ONLY valid JSON in this exact format:
       },
     };
 
-    // Add VirusTotal red flags
+    // Add VirusTotal red flags (already factored into score, just add to display)
     if (virusTotalResult.isMalicious) {
       analysisResult.details.redFlags = analysisResult.details.redFlags || [];
-      analysisResult.details.redFlags.push(`⚠️ MALWARE ALERT: ${virusTotalResult.maliciousCount} security vendors flagged this domain as malicious`);
-      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 40);
-      analysisResult.verdict = 'danger';
+      if (!analysisResult.details.redFlags.some((f: string) => f.includes('MALWARE ALERT'))) {
+        analysisResult.details.redFlags.push(`⚠️ MALWARE ALERT: ${virusTotalResult.maliciousCount} security vendors flagged this domain as malicious`);
+        // Apply additional penalty for malware and enforce hard cap
+        analysisResult.trustScore = Math.min(45, Math.max(0, analysisResult.trustScore - 40));
+        analysisResult.verdict = 'danger';
+      }
     }
     if (virusTotalResult.suspiciousCount > 2) {
       analysisResult.details.redFlags = analysisResult.details.redFlags || [];
-      analysisResult.details.redFlags.push(`${virusTotalResult.suspiciousCount} security vendors flagged this domain as suspicious`);
-      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
+      if (!analysisResult.details.redFlags.some((f: string) => f.includes('security vendors flagged this domain as suspicious'))) {
+        analysisResult.details.redFlags.push(`${virusTotalResult.suspiciousCount} security vendors flagged this domain as suspicious`);
+        // Scam warnings on 1 service: -20, ≥2 services: -40
+        const penalty = virusTotalResult.suspiciousCount >= 2 ? 40 : 20;
+        analysisResult.trustScore = Math.max(0, analysisResult.trustScore - penalty);
+        // Recalculate verdict
+        if (analysisResult.trustScore >= 85) analysisResult.verdict = 'safe';
+        else if (analysisResult.trustScore >= 60) analysisResult.verdict = 'caution';
+        else analysisResult.verdict = 'danger';
+      }
     }
 
-    // Add WHOIS red flags for new domains
-    if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 90) {
-      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
-      analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - very new domains are higher risk`);
-      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 15);
-      if (analysisResult.trustScore < 40) analysisResult.verdict = 'danger';
-      else if (analysisResult.trustScore < 70) analysisResult.verdict = 'caution';
-    } else if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 365) {
-      analysisResult.details.redFlags = analysisResult.details.redFlags || [];
-      analysisResult.details.redFlags.push(`Domain is less than 1 year old (${whoisResult.domainAge})`);
-      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 5);
-    }
-
-    // Add price comparison red flags
+    // Add price comparison red flags (for display only, not scoring again)
     for (const flag of priceComparison.redFlags) {
       analysisResult.details.redFlags = analysisResult.details.redFlags || [];
       if (!analysisResult.details.redFlags.includes(flag)) {
         analysisResult.details.redFlags.push(flag);
       }
-    }
-    if (priceComparison.suspiciouslyLowCount >= 3) {
-      analysisResult.trustScore = Math.max(0, analysisResult.trustScore - 10);
     }
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
