@@ -10,7 +10,7 @@ interface TrustScoreGaugeProps {
 export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScoreGaugeProps) {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-  const isTrustworthy = score >= 75;
+  const isTrustworthy = score >= 85; // Updated threshold: 85-100 = Likely Legit
   const isHighRisk = verdict === 'danger';
   
   const getVerdictColor = () => {
@@ -31,8 +31,8 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
 
   const getVerdictLabel = () => {
     switch (verdict) {
-      case 'safe': return 'Trustworthy';
-      case 'caution': return 'Exercise Caution';
+      case 'safe': return 'Likely Legit';
+      case 'caution': return 'Use Caution';
       case 'danger': return 'High Risk';
     }
   };
@@ -47,9 +47,9 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0 }: TrustScor
 
   const getVerdictDescription = () => {
     switch (verdict) {
-      case 'safe': return 'This website shows positive trust indicators';
-      case 'caution': return 'Some concerns were identified during analysis';
-      case 'danger': return 'Multiple red flags detected — proceed with caution';
+      case 'safe': return 'This website shows strong trust indicators';
+      case 'caution': return 'Some concerns were identified — review before purchasing';
+      case 'danger': return 'Multiple red flags detected — high risk of scam';
     }
   };
 
