@@ -1248,28 +1248,73 @@ function analyzeContactInfo(content: string, links: string[]): {
 }
 
 // Analyze payment methods mentioned
-function analyzePaymentMethods(content: string): {
+function analyzePaymentMethods(content: string, html: string = ''): {
   acceptsCreditCards: boolean;
   acceptsPayPal: boolean;
   acceptsCrypto: boolean;
   onlyAcceptsUnusualMethods: boolean;
+  hasPaymentGateway: boolean;
+  paymentStatus: 'confirmed_safe' | 'likely_safe' | 'unknown' | 'unusual_only' | 'crypto_wire_only';
   methods: string[];
 } {
   const methods: string[] = [];
   const contentLower = content.toLowerCase();
+  const htmlLower = html.toLowerCase();
+  
+  // Payment gateway detection in HTML
+  const paymentGateways = {
+    stripe: ['stripe', 'checkout.stripe.com', 'js.stripe.com', 'stripe-js'],
+    paypal: ['paypal', 'paypalobjects.com', 'paypal.com/sdk'],
+    shopify: ['shopify-payments', 'shopify payments', 'cdn.shopify.com/s/javascripts/checkout'],
+    adyen: ['adyen', 'adyen-checkout'],
+    klarna: ['klarna', 'klarna.com'],
+    affirm: ['affirm', 'affirm.com'],
+    afterpay: ['afterpay', 'afterpay.com', 'clearpay'],
+    square: ['square', 'squareup.com', 'square-web-payments'],
+    braintree: ['braintree', 'braintreegateway.com'],
+  };
   
   const paymentIndicators = {
     creditCards: ['visa', 'mastercard', 'american express', 'amex', 'discover', 'credit card', 'debit card'],
     paypal: ['paypal'],
-    crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto payment'],
-    unusual: ['wire transfer', 'western union', 'moneygram', 'gift card', 'zelle only', 'venmo only', 'cashapp only']
+    crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto payment', 'pay with crypto'],
+    unusual: ['wire transfer', 'western union', 'moneygram', 'gift card payment', 'zelle only', 'venmo only', 'cashapp only', 'bank transfer only']
   };
   
   let acceptsCreditCards = false;
   let acceptsPayPal = false;
   let acceptsCrypto = false;
-  let hasUnusualOnly = false;
+  let hasPaymentGateway = false;
+  let detectedGateways: string[] = [];
   
+  // Check for payment gateways in HTML (strong indicator of card acceptance)
+  for (const [gateway, indicators] of Object.entries(paymentGateways)) {
+    for (const indicator of indicators) {
+      if (htmlLower.includes(indicator) || contentLower.includes(indicator)) {
+        hasPaymentGateway = true;
+        if (!detectedGateways.includes(gateway)) {
+          detectedGateways.push(gateway);
+        }
+        // These gateways indicate card payments are accepted
+        if (['stripe', 'adyen', 'square', 'braintree', 'shopify'].includes(gateway)) {
+          acceptsCreditCards = true;
+          if (!methods.includes('Credit Cards')) methods.push('Credit Cards');
+        }
+        if (gateway === 'paypal') {
+          acceptsPayPal = true;
+          if (!methods.includes('PayPal')) methods.push('PayPal');
+        }
+        if (['klarna', 'affirm', 'afterpay'].includes(gateway)) {
+          // Buy now pay later implies card-like payment
+          if (!methods.includes('Buy Now Pay Later')) methods.push('Buy Now Pay Later');
+          acceptsCreditCards = true; // These typically require cards
+        }
+        break;
+      }
+    }
+  }
+  
+  // Check text content for payment mentions
   for (const indicator of paymentIndicators.creditCards) {
     if (contentLower.includes(indicator)) {
       acceptsCreditCards = true;
@@ -1279,13 +1324,14 @@ function analyzePaymentMethods(content: string): {
   }
   
   for (const indicator of paymentIndicators.paypal) {
-    if (contentLower.includes(indicator)) {
+    if (contentLower.includes(indicator) && !acceptsPayPal) {
       acceptsPayPal = true;
       if (!methods.includes('PayPal')) methods.push('PayPal');
       break;
     }
   }
   
+  // Check for crypto mentions
   for (const indicator of paymentIndicators.crypto) {
     if (contentLower.includes(indicator)) {
       acceptsCrypto = true;
@@ -1294,20 +1340,46 @@ function analyzePaymentMethods(content: string): {
     }
   }
   
+  // Check for unusual/risky payment methods
+  let hasUnusualMethods = false;
   for (const indicator of paymentIndicators.unusual) {
     if (contentLower.includes(indicator)) {
-      methods.push(indicator);
+      hasUnusualMethods = true;
+      const methodName = indicator.replace(' only', '');
+      if (!methods.includes(methodName)) methods.push(methodName);
     }
   }
   
-  // Flag if only unusual methods are mentioned
-  hasUnusualOnly = !acceptsCreditCards && !acceptsPayPal && methods.length > 0;
+  // Determine payment status
+  let paymentStatus: 'confirmed_safe' | 'likely_safe' | 'unknown' | 'unusual_only' | 'crypto_wire_only';
+  
+  if (acceptsCreditCards || acceptsPayPal || hasPaymentGateway) {
+    // Has standard payment methods - safe
+    paymentStatus = 'confirmed_safe';
+  } else if (acceptsCrypto && !hasUnusualMethods) {
+    // Only crypto mentioned, no wire transfer - still risky but not the worst
+    paymentStatus = 'unusual_only';
+  } else if (hasUnusualMethods || (acceptsCrypto && hasUnusualMethods)) {
+    // Wire transfer, gift cards, etc. - high risk
+    paymentStatus = 'crypto_wire_only';
+  } else if (methods.length === 0) {
+    // No payment methods detected - unknown (neutral)
+    paymentStatus = 'unknown';
+  } else {
+    paymentStatus = 'likely_safe';
+  }
+  
+  // onlyAcceptsUnusualMethods should only be true if we have POSITIVE EVIDENCE of unusual methods
+  // AND no evidence of standard payment methods
+  const onlyAcceptsUnusualMethods = paymentStatus === 'crypto_wire_only';
   
   return {
     acceptsCreditCards,
     acceptsPayPal,
     acceptsCrypto,
-    onlyAcceptsUnusualMethods: hasUnusualOnly,
+    onlyAcceptsUnusualMethods,
+    hasPaymentGateway,
+    paymentStatus,
     methods
   };
 }
@@ -1579,7 +1651,7 @@ Deno.serve(async (req) => {
     
     const urgencyAnalysis = analyzeUrgencyTactics(markdown);
     const contactAnalysis = analyzeContactInfo(markdown, links);
-    const paymentAnalysis = analyzePaymentMethods(markdown);
+    const paymentAnalysis = analyzePaymentMethods(markdown, html);
     const scamPatternAnalysis = detectScamPatterns(markdown, html);
     const linkAnalysis = analyzeLinks(links, domain);
     const priceComparison = analyzePriceComparison(markdown, html);
@@ -2031,10 +2103,8 @@ Return ONLY valid JSON in this exact format:
         const hasNoHttps = !httpsSecurityCheck.hasHttps;
         const hasTlsIssue = httpsSecurityCheck.hasHttps && !httpsSecurityCheck.tlsOk;
         const hasFakeAddress = contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0;
-        const hasCryptoWireOnly = paymentAnalysis.onlyAcceptsUnusualMethods && 
-          (paymentAnalysis.acceptsCrypto || paymentAnalysis.methods.some((m: string) => 
-            m.toLowerCase().includes('wire') || m.toLowerCase().includes('transfer') || m.toLowerCase().includes('bitcoin')
-          ));
+        // Use the new payment status for scoring
+        const hasCryptoWireOnly = paymentAnalysis.paymentStatus === 'crypto_wire_only';
         
         // === DOMAIN & IDENTITY (20%) ===
         // Domain age < 6 months: -20
@@ -2184,14 +2254,22 @@ Return ONLY valid JSON in this exact format:
         }
         
         // === PAYMENT RISK (15%) ===
-        // Crypto/wire only: -30
-        if (hasCryptoWireOnly) {
+        // Score based on payment status
+        if (paymentAnalysis.paymentStatus === 'crypto_wire_only') {
+          // Confirmed crypto/wire/giftcard only = major risk: -30
           trustScore -= 30;
-          analysisResult.details.redFlags.push('Only accepts cryptocurrency or wire transfer - no buyer protection');
-        } else if (paymentAnalysis.onlyAcceptsUnusualMethods) {
-          // Unusual payment methods only: -20
-          trustScore -= 20;
-          analysisResult.details.redFlags.push('Only accepts unusual payment methods');
+          analysisResult.details.redFlags.push('Only accepts cryptocurrency, wire transfer, or gift cards - no buyer protection');
+        } else if (paymentAnalysis.paymentStatus === 'unusual_only') {
+          // Crypto only (no wire transfer) = moderate risk: -15
+          trustScore -= 15;
+          analysisResult.details.redFlags.push('Accepts cryptocurrency payments - limited buyer protection');
+        } else if (paymentAnalysis.paymentStatus === 'unknown') {
+          // Unknown payment methods = mild risk: -5 (not harsh punishment)
+          trustScore -= 5;
+          // Don't add a red flag for unknown - it's neutral/mild
+        } else if (paymentAnalysis.hasPaymentGateway) {
+          // Has detected payment gateway = positive signal
+          analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
         }
         
         // No refund policy: -15 (from AI analysis)
