@@ -110,18 +110,17 @@ export default function Index() {
             </div>
           </motion.div>
 
-          {/* Step Guide */}
-          <StepGuide />
-
           {/* URL Checker */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-8"
+            transition={{ delay: 0.3 }}
           >
             <UrlChecker />
           </motion.div>
+
+          {/* Step Guide - below the checker */}
+          <StepGuide />
 
           {/* Trust Statement */}
           <motion.p
