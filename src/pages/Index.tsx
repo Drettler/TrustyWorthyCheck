@@ -108,11 +108,6 @@ export default function Index() {
               </motion.span>
             </div>
           </motion.div>
-         <meta name='impact-site-verification' content='59c01973-1fb1-4a13-b175-3602a6d055e5' />
-          {/* Mission Control Card */}
-          <div id="checker">
-            <MissionControlCard />
-          </div>
 
           {/* Step Guide */}
           <StepGuide />
