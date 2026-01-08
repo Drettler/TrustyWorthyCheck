@@ -270,7 +270,7 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">🧠 Want Extra Protection?</h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">💪 Want Extra Protection?</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Go beyond checking websites — protect yourself everywhere online.
             </p>
