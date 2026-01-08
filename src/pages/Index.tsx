@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { MissionControlCard } from "@/components/MissionControlCard";
 import { FeatureCard } from "@/components/FeatureCard";
 import { StepGuide } from "@/components/StepGuide";
+import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
 
 const features = [
@@ -111,6 +112,16 @@ export default function Index() {
 
           {/* Step Guide */}
           <StepGuide />
+
+          {/* URL Checker */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8"
+          >
+            <UrlChecker />
+          </motion.div>
 
           {/* Trust Statement */}
           <motion.p
