@@ -11,6 +11,7 @@ import { FlagsList } from './FlagsList';
 import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
+import { DetailedReportUpsell } from './DetailedReportUpsell';
 import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
@@ -582,78 +583,11 @@ export function UrlChecker() {
                     </div>
 
                     {/* Unlock Full Report CTA */}
-                    <motion.div
-                      className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <Lock className="w-5 h-5 text-primary" />
-                          <h3 className="font-display font-semibold text-primary">Full Analysis Available with Pro</h3>
-                        </div>
-                        <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary font-medium">
-                          8 detailed reports
-                        </span>
-                      </div>
-                      
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-                        {[
-                          { icon: Building2, label: "Business Legitimacy" },
-                          { icon: Shield, label: "Domain Security" },
-                          { icon: AlertTriangle, label: "Fulfillment Model" },
-                          { icon: Image, label: "Image Analysis" },
-                          { icon: DollarSign, label: "Pricing Analysis" },
-                          { icon: Users, label: "Social Proof" },
-                          { icon: Globe, label: "Website Quality" },
-                          { icon: CheckCircle, label: "Positive Indicators" },
-                        ].map((item, index) => (
-                          <div 
-                            key={item.label}
-                            className="flex items-center gap-2 p-3 rounded-xl bg-background/60 border border-border/50 opacity-60"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                              <item.icon className="w-4 h-4 text-muted-foreground" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground truncate">{item.label}</p>
-                              <span className="text-[10px] text-primary/70 flex items-center gap-0.5">
-                                <Lock className="w-2.5 h-2.5" /> Pro
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="text-center pt-2 border-t border-primary/20">
-                        <Button 
-                          variant="default" 
-                          size="lg" 
-                          className="gap-2 mt-4"
-                          onClick={handleUnlockFullReport}
-                          disabled={isPaymentLoading}
-                        >
-                          {isPaymentLoading ? (
-                            <>
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              >
-                                <Sparkles className="w-4 h-4" />
-                              </motion.div>
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4" />
-                              Unlock Full Report - $4.99
-                            </>
-                          )}
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-2">One-time payment • Detailed analysis & downloadable report</p>
-                      </div>
-                    </motion.div>
+                    <DetailedReportUpsell 
+                      url={url}
+                      trustScore={result.trustScore}
+                      analysisResult={result}
+                    />
 
                   </div>
                 </motion.div>
