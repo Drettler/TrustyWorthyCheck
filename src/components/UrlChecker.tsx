@@ -30,7 +30,7 @@ export function UrlChecker() {
   const [forRelativeMode, setForRelativeMode] = useState(false);
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
-  const { isLimitReached, useCheck, resetForDemo, checksRemaining } = useDailyChecks();
+  const { isLimitReached, useCheck, resetForDemo, checksRemaining, maxChecks } = useDailyChecks();
   const hasAutoChecked = useRef(false);
 
   // Handle ?check= URL parameter from Chrome extension
@@ -374,9 +374,19 @@ export function UrlChecker() {
             )}
           </Button>
         </form>
+
+        {/* Check Counter */}
+        <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-border/30">
+          <div className="flex items-center gap-1.5 text-sm">
+            <Shield className="w-4 h-4 text-primary" />
+            <span className="text-muted-foreground">Daily checks:</span>
+            <span className={`font-bold ${checksRemaining <= 1 ? 'text-warning' : 'text-primary'}`}>
+              {checksRemaining}
+            </span>
+            <span className="text-muted-foreground">/ {maxChecks} remaining</span>
+          </div>
+        </div>
       </motion.div>
-
-
       {/* Loading State */}
       <AnimatePresence mode="wait">
         {isLoading && (
