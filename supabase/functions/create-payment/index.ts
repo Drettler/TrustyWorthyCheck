@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +20,14 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // Check rate limit before processing (10 payment attempts per day max)
+    const rateLimit = await checkRateLimit(req, "create-payment");
+    if (!rateLimit.allowed) {
+      logStep("Rate limit exceeded");
+      return rateLimitResponse(rateLimit, corsHeaders);
+    }
+    logStep("Rate limit check passed", { remaining: rateLimit.remaining });
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");

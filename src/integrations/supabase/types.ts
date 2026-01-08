@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      rate_limits: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          identifier: string
+          identifier_type: string
+          request_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          identifier: string
+          identifier_type: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       url_analysis_cache: {
         Row: {
           created_at: string
@@ -46,7 +79,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_rate_limit: {
+        Args: {
+          p_function_name: string
+          p_identifier: string
+          p_identifier_type: string
+          p_max_requests: number
+          p_window_hours?: number
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+          remaining: number
+          reset_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
