@@ -2238,11 +2238,12 @@ Return ONLY valid JSON in this exact format:
         // === HARD CAPS - CRITICAL ISSUES ===
         // If any of these are true → MAX SCORE = 45
         const hasCriticalIssue = 
-          hasNoHttps ||
           governmentScamAnalysis.isLikelyGovScam ||
           subscriptionScamAnalysis.isLikelySubscriptionScam ||
+          typosquattingCheck.isSuspicious ||
+          virusTotalResult.isMalicious ||
           hasCryptoWireOnly ||
-          hasFakeAddress;
+          (hasNoHttps && !httpsSecurityCheck.httpRedirectsToHttps); // Only if no redirect to https
         
         if (hasCriticalIssue && trustScore > 45) {
           trustScore = 45;
