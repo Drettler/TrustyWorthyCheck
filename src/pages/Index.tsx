@@ -184,6 +184,9 @@ export default function Index() {
             <p className="text-muted-foreground max-w-xl mx-auto">
               No complicated steps. Just paste, wait, and know if it's safe.
             </p>
+            <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-1">
+              <span>⭐</span> Trusted by parents and teens to avoid sketchy online stores every day.
+            </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
