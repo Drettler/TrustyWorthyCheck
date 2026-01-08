@@ -2106,6 +2106,35 @@ Return ONLY valid JSON in this exact format:
         // Use the new payment status for scoring
         const hasCryptoWireOnly = paymentAnalysis.paymentStatus === 'crypto_wire_only';
         
+        // === DETECT SITE TYPE (SaaS/Software vs E-commerce) ===
+        // SaaS/Software sites shouldn't be penalized for missing shipping/return policies
+        const saasKeywords = [
+          'software', 'saas', 'platform', 'subscription', 'app', 'service', 
+          'cloud', 'solution', 'tool', 'api', 'dashboard', 'management',
+          'password manager', 'security', 'antivirus', 'vpn', 'hosting',
+          'crm', 'erp', 'analytics', 'automation', 'workflow'
+        ];
+        const markdownLower = (markdown || '').toLowerCase();
+        const titleLower = (metadata?.title || '').toLowerCase();
+        const descLower = (metadata?.description || '').toLowerCase();
+        const combinedText = `${markdownLower} ${titleLower} ${descLower}`;
+        
+        const isSaaSOrSoftware = saasKeywords.some(kw => combinedText.includes(kw)) ||
+          combinedText.includes('sign up') && combinedText.includes('plan') ||
+          combinedText.includes('free trial') ||
+          combinedText.includes('enterprise') && combinedText.includes('pricing');
+        
+        // Also check if it's clearly NOT an e-commerce site (no products/cart)
+        const ecommerceIndicators = ['add to cart', 'buy now', 'shop now', 'free shipping', 'checkout', 'product'];
+        const hasEcommerceIndicators = ecommerceIndicators.some(kw => combinedText.includes(kw));
+        
+        const isLikelySaaS = isSaaSOrSoftware && !hasEcommerceIndicators;
+        
+        // Store site type in result for transparency
+        if (isLikelySaaS) {
+          analysisResult.siteType = 'saas';
+        }
+        
         // === DOMAIN & IDENTITY (20%) ===
         // Domain age < 6 months: -20
         if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 180) {
@@ -2233,8 +2262,8 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('No terms of service found');
         }
         
-        // Missing shipping info: -8
-        if (analysisResult.details.business && !analysisResult.details.business.hasShippingInfo) {
+        // Missing shipping info: -8 (only for e-commerce, not SaaS)
+        if (analysisResult.details.business && !analysisResult.details.business.hasShippingInfo && !isLikelySaaS) {
           trustScore -= 8;
           missingPagesCount++;
           analysisResult.details.redFlags.push('No shipping information found');
@@ -2272,10 +2301,15 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
         }
         
-        // No refund policy: -15 (from AI analysis)
+        // No refund policy: -15 for e-commerce, -5 for SaaS (they use subscription cancellation instead)
         if (analysisResult.details.business && !analysisResult.details.business.hasReturnPolicy) {
-          trustScore -= 15;
-          analysisResult.details.redFlags.push('No refund/return policy found');
+          if (isLikelySaaS) {
+            trustScore -= 5;
+            // Don't add red flag for SaaS - subscription cancellation is different from returns
+          } else {
+            trustScore -= 15;
+            analysisResult.details.redFlags.push('No refund/return policy found');
+          }
         }
         
         // === BEHAVIORAL RED FLAGS (10%) ===
