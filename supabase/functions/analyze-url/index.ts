@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1527,6 +1528,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check rate limit before processing
+    const rateLimit = await checkRateLimit(req, "analyze-url");
+    if (!rateLimit.allowed) {
+      console.log(`[RATE-LIMIT] Request blocked for analyze-url`);
+      return rateLimitResponse(rateLimit, corsHeaders);
+    }
+    console.log(`[RATE-LIMIT] Request allowed, ${rateLimit.remaining} remaining`);
     const { url } = await req.json();
 
     if (!url) {

@@ -1,3 +1,5 @@
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -216,6 +218,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check rate limit before processing
+    const rateLimit = await checkRateLimit(req, "analyze-social-seller");
+    if (!rateLimit.allowed) {
+      console.log(`[RATE-LIMIT] Request blocked for analyze-social-seller`);
+      return rateLimitResponse(rateLimit, corsHeaders);
+    }
+    console.log(`[RATE-LIMIT] Request allowed, ${rateLimit.remaining} remaining`);
     const { username, bio, platform }: AnalysisRequest = await req.json();
 
     if (!username && !bio) {
