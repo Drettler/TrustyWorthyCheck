@@ -325,6 +325,67 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Extra Protection Section */}
+      <section className="container px-4 py-16 border-t border-border">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-8">
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <Shield className="w-6 h-6 text-primary" />
+              <h2 className="font-display text-2xl font-bold">Want Extra Protection?</h2>
+            </div>
+            
+            <div className="grid sm:grid-cols-3 gap-6">
+              {/* Identity Protection */}
+              <div className="rounded-xl border border-border/50 bg-background/50 p-5 text-center">
+                <div className="text-3xl mb-3">🛡</div>
+                <h3 className="font-semibold mb-2">Identity Protection</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Protect your identity and credit if a site feels unsafe.
+                </p>
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <a href="https://www.aura.com/lp/identity-theft-protection" target="_blank" rel="noopener noreferrer">
+                    Protect My Identity
+                  </a>
+                </Button>
+              </div>
+
+              {/* Password Security */}
+              <div className="rounded-xl border border-border/50 bg-background/50 p-5 text-center">
+                <div className="text-3xl mb-3">🔐</div>
+                <h3 className="font-semibold mb-2">Password Security</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Stop password leaks and account takeovers.
+                </p>
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <a href="https://www.dashlane.com/" target="_blank" rel="noopener noreferrer">
+                    Secure My Accounts
+                  </a>
+                </Button>
+              </div>
+
+              {/* Payment Safety */}
+              <div className="rounded-xl border border-border/50 bg-background/50 p-5 text-center">
+                <div className="text-3xl mb-3">💳</div>
+                <h3 className="font-semibold mb-2">Payment Safety</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Use protected payments when buying online.
+                </p>
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <a href="https://privacy.com/" target="_blank" rel="noopener noreferrer">
+                    Protect My Payment
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="container px-4 text-center text-sm text-muted-foreground space-y-4">
