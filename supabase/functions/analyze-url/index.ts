@@ -2131,15 +2131,55 @@ Return ONLY valid JSON in this exact format:
           combinedText.includes('free trial') ||
           combinedText.includes('enterprise') && combinedText.includes('pricing');
         
-        // Also check if it's clearly NOT an e-commerce site (no products/cart)
-        const ecommerceIndicators = ['add to cart', 'buy now', 'shop now', 'free shipping', 'checkout', 'product'];
-        const hasEcommerceIndicators = ecommerceIndicators.some(kw => combinedText.includes(kw));
-        
-        const isLikelySaaS = isSaaSOrSoftware && !hasEcommerceIndicators;
-        
-        // Store site type in result for transparency
+        // Also check if it's clearly NOT an e-commerce site (avoid false-positives like "product" on SaaS pages)
+        // We only treat it as e-commerce if we see *strong* commerce cues like cart/checkout.
+        const strongEcommerceIndicators = [
+          'add to cart',
+          'checkout',
+          'shopping cart',
+          'cart',
+          'order tracking',
+        ];
+        const hasStrongEcommerceIndicators = strongEcommerceIndicators.some((kw) => combinedText.includes(kw));
+
+        const isLikelySaaS = isSaaSOrSoftware && !hasStrongEcommerceIndicators;
+
+        // Store site type in result for transparency + normalize AI red flags that don't apply to SaaS
         if (isLikelySaaS) {
           analysisResult.siteType = 'saas';
+        }
+
+        if (analysisResult.details?.redFlags?.length) {
+          const filtered = analysisResult.details.redFlags.filter((flag: string) => {
+            const f = (flag || '').toLowerCase();
+
+            // Remove e-commerce-only expectations for SaaS/software sites
+            if (isLikelySaaS) {
+              if (f.includes('shipping')) return false;
+              if (f.includes('refund') || f.includes('return policy') || f.includes('returns')) return false;
+              if (f.includes('physical address') || f.includes('no address')) return false;
+            }
+
+            // If our deterministic scam detectors say "not a gov scam", don't keep vague gov-mention flags
+            if (!governmentScamAnalysis.isLikelyGovScam && f.includes('government')) return false;
+
+            // WHOIS often fails for some TLDs/providers; treat "unknown" as neutral
+            if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && f.includes('unknown domain age')) {
+              return false;
+            }
+
+            // URL shorteners/tracking links are common for legit marketing funnels (especially SaaS)
+            if (isLikelySaaS && (f.includes('url shortener') || f.includes('url shorteners'))) return false;
+
+            return true;
+          });
+
+          // De-dupe while preserving order
+          analysisResult.details.redFlags = Array.from(new Set(filtered));
+        }
+
+        if (analysisResult.details?.positiveSignals?.length) {
+          analysisResult.details.positiveSignals = Array.from(new Set(analysisResult.details.positiveSignals));
         }
         
         // === DOMAIN & IDENTITY (20%) ===
