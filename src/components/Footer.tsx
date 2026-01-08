@@ -17,7 +17,7 @@ export function Footer() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <Shield className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display font-semibold">Should I Buy This?</span>
+            <span className="font-display font-semibold">TrustWorthy Check</span>
           </div>
 
           {/* Links */}
@@ -40,7 +40,7 @@ export function Footer() {
             Educational guidance only — not legal advice.
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            © {new Date().getFullYear()} Should I Buy This? All rights reserved.
+            © {new Date().getFullYear()} TrustWorthy Check. All rights reserved.
           </p>
         </div>
       </div>
