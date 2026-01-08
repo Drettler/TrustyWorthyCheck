@@ -130,10 +130,10 @@ export default function Index() {
             className="text-center mb-12"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              How We Help You
+              🔒 How We Help
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Our friendly safety checks look at everything — so you don't have to be a tech expert.
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We combine real-world scam patterns, security checks, and transparency signals to give you a clear, unbiased verdict.
             </p>
           </motion.div>
 
