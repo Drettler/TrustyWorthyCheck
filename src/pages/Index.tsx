@@ -117,6 +117,16 @@ export default function Index() {
             💚 We never take money to change results. Ever.{' '}
             <span className="font-medium text-foreground">Your safety comes first.</span>
           </motion.p>
+
+          {/* First-timer tip */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-center text-sm text-muted-foreground mt-4 max-w-lg mx-auto"
+          >
+            🧒 First time checking a site? Try a random shop you've seen on TikTok or Instagram.
+          </motion.p>
         </div>
       </section>
 
