@@ -58,16 +58,11 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
       transition={{ delay: 0.3 }}
       className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 border-2 border-primary/20"
     >
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
-          <FileText className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h3 className="font-display font-bold text-lg">🧾 Detailed Trust Report</h3>
-          <p className="text-sm text-muted-foreground">
-            Get the full picture before you buy
-          </p>
-        </div>
+      <div className="text-center mb-4">
+        <h3 className="font-display font-bold text-xl mb-1">🔓 Want the full breakdown?</h3>
+        <p className="text-sm text-muted-foreground">
+          See exactly why this site is safe or risky.
+        </p>
       </div>
 
       <ul className="space-y-2 mb-5">
@@ -97,7 +92,7 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
           </>
         ) : (
           <>
-            Get Detailed Report – $4.99
+            Unlock Full Trust Report — $4.99
             <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
           </>
         )}
