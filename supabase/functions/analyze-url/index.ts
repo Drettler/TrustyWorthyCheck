@@ -2383,6 +2383,80 @@ Return ONLY valid JSON in this exact format:
         // Apply the deterministic score and verdict
         analysisResult.trustScore = trustScore;
         analysisResult.verdict = verdict;
+        
+        // === CONFIDENCE CALCULATION ===
+        // Count how many data sources were actually verified
+        let confidencePoints = 0;
+        const confidenceChecks: string[] = [];
+        
+        // WHOIS available? +1
+        if (!whoisResult.error && whoisResult.domainAge && whoisResult.domainAge !== 'Unknown') {
+          confidencePoints += 1;
+          confidenceChecks.push('WHOIS data');
+        }
+        
+        // VirusTotal available? +1
+        if (!virusTotalResult.error && virusTotalResult.totalEngines > 0) {
+          confidencePoints += 1;
+          confidenceChecks.push('VirusTotal scan');
+        }
+        
+        // Address found? +1
+        if (contactAnalysis.hasPhysicalAddress || analysisResult.details.business?.hasPhysicalAddress) {
+          confidencePoints += 1;
+          confidenceChecks.push('Physical address');
+        }
+        
+        // Payment method detected? +1
+        if (paymentAnalysis.paymentStatus !== 'unknown') {
+          confidencePoints += 1;
+          confidenceChecks.push('Payment methods');
+        }
+        
+        // Policies detected? +1 (at least 1 of: privacy, terms, return)
+        const hasSomePolicies = analysisResult.details.business?.hasPrivacyPolicy || 
+                                analysisResult.details.business?.hasTerms || 
+                                analysisResult.details.business?.hasReturnPolicy;
+        if (hasSomePolicies) {
+          confidencePoints += 1;
+          confidenceChecks.push('Business policies');
+        }
+        
+        // External links detected? +1 (social or review platforms)
+        if (linkAnalysis.hasSocialLinks || linkAnalysis.hasExternalReviews) {
+          confidencePoints += 1;
+          confidenceChecks.push('External links');
+        }
+        
+        // Determine confidence level
+        // 5-6 checks: high, 3-4 checks: medium, 0-2 checks: low
+        let confidenceLevel: 'high' | 'medium' | 'low';
+        let confidenceMessage: string;
+        
+        if (confidencePoints >= 5) {
+          confidenceLevel = 'high';
+          confidenceMessage = 'Comprehensive data available for analysis.';
+        } else if (confidencePoints >= 3) {
+          confidenceLevel = 'medium';
+          confidenceMessage = 'Moderate data available — some checks could not be verified.';
+        } else {
+          confidenceLevel = 'low';
+          confidenceMessage = 'Limited data found — results may be less certain.';
+        }
+        
+        // IMPORTANT: If confidence is low, avoid "safe" unless score is extremely high (95+)
+        if (confidenceLevel === 'low' && verdict === 'safe' && trustScore < 95) {
+          analysisResult.verdict = 'caution';
+        }
+        
+        // Store confidence in result
+        analysisResult.confidence = {
+          level: confidenceLevel,
+          message: confidenceMessage,
+          checksVerified: confidencePoints,
+          totalPossibleChecks: 6,
+          verifiedSources: confidenceChecks,
+        };
       }
       
     } catch (parseError) {
