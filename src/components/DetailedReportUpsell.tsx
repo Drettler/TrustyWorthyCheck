@@ -7,10 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import type { AnalysisResult } from '@/lib/api/url-check';
 
 const features = [
+  { icon: AlertTriangle, text: 'Detailed red flags breakdown' },
   { icon: History, text: 'Full WHOIS history' },
   { icon: Shield, text: 'VirusTotal engine breakdown' },
   { icon: FileText, text: 'Screenshot archive' },
-  { icon: AlertTriangle, text: 'Risk explanation in plain English' },
   { icon: CheckCircle, text: '"What to do next" plan' },
 ];
 
