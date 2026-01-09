@@ -7,11 +7,11 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Website Checker', href: '/#checker' },
-    { label: 'Threat Feeds', href: '/threat-feeds' },
+    { label: 'Website Checker', href: '/website-checker' },
+    { label: 'Threats Feed', href: '/threats-feed' },
     { label: 'Save-Money', href: '/save-money' },
     { label: 'Protect Yourself', href: '/protect-yourself' },
-    { label: 'About', href: '#about' },
+    { label: 'About', href: '/about' },
   ];
 
   return (

@@ -19,6 +19,8 @@ const ProtectYourself = lazy(() => import("./pages/ProtectYourself"));
 const RecentReports = lazy(() => import("./pages/RecentReports"));
 const ThreatFeeds = lazy(() => import("./pages/ThreatFeeds"));
 const Terms = lazy(() => import("./pages/Terms"));
+const WebsiteChecker = lazy(() => import("./pages/WebsiteChecker"));
+const About = lazy(() => import("./pages/About"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Minimal loading fallback
@@ -48,11 +50,14 @@ const App = () => (
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/website-checker" element={<WebsiteChecker />} />
+            <Route path="/threats-feed" element={<ThreatFeeds />} />
             <Route path="/save-money" element={<SaveMoney />} />
             <Route path="/protect-yourself" element={<ProtectYourself />} />
+            <Route path="/about" element={<About />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/recent-reports" element={<RecentReports />} />
-            <Route path="/threat-feeds" element={<ThreatFeeds />} />
+            <Route path="/threat-feeds" element={<ThreatFeeds />} /> {/* Legacy route redirect */}
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/disclosure" element={<Disclosure />} />
