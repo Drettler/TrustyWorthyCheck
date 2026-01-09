@@ -1643,10 +1643,28 @@ Deno.serve(async (req) => {
           },
         };
       } else {
+        // Check if it's an SSL/TLS error - provide a more helpful message
+        const errorMessage = scrapeData.error || 'Unknown error';
+        const isSslError = errorMessage.toLowerCase().includes('ssl') || 
+                          errorMessage.toLowerCase().includes('tls') ||
+                          errorMessage.toLowerCase().includes('certificate');
+        
+        if (isSslError) {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'ssl_error',
+              message: 'This website has SSL/security configuration issues. This can be a red flag - legitimate businesses typically have proper SSL certificates. Proceed with caution if you decide to visit this site.'
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: `Could not access website: ${scrapeData.error || 'Unknown error'}` 
+            error: 'scrape_failed',
+            message: `Could not access website: ${errorMessage}. The site may be down, blocking automated checks, or have configuration issues.`
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

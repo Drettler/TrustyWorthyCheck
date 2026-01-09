@@ -129,6 +129,18 @@ export interface RateLimitError {
   resetAt: string;
 }
 
+export interface SslError {
+  type: 'ssl_error';
+  message: string;
+}
+
+export interface ScrapeError {
+  type: 'scrape_failed';
+  message: string;
+}
+
+export type AnalysisError = RateLimitError | SslError | ScrapeError;
+
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   const { data, error } = await supabase.functions.invoke('analyze-url', {
     body: { url },
@@ -150,8 +162,26 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     throw rateLimitError;
   }
 
+  // Handle SSL error
+  if (!data.success && data.error === 'ssl_error') {
+    const sslError: SslError = {
+      type: 'ssl_error',
+      message: data.message || 'This website has SSL/security issues.',
+    };
+    throw sslError;
+  }
+
+  // Handle scrape failure
+  if (!data.success && data.error === 'scrape_failed') {
+    const scrapeError: ScrapeError = {
+      type: 'scrape_failed',
+      message: data.message || 'Could not access this website.',
+    };
+    throw scrapeError;
+  }
+
   if (!data.success) {
-    throw new Error(data.error || 'Analysis failed');
+    throw new Error(data.message || data.error || 'Analysis failed');
   }
 
   return data.result;
