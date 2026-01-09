@@ -45,11 +45,16 @@ export function MissionControlCard() {
   }, [searchParams]);
 
   const handleAutoSubmit = async (urlToCheck: string) => {
-    if (!useCheck()) return;
-    
+    // Flip into loading state first so the UI never swaps to the limit screen mid-check
     setIsLoading(true);
     setScanStage(0);
     setResult(null);
+
+    if (!useCheck()) {
+      setIsLoading(false);
+      setScanStage(0);
+      return;
+    }
 
     try {
       const analysisResult = await analyzeUrl(urlToCheck);
@@ -108,11 +113,16 @@ export function MissionControlCard() {
       return;
     }
 
-    if (!useCheck()) return;
-
+    // Flip into loading state first so the UI never swaps to the limit screen mid-check
     setIsLoading(true);
     setScanStage(0);
     setResult(null);
+
+    if (!useCheck()) {
+      setIsLoading(false);
+      setScanStage(0);
+      return;
+    }
 
     try {
       const analysisResult = await analyzeUrl(url);
@@ -139,7 +149,7 @@ export function MissionControlCard() {
     setUrlValid(null);
   };
 
-  if (isLimitReached && !result) {
+  if (isLimitReached && !result && !isLoading) {
     return <UpgradePrompt onResetDemo={resetForDemo} />;
   }
 

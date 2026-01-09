@@ -51,11 +51,17 @@ export function UrlChecker() {
   }, [searchParams]);
 
   const handleAutoSubmit = async (urlToCheck: string) => {
-    if (!useCheck()) return;
-    
+    // Flip into loading state first so the UI never swaps to the limit screen mid-check
     setIsLoading(true);
     setScanStage(0);
     setResult(null);
+
+    // Check daily limit (consume one check)
+    if (!useCheck()) {
+      setIsLoading(false);
+      setScanStage(0);
+      return;
+    }
 
     try {
       const analysisResult = await analyzeUrl(urlToCheck);
@@ -132,14 +138,17 @@ export function UrlChecker() {
       return;
     }
 
-    // Check daily limit
-    if (!useCheck()) {
-      return;
-    }
-
+    // Flip into loading state first so the UI never swaps to the limit screen mid-check
     setIsLoading(true);
     setScanStage(0);
     setResult(null);
+
+    // Check daily limit (consume one check)
+    if (!useCheck()) {
+      setIsLoading(false);
+      setScanStage(0);
+      return;
+    }
 
     try {
       const analysisResult = await analyzeUrl(url);
@@ -194,8 +203,8 @@ export function UrlChecker() {
     setShowDetails(false);
   };
 
-  // Show upgrade prompt if limit reached and no result displayed
-  if (isLimitReached && !result) {
+  // Show upgrade prompt if limit reached and no result displayed (but never interrupt an in-flight check)
+  if (isLimitReached && !result && !isLoading) {
     return (
       <div className="w-full max-w-4xl mx-auto">
         <UpgradePrompt onResetDemo={resetForDemo} />
