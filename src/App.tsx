@@ -10,6 +10,7 @@ import SaveMoney from "./pages/SaveMoney";
 import ProtectYourself from "./pages/ProtectYourself";
 import RecentReports from "./pages/RecentReports";
 import ThreatFeeds from "./pages/ThreatFeeds";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/recent-reports" element={<RecentReports />} />
           <Route path="/threat-feeds" element={<ThreatFeeds />} />
+          <Route path="/terms" element={<Terms />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
