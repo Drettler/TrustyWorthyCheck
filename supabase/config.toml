@@ -17,3 +17,12 @@ verify_jwt = false
 
 [functions.create-payment]
 verify_jwt = false
+
+[functions.fetch-threat-feeds]
+verify_jwt = false
+
+# Cron job to refresh threat feeds every 6 hours
+[[cron_jobs]]
+name = "refresh-threat-feeds"
+schedule = "0 */6 * * *"
+command = "SELECT net.http_post(url := 'https://xpbnmybvddkoujsklqom.supabase.co/functions/v1/fetch-threat-feeds', headers := '{\"Content-Type\": \"application/json\"}'::jsonb, body := '{}'::jsonb)"
