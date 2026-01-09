@@ -1,9 +1,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
+import { encodeHex } from "https://deno.land/std@0.208.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Hash IP addresses for privacy - uses SHA-256 with a salt
+async function hashIp(ip: string): Promise<string> {
+  const salt = Deno.env.get("SUPABASE_PROJECT_ID") || "honeypot-salt";
+  const data = new TextEncoder().encode(ip + salt);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return encodeHex(new Uint8Array(hashBuffer)).slice(0, 16); // First 16 chars for readability
+}
 
 // Fake data to return - looks enticing to scrapers
 const FAKE_RESPONSES: Record<string, unknown> = {
@@ -53,11 +63,12 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const endpoint = url.searchParams.get("endpoint") || "unknown";
     
-    // Extract request details
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    // Extract and hash IP for privacy
+    const rawIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("cf-connecting-ip") ||
       req.headers.get("x-real-ip") ||
       "unknown";
+    const hashedIp = await hashIp(rawIp);
     
     const userAgent = req.headers.get("user-agent") || null;
     const referer = req.headers.get("referer") || null;
@@ -79,10 +90,10 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Log the suspicious access attempt
+    // Log the suspicious access attempt with hashed IP
     const { error: logError } = await supabase.from("honeypot_logs").insert({
       endpoint,
-      ip_address: ip,
+      ip_address: hashedIp, // Hashed for privacy
       user_agent: userAgent,
       referer: referer,
       headers,
@@ -93,7 +104,7 @@ Deno.serve(async (req) => {
     if (logError) {
       console.error("Failed to log honeypot access:", logError);
     } else {
-      console.log(`[HONEYPOT] Logged suspicious access to /${endpoint} from ${ip}`);
+      console.log(`[HONEYPOT] Logged suspicious access to /${endpoint} from ${hashedIp}`);
     }
 
     // Return fake data based on endpoint (delay slightly to seem more realistic)
