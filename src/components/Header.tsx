@@ -9,8 +9,7 @@ export function Header() {
   const navLinks = [
     { label: 'Website Checker', href: '#checker' },
     { label: 'Save-Money', href: '/save-money' },
-    { label: 'Learn', href: '#learn' },
-    { label: 'Reports', href: '#reports' },
+    { label: 'Protect Yourself', href: '/protect-yourself' },
     { label: 'About', href: '#about' },
   ];
 
