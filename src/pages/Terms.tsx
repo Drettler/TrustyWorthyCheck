@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 
 export default function Terms() {
   const sections = [
@@ -35,6 +36,11 @@ export default function Terms() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <SEO 
+        title="Terms of Service"
+        description="Read TrustworthyCheck's terms of service. Understand your responsibilities and our limitations when using our website safety tools."
+        canonical="https://trustworthycheck.com/terms"
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-3xl">

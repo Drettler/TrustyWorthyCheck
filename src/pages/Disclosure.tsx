@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 
 export default function Disclosure() {
   const sections = [
@@ -42,6 +43,11 @@ export default function Disclosure() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <SEO 
+        title="Affiliate Disclosure"
+        description="TrustworthyCheck's affiliate disclosure. Learn how we keep this site free through trusted partnerships while maintaining independent safety analysis."
+        canonical="https://trustworthycheck.com/disclosure"
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-3xl">

@@ -4,10 +4,16 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 
 export default function Disclaimer() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <SEO 
+        title="Disclaimer"
+        description="Important disclaimer for TrustworthyCheck. We provide informational content only, not financial, legal, or professional advice."
+        canonical="https://trustworthycheck.com/disclaimer"
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-3xl">
