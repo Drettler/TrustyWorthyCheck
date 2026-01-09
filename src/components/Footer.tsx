@@ -5,6 +5,7 @@ export function Footer() {
     { label: 'Privacy', href: '/privacy' },
     { label: 'Terms', href: '/terms' },
     { label: 'Disclosure', href: '/disclosure' },
+    { label: 'Disclaimer', href: '/disclaimer' },
   ];
 
   return (
