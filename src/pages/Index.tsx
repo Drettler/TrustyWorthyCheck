@@ -8,6 +8,7 @@ import { StepGuide } from "@/components/StepGuide";
 import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
+import { CashbackAgent } from "@/components/CashbackAgent";
 
 const features = [
   {
@@ -400,6 +401,15 @@ export default function Index() {
                 </Button>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Cashback Agent - Compact Version */}
+      <section className="py-12 bg-background">
+        <div className="container px-4">
+          <div className="max-w-3xl mx-auto">
+            <CashbackAgent variant="compact" />
           </div>
         </div>
       </section>

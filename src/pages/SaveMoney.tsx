@@ -6,7 +6,7 @@ import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
+import { CashbackAgent } from '@/components/CashbackAgent';
 export default function SaveMoney() {
   const [showBottomCTA, setShowBottomCTA] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -212,6 +212,27 @@ export default function SaveMoney() {
                   <span className="font-medium">{reason.text}</span>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Cashback Agent Module */}
+        <section className="py-16">
+          <div className="container px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-8"
+            >
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+                💰 Cashback Agent
+              </h2>
+              <p className="text-muted-foreground">Get paid to shop at stores you already trust</p>
+            </motion.div>
+
+            <div className="max-w-2xl mx-auto">
+              <CashbackAgent variant="full" />
             </div>
           </div>
         </section>
