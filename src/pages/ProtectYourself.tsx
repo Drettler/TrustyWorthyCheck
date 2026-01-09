@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Shield, Lock, CreditCard, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 
 const protectionServices = [
@@ -31,6 +32,11 @@ const protectionServices = [
 export default function ProtectYourself() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Protect Yourself Online"
+        description="Essential tools for online safety: identity protection, password security, and payment safety. Protect yourself from scams and data breaches."
+        canonical="https://trustworthycheck.com/protect-yourself"
+      />
       <Header />
       
       <main className="container px-4 py-16 md:py-24">

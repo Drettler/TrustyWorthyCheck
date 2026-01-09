@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Clock, Flag, TrendingUp, Shield, ExternalLink, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SiteReport {
@@ -75,6 +76,11 @@ export default function RecentReports() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <SEO 
+        title="Recently Reported Sites"
+        description="View community-flagged suspicious websites. Stay informed about the latest scams and fraudulent sites reported by users."
+        canonical="https://trustworthycheck.com/recent-reports"
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-5xl">

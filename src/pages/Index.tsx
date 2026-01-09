@@ -1,12 +1,13 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Shield, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { MissionControlCard } from "@/components/MissionControlCard";
 import { FeatureCard } from "@/components/FeatureCard";
 import { StepGuide } from "@/components/StepGuide";
 import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
+import { SEO } from "@/components/SEO";
 
 const features = [
   {
@@ -40,6 +41,11 @@ const features = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO 
+        title="Spot Scams Before They Cost You"
+        description="Check if a website is legit before you buy. TrustworthyCheck scans for scams, fake stores, unsafe payments, and suspicious business details in under 2 minutes."
+        canonical="https://trustworthycheck.com/"
+      />
       <Header />
 
       {/* Friendly helper in corner */}

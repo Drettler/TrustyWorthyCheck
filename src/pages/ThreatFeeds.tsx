@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search, Shield, AlertTriangle, Clock, ExternalLink, 
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -141,6 +142,11 @@ export default function ThreatFeeds() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <SEO 
+        title="Public Threat & Scam Feeds"
+        description="Real-time threat intelligence from trusted government agencies and security researchers. Stay ahead of phishing, scams, and malware."
+        canonical="https://trustworthycheck.com/threat-feeds"
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-6xl">
