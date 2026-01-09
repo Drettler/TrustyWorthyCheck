@@ -126,6 +126,7 @@ export interface RateLimitError {
   type: 'rate_limit';
   message: string;
   remaining: number;
+  limit: number;
   resetAt: string;
 }
 
@@ -142,21 +143,69 @@ export interface ScrapeError {
 export type AnalysisError = RateLimitError | SslError | ScrapeError;
 
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
-  const { data, error } = await supabase.functions.invoke('analyze-url', {
+  const { data, error, response } = await supabase.functions.invoke('analyze-url', {
     body: { url },
   });
 
+  // For non-2xx responses, supabase-js returns `error` + `response` (body not parsed).
+  // Parse the JSON body when possible so the UI can show friendly messages.
   if (error) {
+    if (response) {
+      const contentType = response.headers.get('Content-Type') || '';
+      if (contentType.includes('application/json')) {
+        let body: any = null;
+        try {
+          body = await response.clone().json();
+        } catch {
+          body = null;
+        }
+
+        if (body && typeof body === 'object') {
+          if (body.error === 'rate_limit_exceeded') {
+            const rateLimitError: RateLimitError = {
+              type: 'rate_limit',
+              message: body.message || 'Daily limit reached. Please try again tomorrow.',
+              remaining: body.remaining ?? 0,
+              limit: body.limit ?? 3,
+              resetAt: body.resetAt ?? '',
+            };
+            throw rateLimitError;
+          }
+
+          if (body.error === 'ssl_error') {
+            const sslError: SslError = {
+              type: 'ssl_error',
+              message: body.message || 'This website has SSL/security issues.',
+            };
+            throw sslError;
+          }
+
+          if (body.error === 'scrape_failed') {
+            const scrapeError: ScrapeError = {
+              type: 'scrape_failed',
+              message: body.message || 'Could not access this website.',
+            };
+            throw scrapeError;
+          }
+
+          if (body.message || body.error) {
+            throw new Error(body.message || body.error);
+          }
+        }
+      }
+    }
+
     console.error('Error analyzing URL:', error);
     throw new Error(error.message || 'Failed to analyze URL');
   }
 
-  // Handle rate limit response
+  // Handle rate limit response (if backend returns 200 with an error payload)
   if (!data.success && data.error === 'rate_limit_exceeded') {
     const rateLimitError: RateLimitError = {
       type: 'rate_limit',
       message: data.message || 'Daily limit reached. Please try again tomorrow.',
       remaining: data.remaining || 0,
+      limit: data.limit || 3,
       resetAt: data.resetAt || '',
     };
     throw rateLimitError;
