@@ -77,7 +77,7 @@ export default function Index() {
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Avoid scams and fake stores before they cost you money —{" "}
+              Avoid scams, fake sites and stores before they cost you money —{" "}
               <span className="text-foreground font-medium">in under 2 minutes.</span>
             </p>
 
@@ -105,7 +105,7 @@ export default function Index() {
                 transition={{ delay: 0.2 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-medium text-sm"
               >
-                🧠 No Tech Skills Needed
+                🤖 No Tech Skills Needed
               </motion.span>
             </div>
           </motion.div>
@@ -191,7 +191,7 @@ export default function Index() {
               No complicated steps. Just paste, wait, and know if it's safe.
             </p>
             <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-1">
-              <span>⭐</span> Trusted by parents and teens to avoid sketchy online stores every day.
+              <span>⭐</span> Trusted by parents and teens to avoid sketchy online sites every day.
             </p>
           </motion.div>
 
@@ -205,7 +205,7 @@ export default function Index() {
               },
               {
                 step: "2",
-                emoji: "🔬",
+                emoji: "📡",
                 title: "We Do the Work",
                 description: "Our system checks security, reviews business info, and scans for common scam patterns.",
               },
@@ -252,11 +252,12 @@ export default function Index() {
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Built for Real People</h2>
             <p className="text-lg text-muted-foreground mb-6">
-              We created this tool because too many people lose money to fake websites. Whether you're a teen making
-              your first online purchase or a parent helping your family stay safe — we've got your back.
+              We created this tool because too many people lose money to fake websites. Whether you're a teen, parent,
+              or a friend just trying not to lose out on a gift purchased, we've got your back.
             </p>
             <p className="text-muted-foreground">
-              No jargon. No confusing reports. Just honest answers about whether a website is safe to buy from.
+              No jargon. No confusing reports. Just honest answers about whether a website is considered safe to buy
+              from.
             </p>
           </motion.div>
         </div>
@@ -271,19 +272,89 @@ export default function Index() {
             viewport={{ once: true }}
             className="max-w-3xl mx-auto text-center"
           >
-            <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
-              Check If a Website Is Legitimate
-            </h2>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">Check If a Website Is Legitimate</h2>
             <p className="text-muted-foreground mb-4">
-              TrustworthyCheck.com helps you check if a website is legit before you buy. Our website trust checker scans for scam signals, fake stores, suspicious business details, and unsafe payment practices so you can decide if a site is safe.
+              TrustworthyCheck.com helps you check if a website is legit before you buy. Our website trust checker scans
+              for scam signals, fake stores, suspicious business details, and unsafe payment practices so you can decide
+              if a site is safe.
             </p>
             <p className="text-muted-foreground">
-              If you've ever asked <span className="font-medium text-foreground">"is this website trustworthy?"</span> — this tool was built for you.
+              If you've ever asked <span className="font-medium text-foreground">"is this website trustworthy?"</span> —
+              this tool was built for you.
             </p>
           </motion.div>
         </div>
       </section>
 
+      {/* Extra Protection Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">💪 Want Extra Protection?</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Go beyond checking websites — protect yourself everywhere online.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              {
+                icon: UserCheck,
+                emoji: "🛡",
+                title: "Identity Protection",
+                description: "Protect your identity and credit if a site feels unsafe.",
+                button: "Protect My Identity",
+                href: "https://www.identityguard.com/",
+              },
+              {
+                icon: Lock,
+                emoji: "🔐",
+                title: "Password Security",
+                description: "Stop password leaks and account takeovers.",
+                button: "Secure My Accounts",
+                href: "https://bitwarden.com/",
+              },
+              {
+                icon: CreditCard,
+                emoji: "💳",
+                title: "Payment Safety",
+                description: "Use protected payments when buying online.",
+                button: "Protect My Payment",
+                href: "https://privacy.com/",
+              },
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-card rounded-2xl p-6 border border-border shadow-soft hover:shadow-card transition-shadow text-center"
+              >
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">{item.emoji}</span>
+                </div>
+                <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full group"
+                  onClick={() => window.open(item.href, "_blank", "noopener,noreferrer")}
+                >
+                  {item.button}
+                  <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>
