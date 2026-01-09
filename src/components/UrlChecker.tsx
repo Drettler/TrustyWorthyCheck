@@ -32,6 +32,26 @@ export function UrlChecker() {
   const { toast } = useToast();
   const { isLimitReached, useCheck, resetForDemo, checksRemaining, maxChecks, updateFromResponse } = useDailyChecks();
   const hasAutoChecked = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputHighlight, setInputHighlight] = useState(false);
+
+  // Focus and highlight input when navigating to #checker
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#checker' && inputRef.current) {
+        inputRef.current.focus();
+        setInputHighlight(true);
+        setTimeout(() => setInputHighlight(false), 1500);
+      }
+    };
+    
+    // Check on mount
+    handleHashChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Handle ?check= URL parameter from Chrome extension
   useEffect(() => {
@@ -351,11 +371,14 @@ export function UrlChecker() {
               <Globe className="w-5 h-5" />
             </div>
             <Input
+              ref={inputRef}
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Paste the site link here 👆"
-              className="pl-12 h-14 text-base bg-background border-border focus:border-primary rounded-xl"
+              className={`pl-12 h-14 text-base bg-background border-border focus:border-primary rounded-xl transition-all duration-300 ${
+                inputHighlight ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''
+              }`}
               disabled={isLoading}
             />
           </div>
