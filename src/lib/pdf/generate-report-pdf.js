@@ -27,21 +27,27 @@ export async function generateReportPdf(reportElement, { filename } = {}) {
   const pdfHeight = pdf.internal.pageSize.getHeight();
   const imgWidth = canvas.width;
   const imgHeight = canvas.height;
-  const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-  const imgX = (pdfWidth - imgWidth * ratio) / 2;
+  
+  // Scale image to fit PDF width with some margin
+  const margin = 10; // mm
+  const usableWidth = pdfWidth - (margin * 2);
+  const scaledWidth = usableWidth;
+  const scaledHeight = (imgHeight * usableWidth) / imgWidth;
+  
+  let heightLeft = scaledHeight;
+  let position = margin; // Start with top margin
+  const usablePageHeight = pdfHeight - (margin * 2);
 
-  const pageHeight = pdfHeight / ratio;
-  let heightLeft = imgHeight;
-  let position = 0;
+  // First page
+  pdf.addImage(imgData, "PNG", margin, position, scaledWidth, scaledHeight);
+  heightLeft -= usablePageHeight;
 
-  pdf.addImage(imgData, "PNG", imgX, 0, imgWidth * ratio, imgHeight * ratio);
-  heightLeft -= pageHeight;
-
+  // Additional pages if needed
   while (heightLeft > 0) {
-    position -= pageHeight;
     pdf.addPage();
-    pdf.addImage(imgData, "PNG", imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
-    heightLeft -= pageHeight;
+    position = margin - (scaledHeight - heightLeft);
+    pdf.addImage(imgData, "PNG", margin, position, scaledWidth, scaledHeight);
+    heightLeft -= usablePageHeight;
   }
 
   pdf.save(filename);
