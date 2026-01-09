@@ -151,10 +151,19 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
       </div>
 
       {onResetDemo && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onResetDemo}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            // Also reset the anonymous identifier used by the backend rate limiter
+            // so "Reset for demo" actually gives you fresh demo checks.
+            try {
+              localStorage.removeItem('twc_client_id');
+            } catch {
+              // ignore
+            }
+            onResetDemo();
+          }}
           className="text-xs text-muted-foreground hover:text-foreground"
         >
           <RotateCcw className="w-3 h-3 mr-1" />
