@@ -22,10 +22,11 @@ Deno.serve(async (req) => {
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 50);
     const offset = parseInt(url.searchParams.get("offset") || "0");
 
-    // Fetch only sanitized fields - no domains, tactics, metadata, or source URLs
+    // Fetch sanitized fields - no domains, tactics, or metadata
+    // Include description and source for detail view
     const { data, error, count } = await supabase
       .from("threat_feeds")
-      .select("id, title, severity, threat_type, published_at, created_at", { count: "exact" })
+      .select("id, title, description, source, severity, threat_type, published_at, created_at", { count: "exact" })
       .order("published_at", { ascending: false, nullsFirst: false })
       .range(offset, offset + limit - 1);
 
@@ -42,6 +43,8 @@ Deno.serve(async (req) => {
       threats: data?.map((item) => ({
         id: item.id,
         title: item.title,
+        description: item.description || null,
+        source: item.source,
         severity: item.severity || "medium",
         type: item.threat_type,
         date: item.published_at || item.created_at,
