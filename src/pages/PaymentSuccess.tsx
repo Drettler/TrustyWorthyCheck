@@ -17,26 +17,30 @@ export default function PaymentSuccess() {
   const [storedUrl, setStoredUrl] = useState<string>('');
 
   useEffect(() => {
-    // Retrieve the stored analysis result from sessionStorage
-    const savedResult = sessionStorage.getItem('pendingAnalysisResult');
-    const savedUrl = sessionStorage.getItem('pendingAnalysisUrl');
+    // Retrieve the stored analysis result from localStorage (works across tabs)
+    const savedResult = localStorage.getItem('pendingAnalysisResult');
+    const savedUrl = localStorage.getItem('pendingAnalysisUrl');
     
     if (savedResult) {
       try {
-        setStoredResult(JSON.parse(savedResult));
+        const parsed = JSON.parse(savedResult);
+        setStoredResult(parsed);
         setStoredUrl(savedUrl || '');
+        // Auto-show the full report immediately after payment
+        setShowFullReport(true);
+        // Clear the stored data after retrieving
+        localStorage.removeItem('pendingAnalysisResult');
+        localStorage.removeItem('pendingAnalysisUrl');
       } catch (e) {
         console.error('Error parsing stored result:', e);
       }
     }
   }, []);
 
+  // Fallback handler if user somehow sees the success page without auto-redirect
   const handleViewReport = () => {
     if (storedResult) {
       setShowFullReport(true);
-      // Clear the stored data after viewing
-      sessionStorage.removeItem('pendingAnalysisResult');
-      sessionStorage.removeItem('pendingAnalysisUrl');
     }
   };
 

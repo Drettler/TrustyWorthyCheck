@@ -79,10 +79,10 @@ export function UrlChecker() {
   const handleUnlockFullReport = async () => {
     setIsPaymentLoading(true);
     try {
-      // Store the current analysis result before redirecting to payment
+      // Store the current analysis result in localStorage (works across tabs)
       if (result) {
-        sessionStorage.setItem('pendingAnalysisResult', JSON.stringify(result));
-        sessionStorage.setItem('pendingAnalysisUrl', url);
+        localStorage.setItem('pendingAnalysisResult', JSON.stringify(result));
+        localStorage.setItem('pendingAnalysisUrl', url);
       }
       
       const { data, error } = await supabase.functions.invoke('create-payment');

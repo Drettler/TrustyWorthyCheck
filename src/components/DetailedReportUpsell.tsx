@@ -27,9 +27,9 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
-      // Store the analysis result in sessionStorage for retrieval after payment
-      sessionStorage.setItem('pendingAnalysisResult', JSON.stringify(analysisResult));
-      sessionStorage.setItem('pendingAnalysisUrl', url);
+      // Store the analysis result in localStorage (not sessionStorage) so it's accessible across tabs
+      localStorage.setItem('pendingAnalysisResult', JSON.stringify(analysisResult));
+      localStorage.setItem('pendingAnalysisUrl', url);
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { url },
