@@ -562,7 +562,7 @@ export function UrlChecker() {
                     </p>
                   </div>
                   <Button variant="hero" size="sm" asChild>
-                    <a href="/save-money">
+                    <a href="http://www.mrrebates.com?refid=918226" target="_blank" rel="noopener noreferrer">
                       Activate Cashback →
                     </a>
                   </Button>
