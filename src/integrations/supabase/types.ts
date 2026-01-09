@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      honeypot_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          headers: Json | null
+          id: string
+          ip_address: string | null
+          query_params: Json | null
+          referer: string | null
+          request_method: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          headers?: Json | null
+          id?: string
+          ip_address?: string | null
+          query_params?: Json | null
+          referer?: string | null
+          request_method?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          headers?: Json | null
+          id?: string
+          ip_address?: string | null
+          query_params?: Json | null
+          referer?: string | null
+          request_method?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           created_at: string
