@@ -8,7 +8,6 @@ import { StepGuide } from "@/components/StepGuide";
 import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
-import { CashbackAgent } from "@/components/CashbackAgent";
 
 const features = [
   {
@@ -42,9 +41,9 @@ const features = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO 
+      <SEO
         title="Spot Scams Before They Cost You"
-        description="Check if a website is legit before you buy. TrustworthyCheck scans for scams, fake stores, unsafe payments, and suspicious business details in under 2 minutes."
+        description="Check if a website is legit before you buy. TrustworthyCheck scans for scams, fake stores, unsafe payments, and suspicious business details in under 3 minutes."
         canonical="https://trustworthycheck.com/"
       />
       <Header />
@@ -86,7 +85,7 @@ export default function Index() {
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Avoid scams, fake sites and stores before they cost you money —{" "}
-              <span className="text-foreground font-medium">in under 2 minutes.</span>
+              <span className="text-foreground font-medium">in under 3 minutes.</span>
             </p>
 
             {/* Pill Badges */}
@@ -265,9 +264,7 @@ export default function Index() {
             </div>
 
             {/* Headline */}
-            <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">
-              Built for Real People
-            </h2>
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">Built for Real People</h2>
 
             {/* Sub-headline */}
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed">
@@ -277,12 +274,13 @@ export default function Index() {
             {/* Body text */}
             <div className="space-y-6 text-lg text-muted-foreground leading-relaxed mb-10">
               <p>
-                We built TrustworthyCheck for everyday people who just want to shop safely.
-                Whether you are a teen buying your first hoodie, a parent protecting your family, 
-                or a friend trying not to mess up a birthday gift, we have your back.
+                We built TrustworthyCheck for everyday people who just want to shop safely. Whether you are a teen
+                buying your first hoodie, a parent protecting your family, or a friend trying not to mess up a birthday
+                gift, we have your back.
               </p>
               <p>
-                No jargon. No confusing reports.<br />
+                No jargon. No confusing reports.
+                <br />
                 Just clear, honest answers about whether a website is safe to buy from.
               </p>
             </div>
@@ -317,18 +315,18 @@ export default function Index() {
             viewport={{ once: true }}
             className="max-w-2xl mx-auto text-center"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-8">
-              Check If a Website Is Legitimate
-            </h2>
-            
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-8">Check If a Website Is Legitimate</h2>
+
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              TrustworthyCheck.com helps you verify a website before you buy.
-              Our trust checker scans for scam signals, fake stores, suspicious business details, 
-              and unsafe payment practices so you can make smarter decisions online.
+              TrustworthyCheck.com helps you verify a website before you buy. Our trust checker scans for scam signals,
+              fake stores, suspicious business details, and unsafe payment practices so you can make smarter decisions
+              online.
             </p>
-            
+
             <p className="text-lg text-foreground/80 leading-relaxed italic">
-              If you have ever asked, <span className="font-semibold text-foreground">"Is this website actually trustworthy?"</span><br />
+              If you have ever asked,{" "}
+              <span className="font-semibold text-foreground">"Is this website actually trustworthy?"</span>
+              <br />
               This tool was built for you.
             </p>
           </motion.div>
@@ -401,15 +399,6 @@ export default function Index() {
                 </Button>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Cashback Agent - Compact Version */}
-      <section className="py-12 bg-background">
-        <div className="container px-4">
-          <div className="max-w-3xl mx-auto">
-            <CashbackAgent variant="compact" />
           </div>
         </div>
       </section>
