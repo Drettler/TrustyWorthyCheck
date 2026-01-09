@@ -51,20 +51,20 @@ export function useDailyChecks() {
   }, []);
 
   const useCheck = useCallback((): boolean => {
-    if (checksInfo.remaining <= 0) {
+    // Read current state directly from storage to avoid stale closure
+    const currentInfo = getStoredInfo();
+    if (currentInfo.remaining <= 0) {
       return false;
     }
-    setChecksInfo(prev => {
-      const newInfo = {
-        ...prev,
-        remaining: Math.max(0, prev.remaining - 1),
-        lastUpdated: new Date().toISOString(),
-      };
-      saveInfo(newInfo);
-      return newInfo;
-    });
+    const newInfo = {
+      ...currentInfo,
+      remaining: currentInfo.remaining - 1,
+      lastUpdated: new Date().toISOString(),
+    };
+    saveInfo(newInfo);
+    setChecksInfo(newInfo);
     return true;
-  }, [checksInfo.remaining]);
+  }, []);
 
   const resetForDemo = useCallback(() => {
     const freshInfo: ChecksInfo = {
