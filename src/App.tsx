@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Privacy from "./pages/Privacy";
 import SaveMoney from "./pages/SaveMoney";
 import ProtectYourself from "./pages/ProtectYourself";
 import RecentReports from "./pages/RecentReports";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/recent-reports" element={<RecentReports />} />
           <Route path="/threat-feeds" element={<ThreatFeeds />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
