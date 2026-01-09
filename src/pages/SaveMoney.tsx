@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Search, MousePointerClick, ShoppingBag, Clock, Users, Lock, DollarSign, CheckCircle, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -47,6 +48,11 @@ export default function SaveMoney() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Save Money While Shopping Online"
+        description="Earn cashback and find coupons while shopping at trusted online stores. Check website safety first, then save money on every purchase."
+        canonical="https://trustworthycheck.com/save-money"
+      />
       <Header />
       
       <main>
