@@ -146,7 +146,7 @@ export default function SaveMoney() {
                   >
                     <Button variant="hero" size="lg" className="gap-2 text-lg px-8 py-6">
                       <DollarSign className="w-5 h-5" />
-                      $$ Start Saving With Mr. Rebates
+                      Activate Cashback Now
                     </Button>
                   </a>
                   
