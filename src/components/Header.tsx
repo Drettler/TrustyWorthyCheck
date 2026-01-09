@@ -7,7 +7,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Website Checker', href: '#checker' },
+    { label: 'Website Checker', href: '/#checker' },
     { label: 'Save-Money', href: '/save-money' },
     { label: 'Protect Yourself', href: '/protect-yourself' },
     { label: 'About', href: '#about' },
