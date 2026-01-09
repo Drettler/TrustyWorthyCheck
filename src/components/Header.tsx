@@ -43,7 +43,7 @@ export function Header() {
         {/* CTA Button */}
         <div className="flex items-center gap-3">
           <Button variant="hero" size="sm" className="hidden sm:flex" asChild>
-            <a href="#checker">Check a Website</a>
+            <a href="/#checker">Check a Website</a>
           </Button>
           
           {/* Mobile Menu Toggle */}
@@ -76,7 +76,7 @@ export function Header() {
               </a>
             ))}
             <Button variant="hero" className="mt-2" asChild>
-              <a href="#checker" onClick={() => setMobileMenuOpen(false)}>
+              <a href="/#checker" onClick={() => setMobileMenuOpen(false)}>
                 Check a Website
               </a>
             </Button>
