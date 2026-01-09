@@ -6,10 +6,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-client-id',
 };
 
+// Normalize URL for consistent caching (removes www., ensures https)
+function normalizeUrl(url: string): string {
+  let normalized = url.toLowerCase().trim();
+  // Add https if no protocol
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`;
+  }
+  // Remove www. from hostname for consistent caching
+  try {
+    const urlObj = new URL(normalized);
+    if (urlObj.hostname.startsWith('www.')) {
+      urlObj.hostname = urlObj.hostname.slice(4);
+    }
+    return urlObj.toString();
+  } catch {
+    return normalized;
+  }
+}
+
 // Create a hash for URL caching
 async function hashUrl(url: string): Promise<string> {
+  const normalized = normalizeUrl(url);
   const encoder = new TextEncoder();
-  const data = encoder.encode(url.toLowerCase().trim());
+  const data = encoder.encode(normalized);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1544,11 +1564,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format URL
-    let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
+    // Format and normalize URL (handles www. and protocol)
+    const formattedUrl = normalizeUrl(url);
 
     console.log('Analyzing URL:', formattedUrl);
 
