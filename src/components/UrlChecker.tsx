@@ -12,7 +12,7 @@ import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
 import { DetailedReportUpsell } from './DetailedReportUpsell';
-import { analyzeUrl, type AnalysisResult } from '@/lib/api/url-check';
+import { analyzeUrl, type AnalysisResult, type RateLimitError } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
 import { useDailyChecks } from '@/hooks/use-daily-checks';
@@ -63,11 +63,24 @@ export function UrlChecker() {
       addToHistory(urlToCheck, analysisResult);
     } catch (error) {
       console.error('Analysis error:', error);
-      toast({
-        title: 'Analysis Failed',
-        description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a rate limit error
+      const isRateLimitError = error && typeof error === 'object' && 'type' in error && (error as RateLimitError).type === 'rate_limit';
+      
+      if (isRateLimitError) {
+        const rateLimitErr = error as RateLimitError;
+        toast({
+          title: 'Daily Limit Reached',
+          description: rateLimitErr.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Analysis Failed',
+          description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
       setScanStage(0);
@@ -151,11 +164,24 @@ export function UrlChecker() {
       addToHistory(url, analysisResult);
     } catch (error) {
       console.error('Analysis error:', error);
-      toast({
-        title: 'Analysis Failed',
-        description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // Check if it's a rate limit error
+      const isRateLimitError = error && typeof error === 'object' && 'type' in error && (error as RateLimitError).type === 'rate_limit';
+      
+      if (isRateLimitError) {
+        const rateLimitErr = error as RateLimitError;
+        toast({
+          title: 'Daily Limit Reached',
+          description: rateLimitErr.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Analysis Failed',
+          description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
       setScanStage(0);
