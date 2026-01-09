@@ -30,7 +30,7 @@ export function UrlChecker() {
   const [forRelativeMode, setForRelativeMode] = useState(false);
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
-  const { isLimitReached, useCheck, resetForDemo, checksRemaining, maxChecks } = useDailyChecks();
+  const { isLimitReached, useCheck, resetForDemo, checksRemaining, maxChecks, updateFromResponse } = useDailyChecks();
   const hasAutoChecked = useRef(false);
 
   // Handle ?check= URL parameter from Chrome extension
@@ -160,6 +160,7 @@ export function UrlChecker() {
       const typedError = error as AnalysisError;
       
       if (typedError.type === 'rate_limit') {
+        updateFromResponse(typedError.remaining, typedError.limit, typedError.resetAt);
         toast({
           title: 'Daily Limit Reached',
           description: typedError.message,
