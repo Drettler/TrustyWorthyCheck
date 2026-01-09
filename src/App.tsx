@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import SaveMoney from "./pages/SaveMoney";
 import ProtectYourself from "./pages/ProtectYourself";
+import RecentReports from "./pages/RecentReports";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/save-money" element={<SaveMoney />} />
           <Route path="/protect-yourself" element={<ProtectYourself />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/recent-reports" element={<RecentReports />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

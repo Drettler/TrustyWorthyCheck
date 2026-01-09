@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flag, AlertTriangle, Send, X } from 'lucide-react';
+import { Flag, Send, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-
+import { supabase } from '@/integrations/supabase/client';
 interface ReportSiteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -58,20 +59,38 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore }: Report
 
     setIsSubmitting(true);
     
-    // Simulate submission - in production this would call an API
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: '🛡️ Report Submitted',
-      description: 'Thank you for helping keep the internet safer! We\'ll review this site.',
-    });
-    
-    // Reset form
-    setSelectedReasons([]);
-    setEmail('');
-    setDetails('');
-    setIsSubmitting(false);
-    onOpenChange(false);
+    try {
+      const { error } = await supabase.functions.invoke('submit-report', {
+        body: {
+          url,
+          reasons: selectedReasons,
+          details: details || null,
+          trustScore: trustScore || null,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: '🛡️ Report Submitted',
+        description: 'Thank you for helping keep the internet safer!',
+      });
+      
+      // Reset form
+      setSelectedReasons([]);
+      setEmail('');
+      setDetails('');
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast({
+        title: 'Submission Failed',
+        description: 'Could not submit report. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -189,9 +208,19 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore }: Report
             </Button>
           </div>
 
-          <p className="text-xs text-center text-muted-foreground">
-            Reports are anonymous and help improve our scam detection.
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-xs text-muted-foreground">
+              Reports are anonymous and help improve our scam detection.
+            </p>
+            <Link 
+              to="/recent-reports" 
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+              onClick={() => onOpenChange(false)}
+            >
+              <ExternalLink className="w-3 h-3" />
+              View recently reported sites
+            </Link>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          first_reported_at: string
+          id: string
+          last_reported_at: string
+          reasons: string[]
+          report_count: number
+          trust_score: number | null
+          url: string
+          url_domain: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          first_reported_at?: string
+          id?: string
+          last_reported_at?: string
+          reasons: string[]
+          report_count?: number
+          trust_score?: number | null
+          url: string
+          url_domain: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          first_reported_at?: string
+          id?: string
+          last_reported_at?: string
+          reasons?: string[]
+          report_count?: number
+          trust_score?: number | null
+          url?: string
+          url_domain?: string
+        }
+        Relationships: []
+      }
       url_analysis_cache: {
         Row: {
           created_at: string
