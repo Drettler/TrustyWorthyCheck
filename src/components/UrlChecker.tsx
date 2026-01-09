@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard, ShieldPlus } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard, ShieldPlus, Store, Flag, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -12,6 +12,7 @@ import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
 import { DetailedReportUpsell } from './DetailedReportUpsell';
+import { ReportSiteDialog } from './ReportSiteDialog';
 import { analyzeUrl, type AnalysisResult, type AnalysisError } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
@@ -34,7 +35,7 @@ export function UrlChecker() {
   const hasAutoChecked = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputHighlight, setInputHighlight] = useState(false);
-
+  const [showReportDialog, setShowReportDialog] = useState(false);
   // Focus and highlight input when navigating to #checker
   useEffect(() => {
     const handleHashChange = () => {
@@ -547,28 +548,67 @@ export function UrlChecker() {
             </div>
 
             {/* Savings Promotion Box - Only show for safe or caution sites */}
-            {(result.verdict === 'safe' || result.verdict === 'caution') && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="rounded-xl p-4 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border border-primary/20"
-              >
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">💸</span>
-                    <p className="font-medium text-foreground">
-                      Before you buy, make sure you're saving money
-                    </p>
+            {/* Action Buttons Based on Findings */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+            >
+              {/* Find a Safer Store - show for risky sites */}
+              {(result.verdict === 'danger' || result.verdict === 'caution') && (
+                <Button
+                  variant="outline"
+                  className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-primary/5 hover:border-primary/40 group"
+                  onClick={() => {
+                    const searchQuery = result.details?.domain?.name || new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+                    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' alternatives safe online stores')}`, '_blank');
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Store className="w-5 h-5 text-primary" />
                   </div>
-                  <Button variant="hero" size="sm" asChild>
-                    <a href="http://www.mrrebates.com?refid=918226" target="_blank" rel="noopener noreferrer">
-                      Activate Cashback →
-                    </a>
-                  </Button>
+                  <div className="text-left">
+                    <p className="font-medium text-sm">Find a Safer Store</p>
+                    <p className="text-xs text-muted-foreground">Discover trusted alternatives</p>
+                  </div>
+                </Button>
+              )}
+
+              {/* Activate Cashback - show for safe/caution sites */}
+              {(result.verdict === 'safe' || result.verdict === 'caution') && (
+                <Button
+                  variant="outline"
+                  className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-success/5 hover:border-success/40 group"
+                  asChild
+                >
+                  <a href="http://www.mrrebates.com?refid=918226" target="_blank" rel="noopener noreferrer">
+                    <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0 group-hover:bg-success/20 transition-colors">
+                      <Coins className="w-5 h-5 text-success" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-sm">Activate Cashback</p>
+                      <p className="text-xs text-muted-foreground">Save money on purchases</p>
+                    </div>
+                  </a>
+                </Button>
+              )}
+
+              {/* Report This Site - always show */}
+              <Button
+                variant="outline"
+                className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-danger/5 hover:border-danger/40 group"
+                onClick={() => setShowReportDialog(true)}
+              >
+                <div className="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center flex-shrink-0 group-hover:bg-danger/20 transition-colors">
+                  <Flag className="w-5 h-5 text-danger" />
                 </div>
-              </motion.div>
-            )}
+                <div className="text-left">
+                  <p className="font-medium text-sm">Report This Site</p>
+                  <p className="text-xs text-muted-foreground">Flag suspicious activity</p>
+                </div>
+              </Button>
+            </motion.div>
 
             {/* Actions */}
             <motion.div
@@ -654,6 +694,14 @@ export function UrlChecker() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Report Site Dialog */}
+      <ReportSiteDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        url={url}
+        trustScore={result?.trustScore}
+      />
     </div>
   );
 }
