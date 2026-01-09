@@ -33,6 +33,7 @@ const features = [
     icon: Zap,
     title: "Scam Alerts",
     description: "Stay ahead of trending scams, fake store patterns, and fraud warnings circulating right now.",
+    link: "/recent-reports",
   },
 ];
 
@@ -171,6 +172,7 @@ export default function Index() {
                 title={feature.title}
                 description={feature.description}
                 index={index}
+                link={feature.link}
               />
             ))}
           </div>
