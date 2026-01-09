@@ -4,9 +4,10 @@ interface SEOProps {
   title: string;
   description: string;
   canonical?: string;
+  jsonLd?: Record<string, unknown>;
 }
 
-export function SEO({ title, description, canonical }: SEOProps) {
+export function SEO({ title, description, canonical, jsonLd }: SEOProps) {
   useEffect(() => {
     // Update document title
     document.title = `${title} | TrustworthyCheck`;
@@ -48,11 +49,28 @@ export function SEO({ title, description, canonical }: SEOProps) {
       tag.setAttribute('content', content);
     });
 
+    // Add JSON-LD structured data if provided
+    let jsonLdScript = document.querySelector('script[data-seo-jsonld]');
+    if (jsonLd) {
+      if (!jsonLdScript) {
+        jsonLdScript = document.createElement('script');
+        jsonLdScript.setAttribute('type', 'application/ld+json');
+        jsonLdScript.setAttribute('data-seo-jsonld', 'true');
+        document.head.appendChild(jsonLdScript);
+      }
+      jsonLdScript.textContent = JSON.stringify(jsonLd);
+    } else if (jsonLdScript) {
+      jsonLdScript.remove();
+    }
+
     // Cleanup on unmount - restore default title
     return () => {
       document.title = 'TrustworthyCheck - Website Safety Checker';
+      // Remove page-specific JSON-LD
+      const pageJsonLd = document.querySelector('script[data-seo-jsonld]');
+      if (pageJsonLd) pageJsonLd.remove();
     };
-  }, [title, description, canonical]);
+  }, [title, description, canonical, jsonLd]);
 
   return null;
 }
