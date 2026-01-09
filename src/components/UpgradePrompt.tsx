@@ -120,7 +120,7 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             className="w-full gap-2"
             asChild
           >
-            <a href="https://www.aura.com/lp/identity-theft-protection" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.identityguard.com/" target="_blank" rel="noopener noreferrer">
               <ShieldCheck className="w-4 h-4" />
               Protect My Identity
             </a>
