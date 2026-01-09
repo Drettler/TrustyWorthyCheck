@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Privacy from "./pages/Privacy";
+import Disclosure from "./pages/Disclosure";
 import SaveMoney from "./pages/SaveMoney";
 import ProtectYourself from "./pages/ProtectYourself";
 import RecentReports from "./pages/RecentReports";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/threat-feeds" element={<ThreatFeeds />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/disclosure" element={<Disclosure />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
