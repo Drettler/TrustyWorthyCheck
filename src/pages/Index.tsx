@@ -261,6 +261,28 @@ export default function Index() {
         </div>
       </section>
 
+      {/* SEO Content Section */}
+      <section className="py-16 bg-background">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
+              Check If a Website Is Legitimate
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              TrustworthyCheck.com helps you check if a website is legit before you buy. Our website trust checker scans for scam signals, fake stores, suspicious business details, and unsafe payment practices so you can decide if a site is safe.
+            </p>
+            <p className="text-muted-foreground">
+              If you've ever asked <span className="font-medium text-foreground">"is this website trustworthy?"</span> — this tool was built for you.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Extra Protection Section */}
       <section className="py-20 bg-muted/30">
         <div className="container px-4">
