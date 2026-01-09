@@ -122,6 +122,13 @@ export interface AnalysisResult {
   };
 }
 
+export interface RateLimitError {
+  type: 'rate_limit';
+  message: string;
+  remaining: number;
+  resetAt: string;
+}
+
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   const { data, error } = await supabase.functions.invoke('analyze-url', {
     body: { url },
@@ -130,6 +137,17 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   if (error) {
     console.error('Error analyzing URL:', error);
     throw new Error(error.message || 'Failed to analyze URL');
+  }
+
+  // Handle rate limit response
+  if (!data.success && data.error === 'rate_limit_exceeded') {
+    const rateLimitError: RateLimitError = {
+      type: 'rate_limit',
+      message: data.message || 'Daily limit reached. Please try again tomorrow.',
+      remaining: data.remaining || 0,
+      resetAt: data.resetAt || '',
+    };
+    throw rateLimitError;
   }
 
   if (!data.success) {
