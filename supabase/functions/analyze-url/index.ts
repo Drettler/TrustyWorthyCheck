@@ -805,6 +805,87 @@ function checkSuspiciousTLD(domain: string): boolean {
   return scamPatterns.suspiciousTLDs.some(tld => domain.toLowerCase().endsWith(tld));
 }
 
+// Known legitimate cashback/rebate/coupon sites - should not be flagged for scam patterns
+const KNOWN_CASHBACK_SITES = [
+  'mrrebates.com',
+  'rakuten.com',
+  'ebates.com',
+  'topcashback.com',
+  'befrugal.com',
+  'swagbucks.com',
+  'ibotta.com',
+  'honey.com',
+  'joinhoney.com',
+  'retailmenot.com',
+  'coupons.com',
+  'groupon.com',
+  'slickdeals.net',
+  'dealsplus.com',
+  'cashbackmonitor.com',
+  'activejunky.com',
+  'giving-assistant.org',
+  'lemoney.com',
+  'shopathome.com',
+  'extrabux.com',
+  'splender.com',
+  'dubli.com',
+  'gocashback.com',
+  'rebatesme.com',
+  'couponfollow.com',
+  'promocodes.com',
+  'offers.com',
+  'savings.com',
+  'dealnews.com',
+  'brad\'sdeals.com',
+  'dosh.com',
+  'drop.com',
+  'fetch-rewards.com',
+  'checkout51.com',
+  'shopkick.com',
+];
+
+// Check if domain is a known cashback/rebate site
+function isKnownCashbackSite(domain: string): boolean {
+  const domainLower = domain.toLowerCase().replace(/^www\./, '');
+  return KNOWN_CASHBACK_SITES.some(site => 
+    domainLower === site || domainLower.endsWith('.' + site)
+  );
+}
+
+// Detect if site appears to be a cashback/rebate platform
+function detectCashbackSite(content: string, domain: string): boolean {
+  const contentLower = content.toLowerCase();
+  const domainLower = domain.toLowerCase();
+  
+  // Check domain for cashback/rebate indicators
+  if (/cashback|rebate|coupon|savings|deals/i.test(domainLower)) {
+    return true;
+  }
+  
+  // Check content for cashback platform characteristics
+  const cashbackIndicators = [
+    'cashback',
+    'cash back',
+    'rebate',
+    'earn money back',
+    'get paid to shop',
+    'shopping rewards',
+    'cashback rate',
+    'rebate rate',
+    'cashback percentage',
+  ];
+  
+  let indicatorCount = 0;
+  for (const indicator of cashbackIndicators) {
+    if (contentLower.includes(indicator)) {
+      indicatorCount++;
+    }
+  }
+  
+  // If multiple cashback indicators, it's likely a cashback site
+  return indicatorCount >= 2;
+}
+
 // Detect government impersonation scams
 function detectGovernmentScam(content: string, html: string, domain: string): GovernmentScamIndicators {
   const contentLower = content.toLowerCase();
@@ -812,12 +893,50 @@ function detectGovernmentScam(content: string, html: string, domain: string): Go
   const suspiciousPatterns: string[] = [];
   const mentionedAgencies: string[] = [];
   
-  // Government agencies commonly impersonated
+  // Skip detection for known cashback sites - they legitimately mention payment methods
+  if (isKnownCashbackSite(domain) || detectCashbackSite(content, domain)) {
+    return {
+      claimsGovAffiliation: false,
+      usesGovLookalikeTerms: false,
+      mentionedAgencies: [],
+      isLikelyGovScam: false,
+      suspiciousPatterns: []
+    };
+  }
+  
+  // Government agencies commonly impersonated - use word boundary matching
+  // Note: Removed short ambiguous terms like 'ice', 'dea' that cause false positives
   const govAgencies = {
-    us: ['irs', 'social security', 'ssa', 'dmv', 'medicare', 'fbi', 'dea', 'ice', 'customs', 'treasury', 'uscis', 'immigration'],
-    uk: ['hmrc', 'dvla', 'nhs', 'home office', 'gov.uk'],
-    au: ['ato', 'centrelink', 'mygov', 'medicare australia'],
-    ca: ['cra', 'service canada', 'revenue canada']
+    us: [
+      { term: 'irs', pattern: /\birs\b/i },
+      { term: 'social security', pattern: /\bsocial\s+security\b/i },
+      { term: 'ssa', pattern: /\bssa\b/i },
+      { term: 'dmv', pattern: /\bdmv\b/i },
+      { term: 'medicare', pattern: /\bmedicare\b/i },
+      { term: 'fbi', pattern: /\bfbi\b/i },
+      { term: 'customs', pattern: /\bcustoms\s+(and\s+)?border/i },
+      { term: 'treasury', pattern: /\bu\.?s\.?\s+treasury\b/i },
+      { term: 'uscis', pattern: /\buscis\b/i },
+      { term: 'immigration', pattern: /\bimmigration\s+(and\s+)?customs/i },
+      // Only match DEA/ICE when in government context
+      { term: 'dea', pattern: /\bdrug\s+enforcement\s+administration\b|\bdea\s+(agent|office|department)/i },
+      { term: 'ice', pattern: /\bimmigration\s+and\s+customs\s+enforcement\b|\bice\s+(agent|office|department)/i },
+    ],
+    uk: [
+      { term: 'hmrc', pattern: /\bhmrc\b/i },
+      { term: 'dvla', pattern: /\bdvla\b/i },
+      { term: 'nhs', pattern: /\bnhs\b/i },
+      { term: 'home office', pattern: /\bhome\s+office\b/i },
+    ],
+    au: [
+      { term: 'ato', pattern: /\bato\b/i },
+      { term: 'centrelink', pattern: /\bcentrelink\b/i },
+      { term: 'mygov', pattern: /\bmygov\b/i },
+    ],
+    ca: [
+      { term: 'cra', pattern: /\bcra\b|\bcanada\s+revenue\b/i },
+      { term: 'service canada', pattern: /\bservice\s+canada\b/i },
+    ]
   };
   
   // Check for government-like domain patterns
@@ -837,11 +956,11 @@ function detectGovernmentScam(content: string, html: string, domain: string): Go
     }
   }
   
-  // Check content for agency mentions
+  // Check content for agency mentions using proper word boundary matching
   for (const [country, agencies] of Object.entries(govAgencies)) {
     for (const agency of agencies) {
-      if (contentLower.includes(agency)) {
-        mentionedAgencies.push(agency.toUpperCase());
+      if (agency.pattern.test(contentLower)) {
+        mentionedAgencies.push(agency.term.toUpperCase());
         claimsGovAffiliation = true;
       }
     }
@@ -872,6 +991,7 @@ function detectGovernmentScam(content: string, html: string, domain: string): Go
   }
   
   // Check for payment demands (gov agencies don't demand gift cards, crypto, wire transfers)
+  // Only flag if this is NOT a cashback/payment platform
   const scamPaymentPhrases = [
     'gift card', 'bitcoin', 'wire transfer', 'western union', 
     'moneygram', 'pay immediately', 'zelle', 'cash app', 'venmo'
