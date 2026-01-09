@@ -86,6 +86,84 @@ export type Database = {
         }
         Relationships: []
       }
+      threat_feed_sources: {
+        Row: {
+          created_at: string
+          feed_type: string
+          id: string
+          last_fetched_at: string | null
+          name: string
+          status: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          feed_type: string
+          id?: string
+          last_fetched_at?: string | null
+          name: string
+          status?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          feed_type?: string
+          id?: string
+          last_fetched_at?: string | null
+          name?: string
+          status?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
+      threat_feeds: {
+        Row: {
+          created_at: string
+          description: string | null
+          domains: string[] | null
+          fetched_at: string
+          id: string
+          metadata: Json | null
+          published_at: string | null
+          severity: string | null
+          source: string
+          source_url: string | null
+          tactics: string[] | null
+          threat_type: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          domains?: string[] | null
+          fetched_at?: string
+          id?: string
+          metadata?: Json | null
+          published_at?: string | null
+          severity?: string | null
+          source: string
+          source_url?: string | null
+          tactics?: string[] | null
+          threat_type: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          domains?: string[] | null
+          fetched_at?: string
+          id?: string
+          metadata?: Json | null
+          published_at?: string | null
+          severity?: string | null
+          source?: string
+          source_url?: string | null
+          tactics?: string[] | null
+          threat_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       url_analysis_cache: {
         Row: {
           created_at: string
