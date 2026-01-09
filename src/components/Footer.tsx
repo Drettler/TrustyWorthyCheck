@@ -2,10 +2,9 @@ import { Shield } from 'lucide-react';
 
 export function Footer() {
   const footerLinks = [
-    { label: 'Privacy', href: '#privacy' },
-    { label: 'Terms', href: '#terms' },
-    { label: 'Disclosure', href: '#disclosure' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Privacy', href: '/privacy' },
+    { label: 'Terms', href: '/terms' },
+    { label: 'Disclosure', href: '/disclosure' },
   ];
 
   return (
