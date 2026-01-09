@@ -12,7 +12,7 @@ import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
 import { DetailedReportUpsell } from './DetailedReportUpsell';
-import { analyzeUrl, type AnalysisResult, type RateLimitError } from '@/lib/api/url-check';
+import { analyzeUrl, type AnalysisResult, type AnalysisError } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
 import { useDailyChecks } from '@/hooks/use-daily-checks';
@@ -63,24 +63,7 @@ export function UrlChecker() {
       addToHistory(urlToCheck, analysisResult);
     } catch (error) {
       console.error('Analysis error:', error);
-      
-      // Check if it's a rate limit error
-      const isRateLimitError = error && typeof error === 'object' && 'type' in error && (error as RateLimitError).type === 'rate_limit';
-      
-      if (isRateLimitError) {
-        const rateLimitErr = error as RateLimitError;
-        toast({
-          title: 'Daily Limit Reached',
-          description: rateLimitErr.message,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Analysis Failed',
-          description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      handleAnalysisError(error);
     } finally {
       setIsLoading(false);
       setScanStage(0);
@@ -164,27 +147,43 @@ export function UrlChecker() {
       addToHistory(url, analysisResult);
     } catch (error) {
       console.error('Analysis error:', error);
-      
-      // Check if it's a rate limit error
-      const isRateLimitError = error && typeof error === 'object' && 'type' in error && (error as RateLimitError).type === 'rate_limit';
-      
-      if (isRateLimitError) {
-        const rateLimitErr = error as RateLimitError;
-        toast({
-          title: 'Daily Limit Reached',
-          description: rateLimitErr.message,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Analysis Failed',
-          description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      handleAnalysisError(error);
     } finally {
       setIsLoading(false);
       setScanStage(0);
+    }
+  };
+
+  const handleAnalysisError = (error: unknown) => {
+    // Check if it's a typed error
+    if (error && typeof error === 'object' && 'type' in error) {
+      const typedError = error as AnalysisError;
+      
+      if (typedError.type === 'rate_limit') {
+        toast({
+          title: 'Daily Limit Reached',
+          description: typedError.message,
+          variant: 'destructive',
+        });
+      } else if (typedError.type === 'ssl_error') {
+        toast({
+          title: '⚠️ SSL Security Warning',
+          description: typedError.message,
+          variant: 'destructive',
+        });
+      } else if (typedError.type === 'scrape_failed') {
+        toast({
+          title: 'Website Unavailable',
+          description: typedError.message,
+          variant: 'destructive',
+        });
+      }
+    } else {
+      toast({
+        title: 'Analysis Failed',
+        description: error instanceof Error ? error.message : 'Could not analyze this URL. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
