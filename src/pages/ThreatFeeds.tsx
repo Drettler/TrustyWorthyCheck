@@ -14,10 +14,12 @@ import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Sanitized threat data from public API (no sensitive details)
+// Sanitized threat data from public API (no sensitive tactical details)
 interface ThreatFeed {
   id: string;
   title: string;
+  description: string | null;
+  source: string;
   severity: string;
   type: string;
   date: string;
@@ -73,6 +75,7 @@ function timeAgo(dateString: string | null): string {
 
 export default function ThreatFeeds() {
   const [threats, setThreats] = useState<ThreatFeed[]>([]);
+  const [expandedThreatId, setExpandedThreatId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -366,6 +369,7 @@ export default function ThreatFeeds() {
             {filteredThreats.map((threat, index) => {
               const typeConfig = threatTypeConfig[threat.type] || threatTypeConfig.general;
               const TypeIcon = typeConfig.icon;
+              const isExpanded = expandedThreatId === threat.id;
               
               return (
                 <motion.div
@@ -373,7 +377,8 @@ export default function ThreatFeeds() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all hover:shadow-lg"
+                  onClick={() => setExpandedThreatId(isExpanded ? null : threat.id)}
+                  className="group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all hover:shadow-lg cursor-pointer"
                 >
                   <div className="flex flex-col md:flex-row md:items-start gap-4">
                     {/* Type Icon */}
@@ -398,14 +403,35 @@ export default function ThreatFeeds() {
                         </span>
                       </div>
 
+                      {/* Expanded details */}
+                      {isExpanded && threat.description && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mb-3"
+                        >
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {threat.description}
+                          </p>
+                        </motion.div>
+                      )}
+
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <span className={`px-2 py-0.5 rounded-md ${typeConfig.color}`}>
                           {typeConfig.label}
                         </span>
                         <span className="flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          {threat.source}
+                        </span>
+                        <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {timeAgo(threat.date)}
                         </span>
+                        {!isExpanded && threat.description && (
+                          <span className="text-primary text-xs">Click for details →</span>
+                        )}
                       </div>
                     </div>
                   </div>
