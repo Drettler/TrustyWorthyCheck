@@ -546,6 +546,28 @@ export function UrlChecker() {
               </div>
             </div>
 
+            {/* Savings Promotion Box */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-xl p-4 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border border-primary/20"
+            >
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💸</span>
+                  <p className="font-medium text-foreground">
+                    Before you buy, make sure you're saving money
+                  </p>
+                </div>
+                <Button variant="hero" size="sm" asChild>
+                  <a href="/save-money">
+                    Activate Cashback →
+                  </a>
+                </Button>
+              </div>
+            </motion.div>
+
             {/* Actions */}
             <motion.div
               className="flex flex-col sm:flex-row gap-4 justify-center"
