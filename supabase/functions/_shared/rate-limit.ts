@@ -128,7 +128,9 @@ export function rateLimitResponse(result: RateLimitResult, corsHeaders: Record<s
       limit: result.isAuthenticated ? RATE_LIMITS.authenticated : RATE_LIMITS.anonymous,
     }),
     {
-      status: 429,
+      // Return 200 so the web client can handle the structured JSON payload without surfacing
+      // a hard "Edge function returned 429" runtime error.
+      status: 200,
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
