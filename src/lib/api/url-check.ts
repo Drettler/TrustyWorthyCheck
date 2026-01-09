@@ -148,50 +148,51 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   });
 
   // For non-2xx responses, supabase-js returns `error` + `response` (body not parsed).
-  // Parse the JSON body when possible so the UI can show friendly messages.
+  // Parse the body when possible so the UI can show friendly messages.
   if (error) {
+    let body: any = null;
+
     if (response) {
-      const contentType = response.headers.get('Content-Type') || '';
-      if (contentType.includes('application/json')) {
-        let body: any = null;
-        try {
-          body = await response.clone().json();
-        } catch {
-          body = null;
-        }
+      // Some edge-function errors return JSON without a reliable Content-Type.
+      // So we try to parse JSON regardless and fall back silently.
+      try {
+        const text = await response.clone().text();
+        body = text ? JSON.parse(text) : null;
+      } catch {
+        body = null;
+      }
+    }
 
-        if (body && typeof body === 'object') {
-          if (body.error === 'rate_limit_exceeded') {
-            const rateLimitError: RateLimitError = {
-              type: 'rate_limit',
-              message: body.message || 'Daily limit reached. Please try again tomorrow.',
-              remaining: body.remaining ?? 0,
-              limit: body.limit ?? 3,
-              resetAt: body.resetAt ?? '',
-            };
-            throw rateLimitError;
-          }
+    if (body && typeof body === 'object') {
+      if (body.error === 'rate_limit_exceeded') {
+        const rateLimitError: RateLimitError = {
+          type: 'rate_limit',
+          message: body.message || 'Daily limit reached. Please try again tomorrow.',
+          remaining: body.remaining ?? 0,
+          limit: body.limit ?? 3,
+          resetAt: body.resetAt ?? '',
+        };
+        throw rateLimitError;
+      }
 
-          if (body.error === 'ssl_error') {
-            const sslError: SslError = {
-              type: 'ssl_error',
-              message: body.message || 'This website has SSL/security issues.',
-            };
-            throw sslError;
-          }
+      if (body.error === 'ssl_error') {
+        const sslError: SslError = {
+          type: 'ssl_error',
+          message: body.message || 'This website has SSL/security issues.',
+        };
+        throw sslError;
+      }
 
-          if (body.error === 'scrape_failed') {
-            const scrapeError: ScrapeError = {
-              type: 'scrape_failed',
-              message: body.message || 'Could not access this website.',
-            };
-            throw scrapeError;
-          }
+      if (body.error === 'scrape_failed') {
+        const scrapeError: ScrapeError = {
+          type: 'scrape_failed',
+          message: body.message || 'Could not access this website.',
+        };
+        throw scrapeError;
+      }
 
-          if (body.message || body.error) {
-            throw new Error(body.message || body.error);
-          }
-        }
+      if (body.message || body.error) {
+        throw new Error(body.message || body.error);
       }
     }
 
