@@ -6,14 +6,101 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-client-id',
 };
 
-// Normalize URL for consistent caching (removes www., ensures https)
-function normalizeUrl(url: string): string {
+// Validate URL for security (SSRF prevention)
+interface UrlValidationResult {
+  valid: boolean;
+  error?: string;
+  normalized?: string;
+}
+
+function validateUrl(url: string): UrlValidationResult {
+  // Length check - prevent excessively long URLs
+  if (url.length > 2048) {
+    return { valid: false, error: 'URL too long (max 2048 characters)' };
+  }
+
+  // Basic format check
   let normalized = url.toLowerCase().trim();
+  if (!normalized) {
+    return { valid: false, error: 'URL is required' };
+  }
+
   // Add https if no protocol
   if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
     normalized = `https://${normalized}`;
   }
+
+  // Parse URL
+  let parsed: URL;
+  try {
+    parsed = new URL(normalized);
+  } catch (e) {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+
+  // Protocol check - only allow http/https
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    return { valid: false, error: 'Only HTTP/HTTPS protocols allowed' };
+  }
+
+  // Block private/internal IP ranges and localhost (SSRF protection)
+  const hostname = parsed.hostname.toLowerCase();
+
+  const blockedPatterns = [
+    /^localhost$/i,
+    /^127\.\d+\.\d+\.\d+$/,           // Loopback IPv4
+    /^10\.\d+\.\d+\.\d+$/,            // Private Class A
+    /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, // Private Class B
+    /^192\.168\.\d+\.\d+$/,           // Private Class C
+    /^169\.254\.\d+\.\d+$/,           // Link-local
+    /^0\.\d+\.\d+\.\d+$/,             // Invalid/reserved
+    /^::1?$/,                          // IPv6 loopback
+    /^\[::1?\]$/,                      // IPv6 loopback in brackets
+    /^fe80:/i,                         // IPv6 link-local
+    /^\[fe80:/i,                       // IPv6 link-local in brackets
+  ];
+
+  for (const pattern of blockedPatterns) {
+    if (pattern.test(hostname)) {
+      return { valid: false, error: 'Internal/private addresses not allowed' };
+    }
+  }
+
+  // Block cloud metadata endpoints
+  const blockedHostnames = [
+    '169.254.169.254',           // AWS/GCP metadata
+    'metadata.google.internal',  // GCP metadata
+    'metadata',                  // Azure metadata
+  ];
+
+  if (blockedHostnames.includes(hostname)) {
+    return { valid: false, error: 'Cloud metadata endpoints not allowed' };
+  }
+
+  // Block file:// and other dangerous schemes that might slip through
+  if (parsed.protocol === 'file:') {
+    return { valid: false, error: 'File protocol not allowed' };
+  }
+
   // Remove www. from hostname for consistent caching
+  if (parsed.hostname.startsWith('www.')) {
+    parsed.hostname = parsed.hostname.slice(4);
+  }
+
+  return { valid: true, normalized: parsed.toString() };
+}
+
+// Normalize URL for consistent caching (uses validated URL)
+function normalizeUrl(url: string): string {
+  const validation = validateUrl(url);
+  if (validation.valid && validation.normalized) {
+    return validation.normalized;
+  }
+  // Fallback for legacy calls - should rarely hit this path
+  let normalized = url.toLowerCase().trim();
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`;
+  }
   try {
     const urlObj = new URL(normalized);
     if (urlObj.hostname.startsWith('www.')) {
@@ -1564,8 +1651,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format and normalize URL (handles www. and protocol)
-    const formattedUrl = normalizeUrl(url);
+    // Validate URL for security (SSRF prevention)
+    const validation = validateUrl(url);
+    if (!validation.valid) {
+      console.log('URL validation failed:', validation.error);
+      return new Response(
+        JSON.stringify({ success: false, error: validation.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const formattedUrl = validation.normalized!;
 
     console.log('Analyzing URL:', formattedUrl);
 
