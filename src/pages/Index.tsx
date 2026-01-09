@@ -28,6 +28,12 @@ const features = [
     title: "Truth Meter",
     description: "Our system spots red flags like fake reviews, copied content, and suspicious pricing patterns.",
   },
+  {
+    emoji: "🚨",
+    icon: Zap,
+    title: "Scam Alerts",
+    description: "Stay ahead of trending scams, fake store patterns, and fraud warnings circulating right now.",
+  },
 ];
 
 export default function Index() {
@@ -156,7 +162,7 @@ export default function Index() {
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {features.map((feature, index) => (
               <FeatureCard
                 key={feature.title}
