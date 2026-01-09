@@ -153,13 +153,29 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     let body: any = null;
 
     if (response) {
-      // Some edge-function errors return JSON without a reliable Content-Type.
-      // So we try to parse JSON regardless and fall back silently.
+      // Some function errors return JSON without a reliable Content-Type.
+      // Try JSON parse regardless; fall back silently.
       try {
         const text = await response.clone().text();
         body = text ? JSON.parse(text) : null;
       } catch {
         body = null;
+      }
+    }
+
+    // If we couldn't read the response (or it wasn't JSON), supabase-js often embeds
+    // the JSON payload directly in error.message like:
+    // "Edge function returned 429: Error, { ... }"
+    if (!body && typeof error.message === 'string') {
+      const firstBrace = error.message.indexOf('{');
+      const lastBrace = error.message.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const jsonPart = error.message.slice(firstBrace, lastBrace + 1);
+        try {
+          body = JSON.parse(jsonPart);
+        } catch {
+          body = null;
+        }
       }
     }
 
