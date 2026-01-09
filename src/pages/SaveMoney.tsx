@@ -1,11 +1,24 @@
-import { motion } from 'framer-motion';
-import { Shield, Search, MousePointerClick, ShoppingBag, Clock, Users, Lock, DollarSign, CheckCircle, Heart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Search, MousePointerClick, ShoppingBag, Clock, Users, Lock, DollarSign, CheckCircle, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function SaveMoney() {
+  const [showBottomCTA, setShowBottomCTA] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      setShowBottomCTA(scrollPercent >= 25);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   const steps = [
     {
       icon: Search,
@@ -227,6 +240,81 @@ export default function SaveMoney() {
       </main>
 
       <Footer />
+
+      {/* Mobile Bottom CTA */}
+      <AnimatePresence>
+        {showBottomCTA && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+          >
+            <div 
+              className="bg-background/95 backdrop-blur-lg border-t border-x rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)]"
+            >
+              {/* Swipe indicator / collapse button */}
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full flex justify-center py-2 touch-pan-y"
+                aria-label={isExpanded ? "Collapse" : "Expand"}
+              >
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </button>
+
+              <AnimatePresence mode="wait">
+                {isExpanded ? (
+                  <motion.div
+                    key="expanded"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="px-4 pb-4 overflow-hidden"
+                  >
+                    <p className="text-sm font-medium text-foreground mb-1">Shopping this site?</p>
+                    <p className="text-xs text-muted-foreground mb-3">Activate cashback before you buy.</p>
+                    
+                    <a 
+                      href="http://www.mrrebates.com?refid=918226" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <Button variant="hero" size="sm" className="w-full gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Start Saving
+                      </Button>
+                    </a>
+                    
+                    <p className="text-[10px] text-muted-foreground text-center mt-2">
+                      Confidence in every click.
+                    </p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="collapsed"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="px-4 pb-3"
+                  >
+                    <button
+                      onClick={() => setIsExpanded(true)}
+                      className="w-full flex items-center justify-center gap-2 text-sm font-medium text-primary"
+                    >
+                      <span>💰</span>
+                      <span>Save Money on This Purchase</span>
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
