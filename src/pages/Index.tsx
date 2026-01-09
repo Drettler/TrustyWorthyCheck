@@ -240,49 +240,89 @@ export default function Index() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-20 bg-gradient-to-b from-muted/30 to-background">
+      {/* About Section - Built for Real People */}
+      <section id="about" className="py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center"
+            className="max-w-2xl mx-auto text-center"
           >
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/25">
-              <Shield className="w-8 h-8 text-white" />
+            {/* Shield Icon with Glow */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 w-20 h-20 mx-auto rounded-2xl bg-primary/30 blur-xl" />
+              <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto shadow-xl shadow-primary/25">
+                <Shield className="w-10 h-10 text-white" />
+              </div>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Built for Real People</h2>
-            <p className="text-lg text-muted-foreground mb-6">
-              We created this tool because too many people lose money to fake websites. Whether you're a teen, parent,
-              or a friend just trying not to lose out on a gift purchased, we've got your back.
+
+            {/* Headline */}
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">
+              Built for Real People
+            </h2>
+
+            {/* Sub-headline */}
+            <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed">
+              Because losing money to fake websites should not be part of growing up, parenting, or gift shopping.
             </p>
-            <p className="text-muted-foreground">
-              No jargon. No confusing reports. Just honest answers about whether a website is considered safe to buy
-              from.
+
+            {/* Body text */}
+            <div className="space-y-6 text-lg text-muted-foreground leading-relaxed mb-10">
+              <p>
+                We built TrustworthyCheck for everyday people who just want to shop safely.
+                Whether you are a teen buying your first hoodie, a parent protecting your family, 
+                or a friend trying not to mess up a birthday gift, we have your back.
+              </p>
+              <p>
+                No jargon. No confusing reports.<br />
+                Just clear, honest answers about whether a website is safe to buy from.
+              </p>
+            </div>
+
+            {/* Brand line */}
+            <p className="text-sm text-muted-foreground/70 font-medium tracking-wide mb-12">
+              Confidence in every click. Cashback in every cart.
             </p>
+
+            {/* Trust accent row */}
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-medium">
+                🛡️ Safe Shopping
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/5 text-secondary text-sm font-medium">
+                👨‍👩‍👧 Family Friendly
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/5 text-success text-sm font-medium">
+                💸 Save While You Shop
+              </span>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* SEO Content Section */}
-      <section className="py-16 bg-background">
+      {/* SEO Content Section - Check If a Website Is Legitimate */}
+      <section className="py-20 bg-background">
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center"
+            className="max-w-2xl mx-auto text-center"
           >
-            <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">Check If a Website Is Legitimate</h2>
-            <p className="text-muted-foreground mb-4">
-              TrustworthyCheck.com helps you check if a website is legit before you buy. Our website trust checker scans
-              for scam signals, fake stores, suspicious business details, and unsafe payment practices so you can decide
-              if a site is safe.
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-8">
+              Check If a Website Is Legitimate
+            </h2>
+            
+            <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+              TrustworthyCheck.com helps you verify a website before you buy.
+              Our trust checker scans for scam signals, fake stores, suspicious business details, 
+              and unsafe payment practices so you can make smarter decisions online.
             </p>
-            <p className="text-muted-foreground">
-              If you've ever asked <span className="font-medium text-foreground">"is this website trustworthy?"</span> —
-              this tool was built for you.
+            
+            <p className="text-lg text-foreground/80 leading-relaxed italic">
+              If you have ever asked, <span className="font-semibold text-foreground">"Is this website actually trustworthy?"</span><br />
+              This tool was built for you.
             </p>
           </motion.div>
         </div>
