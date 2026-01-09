@@ -392,10 +392,12 @@ export default function Index() {
                   variant="outline"
                   size="sm"
                   className="w-full group"
-                  onClick={() => window.open(item.href, "_blank", "noopener,noreferrer")}
+                  asChild
                 >
-                  {item.button}
-                  <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <a href={item.href} target="_blank" rel="noopener noreferrer">
+                    {item.button}
+                    <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </a>
                 </Button>
               </motion.div>
             ))}
