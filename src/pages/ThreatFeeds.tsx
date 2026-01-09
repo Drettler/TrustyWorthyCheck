@@ -170,9 +170,24 @@ export default function ThreatFeeds() {
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
             Public Threat & Scam Feeds
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
             Real-time intelligence from trusted government agencies, security researchers, and fraud monitoring organizations.
           </p>
+          
+          {/* Report a Scam CTA */}
+          <motion.a
+            href="https://reportfraud.ftc.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-danger text-danger-foreground font-semibold hover:bg-danger/90 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            Report a Scam to the FTC
+            <ExternalLink className="w-4 h-4" />
+          </motion.a>
         </motion.div>
 
         {/* Trusted Sources Grid */}
