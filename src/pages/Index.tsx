@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, Search, Zap, GraduationCap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
+import { Shield, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MissionControlCard } from "@/components/MissionControlCard";
@@ -23,16 +23,10 @@ const features = [
     description: "We look up who owns the website, how long it's been around, and if the business info checks out.",
   },
   {
-    emoji: "🧠",
+    emoji: "👼",
     icon: Zap,
     title: "Truth Meter",
     description: "Our system spots red flags like fake reviews, copied content, and suspicious pricing patterns.",
-  },
-  {
-    emoji: "🎓",
-    icon: GraduationCap,
-    title: "Scam School",
-    description: "Learn the warning signs so you can spot sketchy sites on your own — knowledge is your best defense!",
   },
 ];
 
@@ -162,7 +156,7 @@ export default function Index() {
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {features.map((feature, index) => (
               <FeatureCard
                 key={feature.title}
