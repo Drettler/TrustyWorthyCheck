@@ -563,7 +563,7 @@ export function UrlChecker() {
                   asChild
                 >
                   <a 
-                    href={`https://www.google.com/search?q=${encodeURIComponent((result.details?.domain?.name || 'online store') + ' alternatives safe trusted stores')}`}
+                    href={`https://duckduckgo.com/?q=${encodeURIComponent((result.details?.domain?.name || 'online store') + ' safe trusted alternatives')}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
