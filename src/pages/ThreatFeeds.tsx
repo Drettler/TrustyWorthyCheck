@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Search, Shield, AlertTriangle, Clock, ExternalLink, 
-  RefreshCw, Filter, TrendingUp, Building2, Newspaper,
-  ArrowLeft, Globe, FileWarning, CreditCard, UserX, Bug
+  Search, Shield, AlertTriangle, Clock, 
+  RefreshCw, TrendingUp, Building2, Newspaper,
+  ArrowLeft, Globe, FileWarning, CreditCard, UserX, Bug, ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,27 +14,23 @@ import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Sanitized threat data from public API (no sensitive details)
 interface ThreatFeed {
   id: string;
-  source: string;
-  source_url: string | null;
   title: string;
-  description: string | null;
-  threat_type: string;
-  domains: string[] | null;
-  tactics: string[] | null;
   severity: string;
-  published_at: string | null;
-  fetched_at: string;
+  type: string;
+  date: string;
 }
 
-interface FeedSource {
-  id: string;
-  name: string;
-  url: string;
-  feed_type: string;
-  last_fetched_at: string | null;
-  status: string;
+interface ThreatApiResponse {
+  threats: ThreatFeed[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
 }
 
 const threatTypeConfig: Record<string, { label: string; icon: any; color: string }> = {
@@ -91,14 +87,13 @@ export default function ThreatFeeds() {
   const fetchThreats = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('threat_feeds')
-        .select('*')
-        .order('published_at', { ascending: false })
-        .limit(100);
+      const { data, error } = await supabase.functions.invoke<ThreatApiResponse>('public-threats', {
+        body: null,
+        method: 'GET',
+      });
 
       if (error) throw error;
-      setThreats(data || []);
+      setThreats(data?.threats || []);
     } catch (error) {
       console.error('Error fetching threats:', error);
     } finally {
@@ -133,9 +128,8 @@ export default function ThreatFeeds() {
 
   const filteredThreats = threats.filter(threat => {
     const matchesSearch = !searchQuery || 
-      threat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      threat.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = !selectedType || threat.threat_type === selectedType;
+      threat.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = !selectedType || threat.type === selectedType;
     const matchesSeverity = !selectedSeverity || threat.severity === selectedSeverity;
     return matchesSearch && matchesType && matchesSeverity;
   });
@@ -323,7 +317,7 @@ export default function ThreatFeeds() {
               Phishing Alerts
             </div>
             <p className="text-2xl font-bold text-warning">
-              {threats.filter(t => t.threat_type === 'phishing').length}
+              {threats.filter(t => t.type === 'phishing').length}
             </p>
           </div>
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
@@ -332,7 +326,7 @@ export default function ThreatFeeds() {
               Last Updated
             </div>
             <p className="text-lg font-medium text-primary">
-              {threats[0] ? timeAgo(threats[0].fetched_at) : 'Never'}
+              {threats[0] ? timeAgo(threats[0].date) : 'Never'}
             </p>
           </div>
         </motion.div>
@@ -370,7 +364,7 @@ export default function ThreatFeeds() {
             className="space-y-3"
           >
             {filteredThreats.map((threat, index) => {
-              const typeConfig = threatTypeConfig[threat.threat_type] || threatTypeConfig.general;
+              const typeConfig = threatTypeConfig[threat.type] || threatTypeConfig.general;
               const TypeIcon = typeConfig.icon;
               
               return (
@@ -403,36 +397,15 @@ export default function ThreatFeeds() {
                           {threat.severity === 'high' ? '🔴' : threat.severity === 'medium' ? '🟡' : '🟢'} {threat.severity}
                         </span>
                       </div>
-                      
-                      {threat.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {threat.description}
-                        </p>
-                      )}
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <span className={`px-2 py-0.5 rounded-md ${typeConfig.color}`}>
                           {typeConfig.label}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Building2 className="w-3 h-3" />
-                          {threat.source}
-                        </span>
-                        <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {timeAgo(threat.published_at)}
+                          {timeAgo(threat.date)}
                         </span>
-                        {threat.source_url && (
-                          <a
-                            href={threat.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-primary hover:underline"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            View Source
-                          </a>
-                        )}
                       </div>
                     </div>
                   </div>
