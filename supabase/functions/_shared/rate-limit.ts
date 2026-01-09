@@ -46,7 +46,7 @@ export async function checkRateLimit(
 
   // Determine identifier and limit
   let identifier: string;
-  let identifierType: "ip" | "user";
+  let identifierType: "ip" | "user" | "client";
   let maxRequests: number;
 
   if (isAuthenticated && userId) {
@@ -54,12 +54,23 @@ export async function checkRateLimit(
     identifierType = "user";
     maxRequests = RATE_LIMITS.authenticated;
   } else {
-    // Use IP for anonymous users
-    identifier = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
-                 req.headers.get("cf-connecting-ip") ||
-                 req.headers.get("x-real-ip") ||
-                 "unknown";
-    identifierType = "ip";
+    // Prefer a browser-stable client id to avoid NAT/shared-IP collisions.
+    // (The web app sends this as `x-client-id`.)
+    const clientId = req.headers.get("x-client-id")?.trim();
+
+    if (clientId) {
+      identifier = clientId;
+      identifierType = "client";
+    } else {
+      // Fallback to IP for anonymous users
+      identifier =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        req.headers.get("cf-connecting-ip") ||
+        req.headers.get("x-real-ip") ||
+        "unknown";
+      identifierType = "ip";
+    }
+
     maxRequests = RATE_LIMITS.anonymous;
   }
 

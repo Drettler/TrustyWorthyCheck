@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { getOrCreateClientId } from '@/lib/client-id';
 export interface VirusTotalData {
   isMalicious: boolean;
   maliciousCount: number;
@@ -145,6 +145,9 @@ export type AnalysisError = RateLimitError | SslError | ScrapeError;
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   const { data, error, response } = await supabase.functions.invoke('analyze-url', {
     body: { url },
+    headers: {
+      'x-client-id': getOrCreateClientId(),
+    },
   });
 
   // For non-2xx responses, supabase-js returns `error` + `response` (body not parsed).
