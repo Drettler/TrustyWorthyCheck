@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard, ShieldPlus, Store, Flag, Coins } from 'lucide-react';
+import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard, ShieldPlus, Store, Flag, Coins, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TrustScoreGauge } from './TrustScoreGauge';
@@ -605,6 +605,40 @@ export function UrlChecker() {
                 <div className="text-left">
                   <p className="font-medium text-sm">Report This Site</p>
                   <p className="text-xs text-muted-foreground">Flag suspicious activity</p>
+                </div>
+              </Button>
+
+              {/* Share Results - always show */}
+              <Button
+                variant="outline"
+                className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-primary/5 hover:border-primary/40 group"
+                onClick={() => {
+                  const domain = result.details?.domain?.name || url;
+                  const verdict = result.verdict === 'safe' ? '✅ Safe' : result.verdict === 'caution' ? '⚠️ Use Caution' : '🚨 High Risk';
+                  const shareText = `I just checked ${domain} on TrustworthyCheck - ${verdict} (Trust Score: ${result.trustScore}/100). Check any website before you buy: `;
+                  const shareUrl = window.location.origin;
+                  
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'TrustworthyCheck Results',
+                      text: shareText,
+                      url: shareUrl,
+                    }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(shareText + shareUrl);
+                    toast({
+                      title: 'Link Copied!',
+                      description: 'Share link copied to clipboard',
+                    });
+                  }
+                }}
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <Share2 className="w-5 h-5 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">Share Results</p>
+                  <p className="text-xs text-muted-foreground">Warn friends & family</p>
                 </div>
               </Button>
             </motion.div>
