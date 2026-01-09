@@ -10,13 +10,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface SiteReport {
   id: string;
-  url: string;
-  url_domain: string;
+  domain: string;
   reasons: string[];
-  trust_score: number | null;
-  report_count: number;
-  first_reported_at: string;
-  last_reported_at: string;
+  trustScore: number | null;
+  reportCount: number;
+  firstReportedAt: string;
+  lastReportedAt: string;
 }
 
 const reasonLabels: Record<string, { label: string; emoji: string }> = {
@@ -52,21 +51,13 @@ export default function RecentReports() {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
-        .from('site_reports')
-        .select('*')
-        .limit(50);
-
-      if (sortBy === 'recent') {
-        query = query.order('last_reported_at', { ascending: false });
-      } else {
-        query = query.order('report_count', { ascending: false });
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase.functions.invoke<{ reports: SiteReport[] }>('public-reports', {
+        body: null,
+        method: 'GET',
+      });
 
       if (error) throw error;
-      setReports(data || []);
+      setReports(data?.reports || []);
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
@@ -189,17 +180,17 @@ export default function RecentReports() {
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="w-4 h-4 text-danger flex-shrink-0" />
                       <span className="font-semibold text-foreground truncate">
-                        {report.url_domain}
+                        {report.domain}
                       </span>
-                      {report.trust_score !== null && (
+                      {report.trustScore !== null && (
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          report.trust_score < 50 
+                          report.trustScore < 50 
                             ? 'bg-danger/10 text-danger' 
-                            : report.trust_score < 70 
+                            : report.trustScore < 70 
                             ? 'bg-warning/10 text-warning' 
                             : 'bg-success/10 text-success'
                         }`}>
-                          Score: {report.trust_score}
+                          Score: {report.trustScore}
                         </span>
                       )}
                     </div>
@@ -225,11 +216,11 @@ export default function RecentReports() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Flag className="w-3.5 h-3.5" />
-                      <span>{report.report_count} {report.report_count === 1 ? 'report' : 'reports'}</span>
+                      <span>{report.reportCount} {report.reportCount === 1 ? 'report' : 'reports'}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>{timeAgo(report.last_reported_at)}</span>
+                      <span>{timeAgo(report.lastReportedAt)}</span>
                     </div>
                   </div>
 
@@ -240,7 +231,7 @@ export default function RecentReports() {
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                     asChild
                   >
-                    <Link to={`/?check=${encodeURIComponent(report.url)}`}>
+                    <Link to={`/?check=${encodeURIComponent(report.domain)}`}>
                       <Shield className="w-3.5 h-3.5 mr-1.5" />
                       Analyze
                     </Link>
