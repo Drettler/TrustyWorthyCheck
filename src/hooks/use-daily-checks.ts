@@ -15,11 +15,23 @@ function getStoredInfo(): ChecksInfo {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const info = JSON.parse(stored) as ChecksInfo;
+      
       // Check if reset time has passed
       if (info.resetAt && new Date(info.resetAt) < new Date()) {
         // Reset expired, return fresh state
         return { remaining: DEFAULT_MAX, limit: DEFAULT_MAX, resetAt: null, lastUpdated: new Date().toISOString() };
       }
+      
+      // Auto-reset if lastUpdated is more than 24 hours ago (fallback for missing resetAt)
+      if (info.lastUpdated) {
+        const lastUpdatedTime = new Date(info.lastUpdated).getTime();
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (now - lastUpdatedTime > twentyFourHours) {
+          return { remaining: DEFAULT_MAX, limit: DEFAULT_MAX, resetAt: null, lastUpdated: new Date().toISOString() };
+        }
+      }
+      
       return info;
     }
   } catch (e) {
