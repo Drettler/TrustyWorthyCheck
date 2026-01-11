@@ -153,6 +153,42 @@ export default function Index() {
         </div>
       </section>
 
+      {/* CTA Banner */}
+      <section className="py-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8"
+          >
+            <div className="text-center sm:text-left">
+              <p className="text-lg font-semibold text-foreground">
+                🔍 Check any website instantly
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Paste a URL above to see if it's safe
+              </p>
+            </div>
+            <div className="h-px w-16 sm:h-12 sm:w-px bg-border" />
+            <div className="text-center sm:text-left">
+              <p className="text-lg font-semibold text-foreground">
+                💰 Save money while you shop
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Get cashback on verified safe sites
+              </p>
+            </div>
+            <Button asChild className="mt-2 sm:mt-0 sm:ml-4">
+              <a href="/save-money">
+                Learn How to Save
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="learn" className="py-20 bg-muted/30">
         <div className="container px-4">
