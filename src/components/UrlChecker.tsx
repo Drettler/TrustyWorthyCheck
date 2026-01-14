@@ -36,6 +36,10 @@ export function UrlChecker() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputHighlight, setInputHighlight] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showFullReport, setShowFullReport] = useState(false);
+  
+  // DEV: Check for test mode via URL param ?testReport=true
+  const isTestMode = searchParams.get('testReport') === 'true';
   // Focus and highlight input when navigating to #checker
   useEffect(() => {
     const handleHashChange = () => {

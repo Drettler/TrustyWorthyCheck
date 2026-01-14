@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, History, Shield, AlertTriangle, CheckCircle, Loader2, ExternalLink } from 'lucide-react';
+import { FileText, History, Shield, AlertTriangle, CheckCircle, Loader2, ExternalLink, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +15,9 @@ const features = [
   { icon: CheckCircle, text: '"What to do next" plan' },
 ];
 
+// DEV MODE: Enable test mode via URL query param ?testReport=true
+const isDevTestMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testReport') === 'true';
+
 interface DetailedReportUpsellProps {
   url: string;
   trustScore: number;
@@ -23,6 +27,14 @@ interface DetailedReportUpsellProps {
 export function DetailedReportUpsell({ url, trustScore, analysisResult }: DetailedReportUpsellProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // DEV: Bypass payment for testing PDF
+  const handleTestReport = () => {
+    localStorage.setItem('pendingAnalysisResult', JSON.stringify(analysisResult));
+    localStorage.setItem('pendingAnalysisUrl', url);
+    navigate('/payment-success?test=true');
+  };
 
   const handlePurchase = async () => {
     setIsLoading(true);
@@ -97,6 +109,18 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
           </>
         )}
       </Button>
+
+      {/* DEV TEST BUTTON - Only shows when ?testReport=true */}
+      {isDevTestMode && (
+        <Button
+          onClick={handleTestReport}
+          variant="outline"
+          className="w-full h-10 mt-2 text-sm border-dashed border-warning text-warning hover:bg-warning/10"
+        >
+          <FlaskConical className="w-4 h-4 mr-2" />
+          🧪 TEST: View Report (No Payment)
+        </Button>
+      )}
 
       <p className="text-xs text-center text-muted-foreground mt-3">
         One-time payment • Instant delivery • Money-back guarantee
