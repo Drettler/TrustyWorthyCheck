@@ -1,49 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Search, MousePointerClick, ShoppingBag, Clock, Users, Lock, DollarSign, CheckCircle, Heart, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, Search, DollarSign, CheckCircle, Heart, ChevronDown, Gift, Store, Zap, HelpCircle, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CashbackAgent } from '@/components/CashbackAgent';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+
 export default function SaveMoney() {
-  const [showBottomCTA, setShowBottomCTA] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [showInterstitial, setShowInterstitial] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-      setShowBottomCTA(scrollPercent >= 25);
-    };
+  const handleActivateClick = () => {
+    setShowInterstitial(true);
+    
+    setTimeout(() => {
+      window.open('http://www.mrrebates.com?refid=918226', '_blank', 'noopener,noreferrer');
+    }, 500);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  const steps = [
-    {
-      icon: Search,
-      title: 'Check the Store',
-      description: 'Search any website on TrustworthyCheck to make sure it\'s safe and legitimate.',
-    },
-    {
-      icon: MousePointerClick,
-      title: 'Activate Your Savings',
-      description: 'Before purchasing, click our partner savings button to activate cashback and coupons.',
-    },
-    {
-      icon: ShoppingBag,
-      title: 'Shop & Save',
-      description: 'Complete your purchase and earn money back automatically.',
-    },
+    setTimeout(() => {
+      setShowInterstitial(false);
+    }, 3000);
+  };
+
+  const trustChips = [
+    { icon: Gift, text: 'Free to join' },
+    { icon: Store, text: 'Works at 5,000+ stores' },
+    { icon: Shield, text: 'No impact on safety verdicts' },
   ];
 
-  const trustReasons = [
-    { icon: Clock, text: 'Operating for over 20 years' },
-    { icon: Users, text: 'Millions paid out to members' },
-    { icon: Lock, text: 'Secure tracking & verified payouts' },
-    { icon: DollarSign, text: 'No fees to join' },
-    { icon: CheckCircle, text: 'Works with stores you already shop at' },
+  const faqItems = [
+    {
+      question: 'How does cashback work?',
+      answer: 'When you shop through Mr. Rebates, they receive a commission from the store. They share a portion of that commission with you as cashback. Your prices stay the same — you just earn money back.',
+    },
+    {
+      question: 'Which stores are supported?',
+      answer: 'Mr. Rebates works with over 5,000 retailers including Walmart, Target, Macy\'s, Best Buy, Expedia, Nike, and many more popular stores.',
+    },
+    {
+      question: 'How long does it take to get paid?',
+      answer: 'Cashback is typically credited to your account within 24-48 hours after your purchase. Once you reach the minimum payout threshold, you can request a payment via check or PayPal.',
+    },
+    {
+      question: 'Why do you recommend Mr. Rebates?',
+      answer: 'They\'ve been operating for over 20 years and have paid out millions to members. They have secure tracking, verified payouts, and no fees to join.',
+    },
+    {
+      question: 'Does this affect your safety ratings?',
+      answer: 'Absolutely not. Our safety verdicts are 100% independent. We never change a website\'s trust score based on affiliate partnerships.',
+    },
   ];
 
   return (
@@ -56,8 +67,8 @@ export default function SaveMoney() {
       <Header />
       
       <main>
-        {/* Hero Section - Why This Exists */}
-        <section className="relative py-20 overflow-hidden">
+        {/* Hero Section */}
+        <section className="relative py-16 md:py-24 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
@@ -66,33 +77,44 @@ export default function SaveMoney() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
-                <Shield className="w-4 h-4" />
-                <span className="text-sm font-medium">Safe Shopping + Savings</span>
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6">
-                Shop Safely.{' '}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
+                Save Money While You Shop —{' '}
                 <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Save Automatically.
+                  Without Getting Scammed
                 </span>
               </h1>
               
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                We don't just tell you whether a store is legitimate — we also help you keep more of your money when you shop there.
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
+                We verify stores first. Then we help you earn cashback at the safe ones.
               </p>
-              
-              <p className="text-md text-muted-foreground mt-4">
-                When you click through our partner savings service, you can earn cashback or discounts at hundreds of major retailers.
-              </p>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+              >
+                <Button 
+                  variant="hero" 
+                  size="lg" 
+                  className="gap-2 text-lg px-10 py-7 shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-shadow"
+                  onClick={handleActivateClick}
+                >
+                  <DollarSign className="w-6 h-6" />
+                  Activate Cashback Now
+                  <ExternalLink className="w-4 h-4 opacity-70" />
+                </Button>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Free. Takes under 60 seconds.
+                </p>
+              </motion.div>
             </motion.div>
           </div>
         </section>
 
-        {/* How It Works Section */}
+        {/* How It Works - Visual Steps */}
         <section className="py-16 bg-muted/30">
           <div className="container px-4">
             <motion.div
@@ -101,143 +123,223 @@ export default function SaveMoney() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+              <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
                 How It Works
               </h2>
-              <p className="text-muted-foreground">Simple 3 Steps to Start Saving</p>
+              <p className="text-muted-foreground">Three simple steps to start earning</p>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {steps.map((step, index) => (
-                <motion.div
-                  key={step.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="h-full text-center relative overflow-hidden">
-                    <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-bold text-primary">{index + 1}</span>
-                    </div>
-                    <CardContent className="pt-12 pb-6">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                        <step.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                      <p className="text-muted-foreground">{step.description}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-4 max-w-4xl mx-auto mb-12">
+              {/* Step 1: Check */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="flex flex-col items-center text-center flex-1"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 shadow-lg">
+                  <Search className="w-10 h-10 text-primary-foreground" />
+                </div>
+                <span className="text-sm font-semibold text-primary uppercase tracking-wide mb-1">Step 1</span>
+                <h3 className="text-xl font-bold mb-2">Check</h3>
+                <p className="text-sm text-muted-foreground max-w-[180px]">Verify the store is safe on TrustworthyCheck</p>
+              </motion.div>
+
+              {/* Arrow */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="hidden md:flex items-center text-muted-foreground/50"
+              >
+                <Zap className="w-8 h-8" />
+              </motion.div>
+
+              {/* Step 2: Activate */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center text-center flex-1"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center mb-4 shadow-lg">
+                  <CheckCircle className="w-10 h-10 text-secondary-foreground" />
+                </div>
+                <span className="text-sm font-semibold text-secondary uppercase tracking-wide mb-1">Step 2</span>
+                <h3 className="text-xl font-bold mb-2">Activate</h3>
+                <p className="text-sm text-muted-foreground max-w-[180px]">Click through to activate your cashback</p>
+              </motion.div>
+
+              {/* Arrow */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="hidden md:flex items-center text-muted-foreground/50"
+              >
+                <Zap className="w-8 h-8" />
+              </motion.div>
+
+              {/* Step 3: Earn */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col items-center text-center flex-1"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4 shadow-lg">
+                  <DollarSign className="w-10 h-10 text-white" />
+                </div>
+                <span className="text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent uppercase tracking-wide mb-1">Step 3</span>
+                <h3 className="text-xl font-bold mb-2">Earn</h3>
+                <p className="text-sm text-muted-foreground max-w-[180px]">Shop & get money back automatically</p>
+              </motion.div>
             </div>
+
+            {/* Secondary CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="text-center"
+            >
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="gap-2 px-8"
+                onClick={handleActivateClick}
+              >
+                <DollarSign className="w-5 h-5" />
+                Activate Cashback Now
+              </Button>
+            </motion.div>
           </div>
         </section>
 
-        {/* Savings Partner Section */}
-        <section className="py-16">
+        {/* Cashback Partner Section - Merged */}
+        <section className="py-16 md:py-20">
           <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-8"
-            >
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                Our Recommended Savings Partner
-              </h2>
-              <p className="text-muted-foreground">Mr. Rebates</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
               className="max-w-2xl mx-auto"
             >
-              <Card className="overflow-hidden border-2 border-primary/20">
-                <CardContent className="p-8 text-center">
-                  <a 
-                    href="http://www.mrrebates.com?refid=918226" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block mb-6"
-                  >
-                    <Button variant="hero" size="lg" className="gap-2 text-lg px-8 py-6">
-                      <DollarSign className="w-5 h-5" />
-                      Activate Cashback Now
-                    </Button>
-                  </a>
-                  
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    Mr. Rebates provides cashback and exclusive deals at over 5,000 trusted online retailers including Walmart, Target, Macy's, Best Buy, Expedia, Nike, and more.
-                  </p>
-                  
-                  <p className="text-sm text-primary font-medium">
-                    Joining is free and takes under 60 seconds.
-                  </p>
+              <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-xl">
+                <CardContent className="p-8 md:p-12">
+                  <div className="text-center">
+                    {/* Icon */}
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      whileInView={{ scale: 1, opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ type: 'spring', stiffness: 200 }}
+                      className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-primary/30"
+                    >
+                      <DollarSign className="w-12 h-12 text-white" />
+                    </motion.div>
+
+                    {/* Title */}
+                    <h2 className="text-2xl md:text-3xl font-display font-bold mb-4">
+                      Our Cashback Partner: Mr. Rebates
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-muted-foreground leading-relaxed mb-8 max-w-lg mx-auto">
+                      Mr. Rebates has been helping shoppers earn cashback for over 20 years. Join for free and start earning at 5,000+ trusted stores including Walmart, Target, Best Buy, and Nike.
+                    </p>
+
+                    {/* Primary CTA */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button 
+                        variant="hero" 
+                        size="lg" 
+                        className="gap-2 text-lg px-10 py-7 shadow-xl shadow-primary/20 mb-6"
+                        onClick={handleActivateClick}
+                      >
+                        <DollarSign className="w-6 h-6" />
+                        Activate Cashback
+                        <ExternalLink className="w-4 h-4 opacity-70" />
+                      </Button>
+                    </motion.div>
+
+                    {/* Trust Chips */}
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {trustChips.map((chip, index) => (
+                        <motion.div
+                          key={chip.text}
+                          initial={{ opacity: 0, y: 10 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.1 * index }}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border text-sm font-medium"
+                        >
+                          <chip.icon className="w-4 h-4 text-primary" />
+                          {chip.text}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
         </section>
 
-        {/* Why We Trust Them Section */}
+        {/* FAQ Section */}
         <section className="py-16 bg-muted/30">
           <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-10"
             >
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                Why We Recommend Mr. Rebates
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-muted-foreground mb-4">
+                <HelpCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Questions?</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-display font-bold">
+                Frequently Asked Questions
               </h2>
             </motion.div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {trustReasons.map((reason, index) => (
-                <motion.div
-                  key={reason.text}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-background border"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <reason.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="font-medium">{reason.text}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Cashback Agent Module */}
-        <section className="py-16">
-          <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-8"
+              className="max-w-2xl mx-auto"
             >
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                💰 Cashback Agent
-              </h2>
-              <p className="text-muted-foreground">Get paid to shop at stores you already trust</p>
+              <Accordion type="single" collapsible className="space-y-3">
+                {faqItems.map((item, index) => (
+                  <AccordionItem 
+                    key={index} 
+                    value={`item-${index}`}
+                    className="bg-background rounded-xl border px-6 data-[state=open]:shadow-md transition-shadow"
+                  >
+                    <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-5">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </motion.div>
-
-            <div className="max-w-2xl mx-auto">
-              <CashbackAgent variant="full" />
-            </div>
           </div>
         </section>
 
-        {/* Affiliate Disclosure Section */}
+        {/* Affiliate Disclosure */}
         <section className="py-12">
           <div className="container px-4">
             <motion.div
@@ -268,77 +370,27 @@ export default function SaveMoney() {
 
       <Footer />
 
-      {/* Mobile Bottom CTA */}
+      {/* Interstitial Overlay */}
       <AnimatePresence>
-        {showBottomCTA && (
+        {showInterstitial && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
           >
-            <div 
-              className="bg-background/95 backdrop-blur-lg border-t border-x rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)]"
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card rounded-2xl p-8 shadow-2xl border text-center max-w-sm mx-4"
             >
-              {/* Swipe indicator / collapse button */}
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex justify-center py-2 touch-pan-y"
-                aria-label={isExpanded ? "Collapse" : "Expand"}
-              >
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </button>
-
-              <AnimatePresence mode="wait">
-                {isExpanded ? (
-                  <motion.div
-                    key="expanded"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="px-4 pb-4 overflow-hidden"
-                  >
-                    <p className="text-sm font-medium text-foreground mb-1">Shopping this site?</p>
-                    <p className="text-xs text-muted-foreground mb-3">Activate cashback before you buy.</p>
-                    
-                    <a 
-                      href="http://www.mrrebates.com?refid=918226" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      <Button variant="hero" size="sm" className="w-full gap-2">
-                        <DollarSign className="w-4 h-4" />
-                        Start Saving
-                      </Button>
-                    </a>
-                    
-                    <p className="text-[10px] text-muted-foreground text-center mt-2">
-                      Confidence in every click.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="collapsed"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="px-4 pb-3"
-                  >
-                    <button
-                      onClick={() => setIsExpanded(true)}
-                      className="w-full flex items-center justify-center gap-2 text-sm font-medium text-primary"
-                    >
-                      <span>💰</span>
-                      <span>Save Money on This Purchase</span>
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-8 h-8 text-white animate-pulse" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Sending you to Mr. Rebates securely…</h3>
+              <p className="text-muted-foreground">Finish signup to lock in cashback.</p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
