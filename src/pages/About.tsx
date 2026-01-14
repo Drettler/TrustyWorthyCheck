@@ -4,7 +4,39 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Shield, Users, Target, Heart, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { FeatureCard } from '@/components/FeatureCard';
+import { Shield, Users, Target, Heart, ArrowRight, CheckCircle2, Search, Zap, CreditCard } from 'lucide-react';
+
+const features = [
+  {
+    emoji: "🛡️",
+    icon: Shield,
+    title: "Safe Shopping",
+    description:
+      "We check if the website has proper security certificates, safe payment processing, and data protection.",
+    link: "/save-money",
+  },
+  {
+    emoji: "🔍",
+    icon: Search,
+    title: "Business X-Ray",
+    description: "We look up who owns the website, how long it's been around, and if the business info checks out.",
+  },
+  {
+    emoji: "🚨",
+    icon: Zap,
+    title: "Live Threat Feed",
+    description: "See real-time scam alerts, newly reported fake stores, and emerging fraud patterns as they happen.",
+    link: "/threats-feed",
+  },
+  {
+    emoji: "💸",
+    icon: CreditCard,
+    title: "Save While You Shop",
+    description: "Get cashback on verified safe sites. Shop smart and earn rewards at trusted stores.",
+    link: "/save-money",
+  },
+];
 
 export default function About() {
   const values = [
@@ -124,8 +156,40 @@ export default function About() {
           </div>
         </section>
 
+        {/* How We Help Section */}
+        <section id="learn" className="py-20 bg-muted/30">
+          <div className="container px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">🔒 How We Help</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                We combine real-world scam patterns, security checks, and transparency signals to give you a clear,
+                unbiased verdict.
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              {features.map((feature, index) => (
+                <FeatureCard
+                  key={feature.title}
+                  icon={feature.icon}
+                  emoji={feature.emoji}
+                  title={feature.title}
+                  description={feature.description}
+                  index={index}
+                  link={feature.link}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* What We Do */}
-        <section className="bg-muted/30">
+        <section className="bg-background">
           <div className="container px-4 py-16 md:py-24">
             <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
               <motion.div
