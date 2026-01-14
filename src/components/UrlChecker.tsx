@@ -64,8 +64,12 @@ export function UrlChecker() {
     if (checkUrl && !hasAutoChecked.current) {
       hasAutoChecked.current = true;
       setUrl(checkUrl);
-      // Clear the URL parameter
-      setSearchParams({}, { replace: true });
+
+      // Clear ONLY the `check` parameter (preserve others like ?testReport=true)
+      const next = new URLSearchParams(searchParams);
+      next.delete('check');
+      setSearchParams(next, { replace: true });
+
       // Auto-submit after a brief delay to allow state to update
       setTimeout(() => {
         if (isValidUrl(checkUrl) && !isLimitReached) {

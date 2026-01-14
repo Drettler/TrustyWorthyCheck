@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, History, Shield, AlertTriangle, CheckCircle, Loader2, ExternalLink, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { AnalysisResult } from '@/lib/api/url-check';
+
+const TEST_MODE_KEY = 'twc_testReportMode';
 
 const features = [
   { icon: AlertTriangle, text: 'Detailed red flags breakdown' },
@@ -25,10 +27,52 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  
+  const location = useLocation();
+
   // DEV MODE: Enable test mode via URL query param ?testReport=true
-  const isDevTestMode = searchParams.get('testReport') === 'true';
+  // Also supports placing the query after the hash, e.g. /#checker?testReport=true
+  // Persists across navigation via localStorage.
+  const isDevTestMode = useMemo(() => {
+    const readParam = (search: string) => {
+      const params = new URLSearchParams(search);
+      const v = params.get('testReport');
+      return v === 'true' ? true : v === 'false' ? false : null;
+    };
+
+    const q = readParam(location.search);
+
+    const hash = location.hash ?? '';
+    const qIndex = hash.indexOf('?');
+    const h = qIndex !== -1 ? readParam(hash.slice(qIndex + 1)) : null;
+
+    const param = q ?? h; // q takes precedence if both exist
+
+    if (typeof window === 'undefined') return param === true;
+
+    if (param === true) {
+      try {
+        localStorage.setItem(TEST_MODE_KEY, 'true');
+      } catch {
+        // ignore
+      }
+      return true;
+    }
+
+    if (param === false) {
+      try {
+        localStorage.removeItem(TEST_MODE_KEY);
+      } catch {
+        // ignore
+      }
+      return false;
+    }
+
+    try {
+      return localStorage.getItem(TEST_MODE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  }, [location.hash, location.search]);
 
   // DEV: Bypass payment for testing PDF
   const handleTestReport = () => {
