@@ -1,12 +1,45 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { Shield, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
+import { Shield, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { FeatureCard } from "@/components/FeatureCard";
 import { StepGuide } from "@/components/StepGuide";
 import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
+
+const features = [
+  {
+    emoji: "🛡️",
+    icon: Shield,
+    title: "Safe Shopping",
+    description:
+      "We check if the website has proper security certificates, safe payment processing, and data protection.",
+    link: "/save-money",
+  },
+  {
+    emoji: "🔍",
+    icon: Search,
+    title: "Business X-Ray",
+    description: "We look up who owns the website, how long it's been around, and if the business info checks out.",
+  },
+  {
+    emoji: "🚨",
+    icon: Zap,
+    title: "Live Threat Feed",
+    description: "See real-time scam alerts, newly reported fake stores, and emerging fraud patterns as they happen.",
+    link: "/threats-feed",
+  },
+  {
+    emoji: "💸",
+    icon: CreditCard,
+    title: "Save While You Shop",
+    description: "Get cashback on verified safe sites. Shop smart and earn rewards at trusted stores.",
+    link: "/save-money",
+  },
+];
+
 export default function Index() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -132,21 +165,13 @@ export default function Index() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8"
           >
             <div className="text-center sm:text-left">
-              <p className="text-lg font-semibold text-foreground">
-                🔍 Check any website instantly
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Paste a URL above to see if it's safe
-              </p>
+              <p className="text-lg font-semibold text-foreground">🔍 Check any website instantly</p>
+              <p className="text-sm text-muted-foreground">Paste a URL above to see if it's safe</p>
             </div>
             <div className="h-px w-16 sm:h-12 sm:w-px bg-border" />
             <div className="text-center sm:text-left">
-              <p className="text-lg font-semibold text-foreground">
-                💰 Save money while you shop
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Get cashback on verified safe sites
-              </p>
+              <p className="text-lg font-semibold text-foreground">💰 Save money while you shop</p>
+              <p className="text-sm text-muted-foreground">Get cashback on verified safe sites</p>
             </div>
             <Button asChild className="mt-2 sm:mt-0 sm:ml-4">
               <a href="/save-money">
@@ -158,6 +183,37 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Features Section */}
+      <section id="learn" className="py-20 bg-muted/30">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">🔒 How We Help</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We combine real-world scam patterns, security checks, and transparency signals to give you a clear,
+              unbiased verdict.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={feature.title}
+                icon={feature.icon}
+                emoji={feature.emoji}
+                title={feature.title}
+                description={feature.description}
+                index={index}
+                link={feature.link}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* How It Works Section (detailed) */}
       <section id="reports" className="py-20">
@@ -259,20 +315,15 @@ export default function Index() {
               </p>
             </div>
 
-            {/* Brand line */}
-            <p className="text-sm text-muted-foreground/70 font-medium tracking-wide mb-12">
-              Confidence in every click. Cashback in every cart.
-            </p>
-
             {/* Trust accent row */}
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
-              <a 
+              <a
                 href="/save-money"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-colors cursor-pointer"
               >
                 🛡️ Safe Shopping
               </a>
-              <a 
+              <a
                 href="/threats-feed"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-destructive/5 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors cursor-pointer"
               >
@@ -281,7 +332,7 @@ export default function Index() {
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/5 text-secondary text-sm font-medium">
                 👨‍👩‍👧 Family Friendly
               </span>
-              <a 
+              <a
                 href="/save-money"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/5 text-success text-sm font-medium hover:bg-success/10 transition-colors cursor-pointer"
               >
@@ -374,12 +425,7 @@ export default function Index() {
                 </div>
                 <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full group"
-                  asChild
-                >
+                <Button variant="outline" size="sm" className="w-full group" asChild>
                   <a href={item.href} target="_blank" rel="noopener noreferrer">
                     {item.button}
                     <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
