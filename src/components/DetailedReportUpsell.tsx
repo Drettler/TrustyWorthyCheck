@@ -29,29 +29,46 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
   const navigate = useNavigate();
   const location = useLocation();
 
-  // DEV MODE: Enable test mode via URL query param ?testReport=true
-  // Also supports placing the query after the hash, e.g. /#checker?testReport=true
+  // DEV MODE: Enable test mode without needing query params (some hosts strip them).
+  // Supported:
+  // - /#testReport
+  // - /#testReport=true
+  // - /#checker?testReport=true
+  // - /#checker&testReport=true
   // Persists across navigation via localStorage.
   const isDevTestMode = useMemo(() => {
-    const readParam = (search: string) => {
-      const params = new URLSearchParams(search);
-      const v = params.get('testReport');
-      return v === 'true' ? true : v === 'false' ? false : null;
+    const readTestReportParam = (raw: string): boolean | null => {
+      if (!raw) return null;
+      const s = raw.startsWith("?") ? raw.slice(1) : raw;
+      const params = new URLSearchParams(s);
+      if (!params.has("testReport")) return null;
+
+      const v = params.get("testReport");
+      if (v === null || v === "") return true; // flag present with no value
+      if (v === "true") return true;
+      if (v === "false") return false;
+      return null;
     };
 
-    const q = readParam(location.search);
+    const q = readTestReportParam(location.search);
 
-    const hash = location.hash ?? '';
-    const qIndex = hash.indexOf('?');
-    const h = qIndex !== -1 ? readParam(hash.slice(qIndex + 1)) : null;
+    const hashRaw = (location.hash ?? "").replace(/^#/, "");
+    let hashParams: string | null = null;
+
+    if (hashRaw === "testReport") hashParams = "testReport=true";
+    else if (hashRaw === "testReport=true" || hashRaw === "testReport=false") hashParams = hashRaw;
+    else if (hashRaw.includes("?")) hashParams = hashRaw.split("?")[1] ?? null;
+    else if (/[=&]/.test(hashRaw)) hashParams = hashRaw;
+
+    const h = hashParams ? readTestReportParam(hashParams) : null;
 
     const param = q ?? h; // q takes precedence if both exist
 
-    if (typeof window === 'undefined') return param === true;
+    if (typeof window === "undefined") return param === true;
 
     if (param === true) {
       try {
-        localStorage.setItem(TEST_MODE_KEY, 'true');
+        localStorage.setItem(TEST_MODE_KEY, "true");
       } catch {
         // ignore
       }
@@ -68,7 +85,7 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
     }
 
     try {
-      return localStorage.getItem(TEST_MODE_KEY) === 'true';
+      return localStorage.getItem(TEST_MODE_KEY) === "true";
     } catch {
       return false;
     }
