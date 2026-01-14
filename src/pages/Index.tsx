@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { Shield, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
+import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -8,6 +8,7 @@ import { StepGuide } from "@/components/StepGuide";
 import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -40,7 +41,44 @@ const features = [
   },
 ];
 
+const controlPanelCards = [
+  {
+    icon: Shield,
+    title: "Check a Website",
+    description: "Paste a link to instantly see if a site is safe.",
+    buttonText: "Run Safety Check",
+    action: "scroll",
+    color: "primary",
+    emoji: "🛡️",
+  },
+  {
+    icon: AlertTriangle,
+    title: "View Current Threats",
+    description: "See newly reported scams and fraud patterns.",
+    buttonText: "Live Threat Feed",
+    action: "/threats-feed",
+    color: "destructive",
+    emoji: "🚨",
+  },
+  {
+    icon: DollarSign,
+    title: "Save Money & Shop Safe",
+    description: "Activate cashback and avoid fake stores.",
+    buttonText: "Save & Shop Smart",
+    action: "/save-money",
+    color: "success",
+    emoji: "💰",
+  },
+];
+
 export default function Index() {
+  const scrollToChecker = () => {
+    const checker = document.getElementById("checker");
+    if (checker) {
+      checker.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
@@ -49,17 +87,6 @@ export default function Index() {
         canonical="https://trustworthycheck.com/"
       />
       <Header />
-
-      {/* Friendly helper in corner */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.4 }}
-        className="fixed bottom-6 right-6 z-50 hidden md:flex items-center gap-2 bg-card/95 backdrop-blur-sm px-4 py-3 rounded-full shadow-lg border border-border hover:shadow-xl transition-shadow cursor-default"
-      >
-        <span className="text-2xl hover-wiggle">🛡️</span>
-        <span className="text-sm font-medium text-muted-foreground">I'll help you spot sketchy sites.</span>
-      </motion.div>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -77,26 +104,26 @@ export default function Index() {
           />
         </div>
 
-        <div className="container relative z-10 px-4 pt-16 pb-12 md:pt-24 md:pb-20">
-          <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="container relative z-10 px-4 pt-12 pb-8 md:pt-20 md:pb-12">
+          <motion.div className="text-center mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             {/* Headline */}
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
               Should I Trust This Site? <span className="inline-block hover-wiggle">🛡️</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Avoid scams, fake sites and stores before they cost you money —{" "}
-              <span className="text-foreground font-medium">in under 3 minutes.</span>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
+              Check a website before you buy, stay ahead of scams, and save money while you shop —{" "}
+              <span className="text-foreground font-medium">all in under 3 minutes.</span>
             </p>
 
             {/* Pill Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
               <motion.span
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/10 border border-success/30 text-success font-medium text-sm"
+                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-success/10 border border-success/30 text-success font-medium text-xs md:text-sm"
               >
                 🧒 Teen-Safe
               </motion.span>
@@ -104,7 +131,7 @@ export default function Index() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.15 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-medium text-sm"
+                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-medium text-xs md:text-sm"
               >
                 👪 Parent-Approved
               </motion.span>
@@ -112,79 +139,129 @@ export default function Index() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-medium text-sm"
+                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-medium text-xs md:text-sm"
               >
                 🤖 No Tech Skills Needed
               </motion.span>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Primary Control Panel */}
+      <section className="relative z-10 -mt-2 pb-12">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="text-center mb-8"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+              What do you want to do?
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto mb-12">
+            {controlPanelCards.map((card, index) => {
+              const Icon = card.icon;
+              const isScrollAction = card.action === "scroll";
+              
+              return (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  className={`
+                    group relative overflow-hidden rounded-2xl bg-card border-2 
+                    ${card.color === "primary" ? "border-primary/20 hover:border-primary/40" : ""}
+                    ${card.color === "destructive" ? "border-destructive/20 hover:border-destructive/40" : ""}
+                    ${card.color === "success" ? "border-success/20 hover:border-success/40" : ""}
+                    p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1
+                  `}
+                >
+                  {/* Background glow */}
+                  <div 
+                    className={`
+                      absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                      ${card.color === "primary" ? "bg-gradient-to-br from-primary/5 to-transparent" : ""}
+                      ${card.color === "destructive" ? "bg-gradient-to-br from-destructive/5 to-transparent" : ""}
+                      ${card.color === "success" ? "bg-gradient-to-br from-success/5 to-transparent" : ""}
+                    `}
+                  />
+                  
+                  <div className="relative z-10">
+                    {/* Icon */}
+                    <div 
+                      className={`
+                        w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-5
+                        ${card.color === "primary" ? "bg-primary/10 text-primary" : ""}
+                        ${card.color === "destructive" ? "bg-destructive/10 text-destructive" : ""}
+                        ${card.color === "success" ? "bg-success/10 text-success" : ""}
+                      `}
+                    >
+                      <span className="text-3xl md:text-4xl">{card.emoji}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-display text-xl md:text-2xl font-bold mb-2 text-foreground">
+                      {card.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-muted-foreground text-sm md:text-base mb-5 md:mb-6">
+                      {card.description}
+                    </p>
+
+                    {/* Button */}
+                    {isScrollAction ? (
+                      <Button
+                        onClick={scrollToChecker}
+                        size="lg"
+                        className={`
+                          w-full font-semibold
+                          ${card.color === "primary" ? "bg-primary hover:bg-primary/90" : ""}
+                        `}
+                      >
+                        {card.buttonText}
+                      </Button>
+                    ) : (
+                      <Button
+                        asChild
+                        size="lg"
+                        variant={card.color === "destructive" ? "destructive" : "default"}
+                        className={`
+                          w-full font-semibold
+                          ${card.color === "success" ? "bg-success hover:bg-success/90 text-success-foreground" : ""}
+                        `}
+                      >
+                        <Link to={card.action}>
+                          {card.buttonText}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
 
           {/* URL Checker */}
           <motion.div
             id="checker"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.5 }}
+            className="max-w-4xl mx-auto"
           >
             <UrlChecker />
           </motion.div>
-
-          {/* Step Guide - below the checker */}
-          <StepGuide />
-
-          {/* Trust Statement */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center text-sm text-muted-foreground mt-10 max-w-md mx-auto"
-          >
-            💚 We never take money to change results. Ever.{" "}
-            <span className="font-medium text-foreground">Your safety comes first.</span>
-          </motion.p>
-
-          {/* First-timer tip */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-center text-sm text-muted-foreground mt-4 max-w-lg mx-auto"
-          >
-            🧒 First time checking a site? Try a random shop you've seen on TikTok or Instagram.
-          </motion.p>
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="py-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10">
-        <div className="container px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8"
-          >
-            <div className="text-center sm:text-left">
-              <p className="text-lg font-semibold text-foreground">🔍 Check any website instantly</p>
-              <p className="text-sm text-muted-foreground">Paste a URL above to see if it's safe</p>
-            </div>
-            <div className="h-px w-16 sm:h-12 sm:w-px bg-border" />
-            <div className="text-center sm:text-left">
-              <p className="text-lg font-semibold text-foreground">💰 Save money while you shop</p>
-              <p className="text-sm text-muted-foreground">Get cashback on verified safe sites</p>
-            </div>
-            <Button asChild className="mt-2 sm:mt-0 sm:ml-4">
-              <a href="/save-money">
-                Learn How to Save
-                <ExternalLink className="w-4 h-4 ml-2" />
-              </a>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="learn" className="py-20 bg-muted/30">
+      {/* How We Help Section */}
+      <section id="learn" className="py-16 md:py-20 bg-muted/30">
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -215,14 +292,14 @@ export default function Index() {
         </div>
       </section>
 
-      {/* How It Works Section (detailed) */}
-      <section id="reports" className="py-20">
+      {/* Simple as 1-2-3 Section */}
+      <section id="reports" className="py-16 md:py-20">
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 md:mb-16"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Simple as 1-2-3</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
@@ -233,7 +310,10 @@ export default function Index() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          {/* Step Guide */}
+          <StepGuide />
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-12">
             {[
               {
                 step: "1",
@@ -276,8 +356,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* About Section - Built for Real People */}
-      <section id="about" className="py-24 bg-gradient-to-b from-muted/30 to-background">
+      {/* Built for Real People Section */}
+      <section id="about" className="py-20 md:py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -294,15 +374,15 @@ export default function Index() {
             </div>
 
             {/* Headline */}
-            <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">Built for Real People</h2>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">Built for Real People</h2>
 
             {/* Sub-headline */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed">
               Because losing money to fake websites should not be part of growing up, parenting, or gift shopping.
             </p>
 
             {/* Body text */}
-            <div className="space-y-6 text-lg text-muted-foreground leading-relaxed mb-10">
+            <div className="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed mb-10">
               <p>
                 We built TrustworthyCheck for everyday people who just want to shop safely. Whether you are a teen
                 buying your first hoodie, a parent protecting your family, or a friend trying not to mess up a birthday
@@ -316,62 +396,35 @@ export default function Index() {
             </div>
 
             {/* Trust accent row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
-              <a
-                href="/save-money"
+            <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+              <Link
+                to="/save-money"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-colors cursor-pointer"
               >
                 🛡️ Safe Shopping
-              </a>
-              <a
-                href="/threats-feed"
+              </Link>
+              <Link
+                to="/threats-feed"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-destructive/5 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors cursor-pointer"
               >
                 🚨 Live Threat Alerts
-              </a>
+              </Link>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/5 text-secondary text-sm font-medium">
                 👨‍👩‍👧 Family Friendly
               </span>
-              <a
-                href="/save-money"
+              <Link
+                to="/save-money"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/5 text-success text-sm font-medium hover:bg-success/10 transition-colors cursor-pointer"
               >
                 💸 Save While You Shop
-              </a>
+              </Link>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* SEO Content Section - Check If a Website Is Legitimate */}
-      <section className="py-20 bg-background">
-        <div className="container px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-2xl mx-auto text-center"
-          >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-8">Check If a Website Is Legitimate</h2>
-
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              TrustworthyCheck.com helps you verify a website before you buy. Our trust checker scans for scam signals,
-              fake stores, suspicious business details, and unsafe payment practices so you can make smarter decisions
-              online.
-            </p>
-
-            <p className="text-lg text-foreground/80 leading-relaxed italic">
-              If you have ever asked,{" "}
-              <span className="font-semibold text-foreground">"Is this website actually trustworthy?"</span>
-              <br />
-              This tool was built for you.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Extra Protection Section */}
-      <section className="py-20 bg-muted/30">
+      {/* Want Extra Protection Section */}
+      <section className="py-16 md:py-20 bg-muted/30">
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -399,41 +452,64 @@ export default function Index() {
                 icon: Lock,
                 emoji: "🔐",
                 title: "Password Security",
-                description: "Stop password leaks and account takeovers.",
-                button: "Secure My Accounts",
-                href: "https://bitwarden.com/",
+                description: "Keep your passwords secure and never get hacked.",
+                button: "Secure My Passwords",
+                href: "https://1password.com/",
               },
               {
-                icon: CreditCard,
-                emoji: "💳",
-                title: "Payment Safety",
-                description: "Use protected payments when buying online.",
-                button: "Protect My Payment",
-                href: "https://privacy.com/",
+                icon: Shield,
+                emoji: "🛡️",
+                title: "VPN Protection",
+                description: "Browse anonymously and protect your data.",
+                button: "Get VPN Protection",
+                href: "https://nordvpn.com/",
               },
-            ].map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-card rounded-2xl p-6 border border-border shadow-soft hover:shadow-card transition-shadow text-center"
-              >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">{item.emoji}</span>
-                </div>
-                <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
-                <Button variant="outline" size="sm" className="w-full group" asChild>
-                  <a href={item.href} target="_blank" rel="noopener noreferrer">
-                    {item.button}
-                    <ExternalLink className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                </Button>
-              </motion.div>
-            ))}
+            ].map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="group bg-card rounded-2xl p-6 border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <span className="text-3xl">{item.emoji}</span>
+                  </div>
+                  <h3 className="font-display font-bold text-xl mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm mb-4">{item.description}</p>
+                  <Button asChild variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <a href={item.href} target="_blank" rel="noopener noreferrer">
+                      {item.button}
+                      <ExternalLink className="w-4 h-4 ml-2" />
+                    </a>
+                  </Button>
+                </motion.div>
+              );
+            })}
           </div>
+        </div>
+      </section>
+
+      {/* Trust Statement */}
+      <section className="py-12 md:py-16 bg-background">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto"
+          >
+            <p className="text-lg text-muted-foreground mb-4">
+              💚 We never take money to change results. Ever.{" "}
+              <span className="font-medium text-foreground">Your safety comes first.</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              🧒 First time checking a site? Try a random shop you've seen on TikTok or Instagram.
+            </p>
+          </motion.div>
         </div>
       </section>
 
