@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Search, DollarSign, CheckCircle, Heart, ChevronDown, Gift, Store, Zap, HelpCircle, ExternalLink } from 'lucide-react';
+import { Shield, Search, DollarSign, CheckCircle, Heart, Gift, Store, Zap, HelpCircle, ExternalLink, Users, Star, Quote } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SEO } from '@/components/SEO';
@@ -32,6 +32,24 @@ export default function SaveMoney() {
     { icon: Gift, text: 'Free to join' },
     { icon: Store, text: 'Works at 5,000+ stores' },
     { icon: Shield, text: 'No impact on safety verdicts' },
+  ];
+
+  const testimonials = [
+    {
+      quote: "I saved $47 on my first order! Can't believe I wasn't using this before.",
+      name: "Sarah M.",
+      location: "Texas",
+    },
+    {
+      quote: "Finally a cashback site that actually pays out. Been using it for 6 months now.",
+      name: "Mike R.",
+      location: "California",
+    },
+    {
+      quote: "Love that TrustworthyCheck checks if a site is safe first. Peace of mind + savings!",
+      name: "Jessica T.",
+      location: "New York",
+    },
   ];
 
   const faqItems = [
@@ -95,7 +113,22 @@ export default function SaveMoney() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
+                className="flex flex-col items-center"
               >
+                {/* Social Proof Badge */}
+                <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-muted/80 border">
+                  <div className="flex -space-x-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center">
+                      <Users className="w-3 h-3 text-primary" />
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-secondary/20 border-2 border-background" />
+                    <div className="w-6 h-6 rounded-full bg-primary/30 border-2 border-background" />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Join <span className="text-foreground font-semibold">10,000+</span> smart shoppers
+                  </span>
+                </div>
+
                 <Button 
                   variant="hero" 
                   size="lg" 
@@ -219,6 +252,60 @@ export default function SaveMoney() {
                 Activate Cashback Now
               </Button>
             </motion.div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="py-16">
+          <div className="container px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-10"
+            >
+              <div className="inline-flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                ))}
+              </div>
+              <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
+                Loved by Smart Shoppers
+              </h2>
+              <p className="text-muted-foreground">See what others are saying</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={testimonial.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="h-full bg-background/50 hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <Quote className="w-8 h-8 text-primary/20 mb-3" />
+                      <p className="text-foreground mb-4 leading-relaxed">
+                        "{testimonial.quote}"
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-primary">
+                            {testimonial.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{testimonial.name}</p>
+                          <p className="text-xs text-muted-foreground">{testimonial.location}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
