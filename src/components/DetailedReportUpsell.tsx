@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, History, Shield, AlertTriangle, CheckCircle, Loader2, ExternalLink, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,6 @@ const features = [
   { icon: CheckCircle, text: '"What to do next" plan' },
 ];
 
-// DEV MODE: Enable test mode via URL query param ?testReport=true
-const isDevTestMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testReport') === 'true';
-
 interface DetailedReportUpsellProps {
   url: string;
   trustScore: number;
@@ -28,6 +25,10 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // DEV MODE: Enable test mode via URL query param ?testReport=true
+  const isDevTestMode = searchParams.get('testReport') === 'true';
 
   // DEV: Bypass payment for testing PDF
   const handleTestReport = () => {
