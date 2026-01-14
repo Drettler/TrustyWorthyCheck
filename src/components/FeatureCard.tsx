@@ -47,7 +47,7 @@ export function FeatureCard({ icon: Icon, emoji, title, description, index, link
 
           {link && (
             <span className="inline-flex items-center gap-1 mt-3 text-sm text-primary font-medium group-hover:underline">
-              View alerts →
+              Learn more →
             </span>
           )}
         </div>

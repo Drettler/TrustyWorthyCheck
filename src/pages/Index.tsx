@@ -13,9 +13,10 @@ const features = [
   {
     emoji: "🛡️",
     icon: Shield,
-    title: "Security Shield",
+    title: "Safe Shopping",
     description:
       "We check if the website has proper security certificates, safe payment processing, and data protection.",
+    link: "/save-money",
   },
   {
     emoji: "🔍",
@@ -24,17 +25,18 @@ const features = [
     description: "We look up who owns the website, how long it's been around, and if the business info checks out.",
   },
   {
-    emoji: "👼",
-    icon: Zap,
-    title: "Truth Meter",
-    description: "Our system spots red flags like fake reviews, copied content, and suspicious pricing patterns.",
-  },
-  {
     emoji: "🚨",
     icon: Zap,
-    title: "Scam Alerts",
-    description: "Stay ahead of trending scams, fake store patterns, and fraud warnings circulating right now.",
-    link: "/recent-reports",
+    title: "Live Threat Feed",
+    description: "See real-time scam alerts, newly reported fake stores, and emerging fraud patterns as they happen.",
+    link: "/threats-feed",
+  },
+  {
+    emoji: "💸",
+    icon: CreditCard,
+    title: "Save While You Shop",
+    description: "Get cashback on verified safe sites. Shop smart and earn rewards at trusted stores.",
+    link: "/save-money",
   },
 ];
 
@@ -328,15 +330,27 @@ export default function Index() {
 
             {/* Trust accent row */}
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-medium">
+              <a 
+                href="/save-money"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-colors cursor-pointer"
+              >
                 🛡️ Safe Shopping
-              </span>
+              </a>
+              <a 
+                href="/threats-feed"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-destructive/5 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors cursor-pointer"
+              >
+                🚨 Live Threat Alerts
+              </a>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/5 text-secondary text-sm font-medium">
                 👨‍👩‍👧 Family Friendly
               </span>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/5 text-success text-sm font-medium">
+              <a 
+                href="/save-money"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/5 text-success text-sm font-medium hover:bg-success/10 transition-colors cursor-pointer"
+              >
                 💸 Save While You Shop
-              </span>
+              </a>
             </div>
           </motion.div>
         </div>
