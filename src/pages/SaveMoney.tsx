@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Search, DollarSign, CheckCircle, Heart, Gift, Store, Zap, HelpCircle, ExternalLink, Users, Star, Quote } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -15,6 +15,17 @@ import {
 
 export default function SaveMoney() {
   const [showInterstitial, setShowInterstitial] = useState(false);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show sticky CTA after scrolling past hero section
+      setShowStickyCTA(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleActivateClick = () => {
     setShowInterstitial(true);
@@ -478,6 +489,37 @@ export default function SaveMoney() {
               <h3 className="text-xl font-bold mb-2">Sending you to Mr. Rebates securely…</h3>
               <p className="text-muted-foreground">Finish signup to lock in cashback.</p>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sticky Mobile CTA */}
+      <AnimatePresence>
+        {showStickyCTA && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
+          >
+            <div className="bg-background/95 backdrop-blur-lg border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3 safe-bottom">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">Ready to save?</p>
+                  <p className="text-xs text-muted-foreground">Free cashback at 5,000+ stores</p>
+                </div>
+                <Button 
+                  variant="hero" 
+                  size="sm" 
+                  className="gap-1.5 flex-shrink-0 shadow-lg"
+                  onClick={handleActivateClick}
+                >
+                  <DollarSign className="w-4 h-4" />
+                  Activate
+                </Button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
