@@ -132,16 +132,6 @@ export function UrlChecker() {
     }
   };
 
-  const handleDevViewReport = () => {
-    if (!import.meta.env.DEV || !result) return;
-    try {
-      localStorage.setItem('pendingAnalysisResult', JSON.stringify(result));
-      localStorage.setItem('pendingAnalysisUrl', url);
-    } catch {
-      // ignore
-    }
-    navigate('/payment-success?test=true');
-  };
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -777,18 +767,6 @@ export function UrlChecker() {
                   </>
                 )}
               </Button>
-
-              {import.meta.env.DEV && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleDevViewReport}
-                  className="border-dashed"
-                >
-                  <FileText className="w-4 h-4" />
-                  DEV: View report
-                </Button>
-              )}
 
               <Button variant="glass" size="lg" asChild>
                 <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noopener noreferrer">
