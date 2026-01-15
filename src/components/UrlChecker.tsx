@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Shield, Globe, Building2, AlertTriangle, CheckCircle, DollarSign, Users, ExternalLink, Clock, Image, ChevronDown, ChevronUp, Lock, FileText, Sparkles, Infinity as InfinityIcon, ShieldCheck, Calendar, TrendingDown, Heart, X, ShieldAlert, Eye, CreditCard, ShieldPlus, Store, Flag, Coins, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export function UrlChecker() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -38,8 +39,6 @@ export function UrlChecker() {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFullReport, setShowFullReport] = useState(false);
   
-  // DEV: Check for test mode via URL param ?testReport=true
-  const isTestMode = searchParams.get('testReport') === 'true';
   // Focus and highlight input when navigating to #checker
   useEffect(() => {
     const handleHashChange = () => {
@@ -131,6 +130,17 @@ export function UrlChecker() {
     } finally {
       setIsPaymentLoading(false);
     }
+  };
+
+  const handleDevViewReport = () => {
+    if (!import.meta.env.DEV || !result) return;
+    try {
+      localStorage.setItem('pendingAnalysisResult', JSON.stringify(result));
+      localStorage.setItem('pendingAnalysisUrl', url);
+    } catch {
+      // ignore
+    }
+    navigate('/payment-success?test=true');
   };
 
   useEffect(() => {
@@ -767,6 +777,19 @@ export function UrlChecker() {
                   </>
                 )}
               </Button>
+
+              {import.meta.env.DEV && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleDevViewReport}
+                  className="border-dashed"
+                >
+                  <FileText className="w-4 h-4" />
+                  DEV: View report
+                </Button>
+              )}
+
               <Button variant="glass" size="lg" asChild>
                 <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4" />

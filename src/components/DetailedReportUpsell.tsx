@@ -172,8 +172,8 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
         )}
       </Button>
 
-      {/* DEV TEST BUTTON - Only shows when ?testReport=true */}
-      {isDevTestMode && (
+      {/* DEV TEST BUTTON - Always available in dev builds; can also be enabled via ?testReport=true */}
+      {(import.meta.env.DEV || isDevTestMode) && (
         <Button
           onClick={handleTestReport}
           variant="outline"
