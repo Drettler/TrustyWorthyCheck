@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, RotateCcw, ShieldCheck, CreditCard, Eye, Zap, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { resetClientId } from '@/lib/client-id';
 
 interface UpgradePromptProps {
   onResetDemo?: () => void;
@@ -12,6 +13,11 @@ interface UpgradePromptProps {
 export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const isDev = useMemo(() => {
+    // Never expose limit-bypass tooling in production builds.
+    return import.meta.env.DEV;
+  }, []);
 
   const handleUnlockMore = async () => {
     setIsLoading(true);
@@ -34,6 +40,30 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDevReset = () => {
+    // Local UI counter
+    onResetDemo?.();
+
+    // Backend rate limit identity for anonymous users is tied to this browser-stable id.
+    // Resetting it is *dev-only* and intended for preview/testing.
+    resetClientId();
+
+    try {
+      localStorage.removeItem('daily_checks_info');
+    } catch {
+      // ignore
+    }
+
+    toast({
+      title: 'Reset complete',
+      description: 'Daily limit has been reset for this browser (dev mode).',
+    });
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 250);
   };
 
   return (
@@ -150,7 +180,24 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
         </div>
       </div>
 
-      {/* Demo reset button hidden for production */}
+      {/* Dev-only: reset both local counter + anonymous identifier used by backend rate limiting */}
+      {isDev && onResetDemo && (
+        <div className="max-w-lg mx-auto">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleDevReset}
+            className="gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Dev: Reset daily limit
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Dev-only (preview): resets this browser’s anonymous rate-limit id.
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }
