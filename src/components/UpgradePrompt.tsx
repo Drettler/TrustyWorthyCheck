@@ -181,20 +181,20 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
       </div>
 
       {/* Dev-only: reset both local counter + anonymous identifier used by backend rate limiting */}
-      {isDev && onResetDemo && (
-        <div className="max-w-lg mx-auto">
+      {isDev && (
+        <div className="max-w-lg mx-auto mt-6 pt-6 border-t border-border/30">
           <Button
             type="button"
-            variant="outline"
-            size="sm"
+            variant="destructive"
+            size="lg"
             onClick={handleDevReset}
-            className="gap-2"
+            className="gap-2 w-full"
           >
-            <RotateCcw className="w-4 h-4" />
-            Dev: Reset daily limit
+            <RotateCcw className="w-5 h-5" />
+            DEV: Reset daily limit
           </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Dev-only (preview): resets this browser’s anonymous rate-limit id.
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Development mode only — resets local storage + anonymous browser id
           </p>
         </div>
       )}
