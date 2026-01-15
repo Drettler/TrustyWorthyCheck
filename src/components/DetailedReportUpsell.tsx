@@ -172,17 +172,6 @@ export function DetailedReportUpsell({ url, trustScore, analysisResult }: Detail
         )}
       </Button>
 
-      {/* DEV TEST BUTTON - Always available in dev builds; can also be enabled via ?testReport=true */}
-      {(import.meta.env.DEV || isDevTestMode) && (
-        <Button
-          onClick={handleTestReport}
-          variant="outline"
-          className="w-full h-10 mt-2 text-sm border-dashed border-warning text-warning hover:bg-warning/10"
-        >
-          <FlaskConical className="w-4 h-4 mr-2" />
-          🧪 TEST: View Report (No Payment)
-        </Button>
-      )}
 
       <p className="text-xs text-center text-muted-foreground mt-3">
         One-time payment • Instant delivery • Money-back guarantee
