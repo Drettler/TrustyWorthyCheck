@@ -1,17 +1,26 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Search, DollarSign, CheckCircle, Heart, Gift, Store, Zap, HelpCircle, ExternalLink, Users, Star, Quote } from 'lucide-react';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { SEO } from '@/components/SEO';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  Shield,
+  Search,
+  DollarSign,
+  CheckCircle,
+  Heart,
+  Gift,
+  Store,
+  Zap,
+  HelpCircle,
+  ExternalLink,
+  Users,
+  Star,
+  Quote,
+} from "lucide-react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function SaveMoney() {
   const [showInterstitial, setShowInterstitial] = useState(false);
@@ -23,15 +32,15 @@ export default function SaveMoney() {
       setShowStickyCTA(window.scrollY > 400);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleActivateClick = () => {
     setShowInterstitial(true);
-    
+
     setTimeout(() => {
-      window.open('http://www.mrrebates.com?refid=918226', '_blank', 'noopener,noreferrer');
+      window.open("http://www.mrrebates.com?refid=918226", "_blank", "noopener,noreferrer");
     }, 500);
 
     setTimeout(() => {
@@ -40,9 +49,9 @@ export default function SaveMoney() {
   };
 
   const trustChips = [
-    { icon: Gift, text: 'Free to join' },
-    { icon: Store, text: 'Works at 5,000+ stores' },
-    { icon: Shield, text: 'No impact on safety verdicts' },
+    { icon: Gift, text: "Free to join" },
+    { icon: Store, text: "Works at 5,000+ stores" },
+    { icon: Shield, text: "No impact on safety verdicts" },
   ];
 
   const testimonials = [
@@ -65,43 +74,48 @@ export default function SaveMoney() {
 
   const faqItems = [
     {
-      question: 'How does cashback work?',
-      answer: 'When you shop through Mr. Rebates, they receive a commission from the store. They share a portion of that commission with you as cashback. Your prices stay the same — you just earn money back.',
+      question: "How does cashback work?",
+      answer:
+        "When you shop through Mr. Rebates, they receive a commission from the store. They share a portion of that commission with you as cashback. Your prices stay the same — you just earn money back.",
     },
     {
-      question: 'Which stores are supported?',
-      answer: 'Mr. Rebates works with over 5,000 retailers including Walmart, Target, Macy\'s, Best Buy, Expedia, Nike, and many more popular stores.',
+      question: "Which stores are supported?",
+      answer:
+        "Mr. Rebates works with over 5,000 retailers including Walmart, Target, Macy's, Best Buy, Expedia, Nike, and many more popular stores.",
     },
     {
-      question: 'How long does it take to get paid?',
-      answer: 'Cashback is typically credited to your account within 24-48 hours after your purchase. Once you reach the minimum payout threshold, you can request a payment via check or PayPal.',
+      question: "How long does it take to get paid?",
+      answer:
+        "Cashback is typically credited to your account within 24-48 hours after your purchase. Once you reach the minimum payout threshold, you can request a payment via check or PayPal.",
     },
     {
-      question: 'Why do you recommend Mr. Rebates?',
-      answer: 'They\'ve been operating for over 20 years and have paid out millions to members. They have secure tracking, verified payouts, and no fees to join.',
+      question: "Why do you recommend Mr. Rebates?",
+      answer:
+        "They've been operating for over 20 years and have paid out millions to members. They have secure tracking, verified payouts, and no fees to join.",
     },
     {
-      question: 'Does this affect your safety ratings?',
-      answer: 'Absolutely not. Our safety verdicts are 100% independent. We never change a website\'s trust score based on affiliate partnerships.',
+      question: "Does this affect your safety ratings?",
+      answer:
+        "Absolutely not. Our safety verdicts are 100% independent. We never change a website's trust score based on affiliate partnerships.",
     },
   ];
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO 
+      <SEO
         title="Save Money While Shopping Online"
         description="Earn cashback and find coupons while shopping at trusted online stores. Check website safety first, then save money on every purchase."
         canonical="https://trustworthycheck.com/save-money"
       />
       <Header />
-      
+
       <main>
         {/* Hero Section */}
         <section className="relative py-16 md:py-24 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-          
+
           <div className="container px-4 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -110,12 +124,12 @@ export default function SaveMoney() {
               className="text-center max-w-3xl mx-auto"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-                Save Money While You Shop —{' '}
+                Save Money While You Shop {""}
                 <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Without Getting Scammed
                 </span>
               </h1>
-              
+
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
                 We verify stores first. Then we help you earn cashback at the safe ones.
               </p>
@@ -140,9 +154,9 @@ export default function SaveMoney() {
                   </span>
                 </div>
 
-                <Button 
-                  variant="hero" 
-                  size="lg" 
+                <Button
+                  variant="hero"
+                  size="lg"
                   className="gap-2 text-lg px-10 py-7 shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-shadow"
                   onClick={handleActivateClick}
                 >
@@ -150,9 +164,7 @@ export default function SaveMoney() {
                   Activate Cashback Now
                   <ExternalLink className="w-4 h-4 opacity-70" />
                 </Button>
-                <p className="text-sm text-muted-foreground mt-4">
-                  Free. Takes under 60 seconds.
-                </p>
+                <p className="text-sm text-muted-foreground mt-4">Free. Takes under 60 seconds.</p>
               </motion.div>
             </motion.div>
           </div>
@@ -167,9 +179,7 @@ export default function SaveMoney() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
-                How It Works
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">How It Works</h2>
               <p className="text-muted-foreground">Three simple steps to start earning</p>
             </motion.div>
 
@@ -187,7 +197,9 @@ export default function SaveMoney() {
                 </div>
                 <span className="text-sm font-semibold text-primary uppercase tracking-wide mb-1">Step 1</span>
                 <h3 className="text-xl font-bold mb-2">Check</h3>
-                <p className="text-sm text-muted-foreground max-w-[180px]">Verify the store is safe on TrustworthyCheck</p>
+                <p className="text-sm text-muted-foreground max-w-[180px]">
+                  Verify the store is safe on TrustworthyCheck
+                </p>
               </motion.div>
 
               {/* Arrow */}
@@ -239,7 +251,9 @@ export default function SaveMoney() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4 shadow-lg">
                   <DollarSign className="w-10 h-10 text-white" />
                 </div>
-                <span className="text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent uppercase tracking-wide mb-1">Step 3</span>
+                <span className="text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent uppercase tracking-wide mb-1">
+                  Step 3
+                </span>
                 <h3 className="text-xl font-bold mb-2">Earn</h3>
                 <p className="text-sm text-muted-foreground max-w-[180px]">Shop & get money back automatically</p>
               </motion.div>
@@ -253,12 +267,7 @@ export default function SaveMoney() {
               transition={{ delay: 0.4 }}
               className="text-center"
             >
-              <Button 
-                variant="hero" 
-                size="lg" 
-                className="gap-2 px-8"
-                onClick={handleActivateClick}
-              >
+              <Button variant="hero" size="lg" className="gap-2 px-8" onClick={handleActivateClick}>
                 <DollarSign className="w-5 h-5" />
                 Activate Cashback Now
               </Button>
@@ -280,9 +289,7 @@ export default function SaveMoney() {
                   <Star key={i} className="w-5 h-5 fill-primary text-primary" />
                 ))}
               </div>
-              <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
-                Loved by Smart Shoppers
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">Loved by Smart Shoppers</h2>
               <p className="text-muted-foreground">See what others are saying</p>
             </motion.div>
 
@@ -298,14 +305,10 @@ export default function SaveMoney() {
                   <Card className="h-full bg-background/50 hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <Quote className="w-8 h-8 text-primary/20 mb-3" />
-                      <p className="text-foreground mb-4 leading-relaxed">
-                        "{testimonial.quote}"
-                      </p>
+                      <p className="text-foreground mb-4 leading-relaxed">"{testimonial.quote}"</p>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-primary">
-                            {testimonial.name.charAt(0)}
-                          </span>
+                          <span className="text-sm font-semibold text-primary">{testimonial.name.charAt(0)}</span>
                         </div>
                         <div>
                           <p className="text-sm font-medium">{testimonial.name}</p>
@@ -337,7 +340,7 @@ export default function SaveMoney() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       whileInView={{ scale: 1, opacity: 1 }}
                       viewport={{ once: true }}
-                      transition={{ type: 'spring', stiffness: 200 }}
+                      transition={{ type: "spring", stiffness: 200 }}
                       className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-primary/30"
                     >
                       <DollarSign className="w-12 h-12 text-white" />
@@ -350,17 +353,15 @@ export default function SaveMoney() {
 
                     {/* Description */}
                     <p className="text-muted-foreground leading-relaxed mb-8 max-w-lg mx-auto">
-                      Mr. Rebates has been helping shoppers earn cashback for over 20 years. Join for free and start earning at 5,000+ trusted stores including Walmart, Target, Best Buy, and Nike.
+                      Mr. Rebates has been helping shoppers earn cashback for over 20 years. Join for free and start
+                      earning at 5,000+ trusted stores including Walmart, Target, Best Buy, and Nike.
                     </p>
 
                     {/* Primary CTA */}
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Button 
-                        variant="hero" 
-                        size="lg" 
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        variant="hero"
+                        size="lg"
                         className="gap-2 text-lg px-10 py-7 shadow-xl shadow-primary/20 mb-6"
                         onClick={handleActivateClick}
                       >
@@ -406,9 +407,7 @@ export default function SaveMoney() {
                 <HelpCircle className="w-4 h-4" />
                 <span className="text-sm font-medium">Questions?</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-display font-bold">
-                Frequently Asked Questions
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold">Frequently Asked Questions</h2>
             </motion.div>
 
             <motion.div
@@ -419,17 +418,15 @@ export default function SaveMoney() {
             >
               <Accordion type="single" collapsible className="space-y-3">
                 {faqItems.map((item, index) => (
-                  <AccordionItem 
-                    key={index} 
+                  <AccordionItem
+                    key={index}
                     value={`item-${index}`}
                     className="bg-background rounded-xl border px-6 data-[state=open]:shadow-md transition-shadow"
                   >
                     <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
                       {item.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground pb-5">
-                      {item.answer}
-                    </AccordionContent>
+                    <AccordionContent className="text-muted-foreground pb-5">{item.answer}</AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
@@ -455,7 +452,9 @@ export default function SaveMoney() {
                     <div>
                       <h3 className="font-semibold mb-2">Affiliate Disclosure</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        TrustworthyCheck may earn a small commission when you use our partner links. This never affects your price and helps support the operation of our site. We only recommend services we believe provide genuine value to consumers.
+                        TrustworthyCheck may earn a small commission when you use our partner links. This never affects
+                        your price and helps support the operation of our site. We only recommend services we believe
+                        provide genuine value to consumers.
                       </p>
                     </div>
                   </div>
@@ -500,7 +499,7 @@ export default function SaveMoney() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
           >
             <div className="bg-background/95 backdrop-blur-lg border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3 safe-bottom">
@@ -509,9 +508,9 @@ export default function SaveMoney() {
                   <p className="text-sm font-semibold truncate">Ready to save?</p>
                   <p className="text-xs text-muted-foreground">Free cashback at 5,000+ stores</p>
                 </div>
-                <Button 
-                  variant="hero" 
-                  size="sm" 
+                <Button
+                  variant="hero"
+                  size="sm"
                   className="gap-1.5 flex-shrink-0 shadow-lg"
                   onClick={handleActivateClick}
                 >
