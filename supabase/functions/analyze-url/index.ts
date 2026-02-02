@@ -1651,10 +1651,15 @@ function detectScamPatterns(content: string, html: string): {
     (content.match(/5 star|★★★★★/gi)?.length || 0) > 10;
   if (hasFakeReviewIndicators) patterns.push('Possibly fake review patterns');
   
-  // Check for site clone indicators
-  const hasCloneIndicators = 
-    htmlLower.includes('shopify') && 
-    (contentLower.includes('powered by') || htmlLower.includes('template'));
+  // Check for site clone indicators - but NOT legitimate Shopify stores
+  // A legitimate Shopify store shouldn't be penalized just for using Shopify
+  // Only flag as clone if it has other suspicious patterns like "powered by [theme name]" visible to users
+  // or appears to be using a default/unbranded template setup
+  const hasShopifyPoweredBy = htmlLower.includes('shopify') && 
+    contentLower.includes('powered by shopify');
+  const hasGenericTemplate = htmlLower.includes('template') && 
+    (contentLower.includes('theme by') || contentLower.includes('theme:'));
+  const hasCloneIndicators = hasShopifyPoweredBy && hasGenericTemplate;
   
   // Check for excessive discount claims
   const discountMatches = content.match(/\d{2,3}%\s*(off|discount|sale)/gi) || [];
@@ -2397,6 +2402,41 @@ Return ONLY valid JSON in this exact format:
           'wikipedia.org', 'archive.org', 'weather.com', 'imdb.com',
         ];
         
+        // Established retail/fashion brands - legitimate e-commerce that shouldn't be penalized
+        // These are known brands with physical presence even if web scraping misses some data
+        const establishedRetailBrands = [
+          // Fashion & Apparel
+          'brandymelville.com', 'zara.com', 'hm.com', 'uniqlo.com', 'gap.com', 'oldnavy.com',
+          'forever21.com', 'urbanoutfitters.com', 'anthropologie.com', 'freepeople.com',
+          'asos.com', 'boohoo.com', 'shein.com', 'fashionnova.com', 'prettylittlething.com',
+          'nordstrom.com', 'macys.com', 'bloomingdales.com', 'saksoff5th.com', 'neimanmarcus.com',
+          'jcrew.com', 'bananarepublic.com', 'abercrombie.com', 'hollisterco.com',
+          'ae.com', 'pacsun.com', 'tillys.com', 'zumiez.com', 'hottoopic.com',
+          'lululemon.com', 'nike.com', 'adidas.com', 'puma.com', 'underarmour.com',
+          'reebok.com', 'newbalance.com', 'asics.com', 'vans.com', 'converse.com',
+          // Department stores & general retail
+          'target.com', 'walmart.com', 'costco.com', 'kohls.com', 'jcpenney.com',
+          'belk.com', 'dillards.com', 'bedbathandbeyond.com', 'wayfair.com', 'overstock.com',
+          'etsy.com', 'ebay.com', 'wish.com', 'aliexpress.com',
+          // Beauty & cosmetics
+          'sephora.com', 'ulta.com', 'glossier.com', 'colourpop.com', 'elfcosmetics.com',
+          'fentybeauty.com', 'maccosmetics.com', 'urbandecay.com', 'tartecosmetics.com',
+          // Home & furniture
+          'ikea.com', 'westelm.com', 'potterybarn.com', 'crateandbarrel.com', 'cb2.com',
+          'homedepot.com', 'lowes.com', 'bedbathandbeyond.com', 'williams-sonoma.com',
+          // Electronics
+          'bestbuy.com', 'newegg.com', 'bhphotovideo.com', 'adorama.com',
+          // Luxury
+          'gucci.com', 'louisvuitton.com', 'prada.com', 'chanel.com', 'dior.com',
+          'burberry.com', 'balenciaga.com', 'versace.com', 'fendi.com', 'armani.com',
+        ];
+        
+        const isEstablishedRetailBrand = establishedRetailBrands.some(brand => 
+          domain === brand || domain.endsWith('.' + brand) || 
+          brand.replace('.com', '').includes(domain.split('.')[0]) ||
+          domain.includes(brand.replace('.com', ''))
+        );
+        
         const isWellKnownDomain = wellKnownDomains.some(known => 
           domain === known || domain.endsWith('.' + known)
         );
@@ -2447,6 +2487,8 @@ Return ONLY valid JSON in this exact format:
         // Store site type in result for transparency + normalize AI red flags that don't apply
         if (isWellKnownDomain) {
           analysisResult.siteType = 'well_known';
+        } else if (isEstablishedRetailBrand) {
+          analysisResult.siteType = 'established_retail';
         } else if (isPortalOrNews) {
           analysisResult.siteType = 'portal';
         } else if (isLikelySaaS) {
@@ -2466,6 +2508,16 @@ Return ONLY valid JSON in this exact format:
               if (f.includes('payment')) return false;
               if (f.includes('no privacy policy')) return false;
               if (f.includes('no terms')) return false;
+              if (f.includes('no about page')) return false;
+              if (f.includes('essential business pages')) return false;
+            }
+            
+            // Established retail brands should not be penalized for country mismatch or clone detection
+            // These are known legitimate businesses that may have international operations
+            if (isEstablishedRetailBrand) {
+              if (f.includes('country mismatch') || f.includes('location mismatch')) return false;
+              if (f.includes('cloned') || f.includes('templated')) return false;
+              if (f.includes('physical address') || f.includes('no address')) return false;
               if (f.includes('no about page')) return false;
               if (f.includes('essential business pages')) return false;
             }
@@ -2505,8 +2557,8 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('WHOIS privacy enabled on a new domain');
         }
         
-        // Country mismatch: -15
-        if (businessVerification.countriesMismatch) {
+        // Country mismatch: -15 (but skip for established retail brands which have international operations)
+        if (businessVerification.countriesMismatch && !isEstablishedRetailBrand) {
           trustScore -= 15;
           analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
         }
@@ -2569,8 +2621,10 @@ Return ONLY valid JSON in this exact format:
         }
         
         // === BUSINESS TRANSPARENCY (15%) ===
-        // Skip these penalties for well-known sites, portals, and non-commerce sites
-        if (!isNonCommerceSite) {
+        // Skip these penalties for well-known sites, portals, non-commerce sites, AND established retail brands
+        // Established retail brands are known legitimate businesses - if our scraper can't find their policies,
+        // it's more likely a scraping limitation than an actual red flag
+        if (!isNonCommerceSite && !isEstablishedRetailBrand) {
           // Only apply address penalties if we have meaningful address data
           // Skip penalties if extractedAddresses is empty or looks like garbage was filtered out
           const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
@@ -2677,6 +2731,10 @@ Return ONLY valid JSON in this exact format:
         if (isWellKnownDomain) {
           trustScore += 40;
           analysisResult.details.positiveSignals.push('Well-known established website');
+        } else if (isEstablishedRetailBrand) {
+          // Established retail brands get a trust boost (known legitimate businesses)
+          trustScore += 35;
+          analysisResult.details.positiveSignals.push('Established retail brand with known physical presence');
         } else if (isPortalOrNews && !isWellKnownDomain) {
           // Portal/news sites that aren't in the well-known list still get a small boost
           trustScore += 10;
@@ -2709,7 +2767,8 @@ Return ONLY valid JSON in this exact format:
         }
         
         // Plagiarized content: -10 (from AI analysis websiteQuality)
-        if (analysisResult.details.websiteQuality?.isTemplatedSite || scamPatternAnalysis.hasCloneIndicators) {
+        // Skip for established retail brands (they often use standard e-commerce platforms like Shopify)
+        if (!isEstablishedRetailBrand && (analysisResult.details.websiteQuality?.isTemplatedSite || scamPatternAnalysis.hasCloneIndicators)) {
           trustScore -= 10;
           analysisResult.details.redFlags.push('Website appears to use cloned/templated content');
         }
