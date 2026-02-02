@@ -478,7 +478,7 @@ export default function Index() {
                 title: "Identity Protection",
                 description: "Protect your identity and credit if a site feels unsafe.",
                 button: "Protect My Identity",
-                href: "https://www.identityguard.com/",
+                href: "https://identityguard.y8uw.net/DGT10",
               },
               {
                 icon: Lock,
