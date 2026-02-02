@@ -2372,14 +2372,51 @@ Return ONLY valid JSON in this exact format:
         // Use the new payment status for scoring
         const hasCryptoWireOnly = paymentAnalysis.paymentStatus === 'crypto_wire_only';
         
-        // === DETECT SITE TYPE (SaaS/Software vs E-commerce) ===
-        // SaaS/Software sites shouldn't be penalized for missing shipping/return policies
+        // === WELL-KNOWN TRUSTED DOMAINS ===
+        // Major web portals, search engines, social media, and established companies
+        // These should NOT be penalized for missing e-commerce features
+        const wellKnownDomains = [
+          // Major portals & search engines
+          'google.com', 'yahoo.com', 'bing.com', 'duckduckgo.com', 'baidu.com', 'yandex.com',
+          // Social media
+          'facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'linkedin.com', 'tiktok.com',
+          'pinterest.com', 'reddit.com', 'tumblr.com', 'snapchat.com', 'youtube.com',
+          // Major tech companies
+          'microsoft.com', 'apple.com', 'amazon.com', 'netflix.com', 'spotify.com',
+          'adobe.com', 'salesforce.com', 'oracle.com', 'ibm.com', 'cisco.com',
+          // News & media
+          'cnn.com', 'bbc.com', 'nytimes.com', 'washingtonpost.com', 'reuters.com',
+          'theguardian.com', 'forbes.com', 'bloomberg.com', 'wsj.com', 'npr.org',
+          // Popular services
+          'github.com', 'gitlab.com', 'stackoverflow.com', 'medium.com', 'wordpress.com',
+          'dropbox.com', 'zoom.us', 'slack.com', 'notion.so', 'figma.com',
+          'paypal.com', 'stripe.com', 'square.com', 'venmo.com',
+          // Email providers
+          'gmail.com', 'outlook.com', 'proton.me', 'protonmail.com',
+          // Utilities & reference
+          'wikipedia.org', 'archive.org', 'weather.com', 'imdb.com',
+        ];
+        
+        const isWellKnownDomain = wellKnownDomains.some(known => 
+          domain === known || domain.endsWith('.' + known)
+        );
+        
+        // === DETECT SITE TYPE (SaaS/Software vs E-commerce vs Portal/News) ===
+        // Non-commerce sites shouldn't be penalized for missing shipping/return policies
         const saasKeywords = [
           'software', 'saas', 'platform', 'subscription', 'app', 'service', 
           'cloud', 'solution', 'tool', 'api', 'dashboard', 'management',
           'password manager', 'security', 'antivirus', 'vpn', 'hosting',
           'crm', 'erp', 'analytics', 'automation', 'workflow'
         ];
+        
+        const portalNewsKeywords = [
+          'news', 'trending', 'breaking', 'headlines', 'stories', 'articles',
+          'search', 'discover', 'explore', 'homepage', 'portal', 'mail',
+          'entertainment', 'sports', 'finance', 'weather', 'lifestyle',
+          'sign in', 'log in', 'create account', 'your feed'
+        ];
+        
         const markdownLower = (markdown || '').toLowerCase();
         const titleLower = (metadata?.title || '').toLowerCase();
         const descLower = (metadata?.description || '').toLowerCase();
@@ -2389,6 +2426,9 @@ Return ONLY valid JSON in this exact format:
           combinedText.includes('sign up') && combinedText.includes('plan') ||
           combinedText.includes('free trial') ||
           combinedText.includes('enterprise') && combinedText.includes('pricing');
+        
+        const isPortalOrNews = isWellKnownDomain || 
+          portalNewsKeywords.filter(kw => combinedText.includes(kw)).length >= 3;
         
         // Also check if it's clearly NOT an e-commerce site (avoid false-positives like "product" on SaaS pages)
         // We only treat it as e-commerce if we see *strong* commerce cues like cart/checkout.
@@ -2402,9 +2442,14 @@ Return ONLY valid JSON in this exact format:
         const hasStrongEcommerceIndicators = strongEcommerceIndicators.some((kw) => combinedText.includes(kw));
 
         const isLikelySaaS = isSaaSOrSoftware && !hasStrongEcommerceIndicators;
+        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain;
 
-        // Store site type in result for transparency + normalize AI red flags that don't apply to SaaS
-        if (isLikelySaaS) {
+        // Store site type in result for transparency + normalize AI red flags that don't apply
+        if (isWellKnownDomain) {
+          analysisResult.siteType = 'well_known';
+        } else if (isPortalOrNews) {
+          analysisResult.siteType = 'portal';
+        } else if (isLikelySaaS) {
           analysisResult.siteType = 'saas';
         }
 
@@ -2412,11 +2457,17 @@ Return ONLY valid JSON in this exact format:
           const filtered = analysisResult.details.redFlags.filter((flag: string) => {
             const f = (flag || '').toLowerCase();
 
-            // Remove e-commerce-only expectations for SaaS/software sites
-            if (isLikelySaaS) {
+            // Remove e-commerce-only expectations for non-commerce sites (SaaS, portals, well-known sites)
+            if (isNonCommerceSite) {
               if (f.includes('shipping')) return false;
               if (f.includes('refund') || f.includes('return policy') || f.includes('returns')) return false;
               if (f.includes('physical address') || f.includes('no address')) return false;
+              if (f.includes('no phone')) return false;
+              if (f.includes('payment')) return false;
+              if (f.includes('no privacy policy')) return false;
+              if (f.includes('no terms')) return false;
+              if (f.includes('no about page')) return false;
+              if (f.includes('essential business pages')) return false;
             }
 
             // If our deterministic scam detectors say "not a gov scam", don't keep vague gov-mention flags
@@ -2428,7 +2479,7 @@ Return ONLY valid JSON in this exact format:
             }
 
             // URL shorteners/tracking links are common for legit marketing funnels (especially SaaS)
-            if (isLikelySaaS && (f.includes('url shortener') || f.includes('url shorteners'))) return false;
+            if (isNonCommerceSite && (f.includes('url shortener') || f.includes('url shorteners'))) return false;
 
             return true;
           });
@@ -2518,114 +2569,118 @@ Return ONLY valid JSON in this exact format:
         }
         
         // === BUSINESS TRANSPARENCY (15%) ===
-        // Only apply address penalties if we have meaningful address data
-        // Skip penalties if extractedAddresses is empty or looks like garbage was filtered out
-        const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
-          contactAnalysis.extractedAddresses.some((addr: string) => /\s/.test(addr) && addr.length > 15);
-        
-        // No physical address: -20 (only for e-commerce sites)
-        if (!contactAnalysis.hasPhysicalAddress && !isLikelySaaS) {
-          trustScore -= 20;
-          analysisResult.details.redFlags.push('No physical address found');
-        } else if (hasValidAddressData && contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
-          // Address fake / residential mismatch: -15 (only if we have valid address data)
-          trustScore -= 15;
-          for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
-            analysisResult.details.redFlags.push(`Address issue: ${issue}`);
+        // Skip these penalties for well-known sites, portals, and non-commerce sites
+        if (!isNonCommerceSite) {
+          // Only apply address penalties if we have meaningful address data
+          // Skip penalties if extractedAddresses is empty or looks like garbage was filtered out
+          const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
+            contactAnalysis.extractedAddresses.some((addr: string) => /\s/.test(addr) && addr.length > 15);
+          
+          // No physical address: -20 (only for e-commerce sites)
+          if (!contactAnalysis.hasPhysicalAddress) {
+            trustScore -= 20;
+            analysisResult.details.redFlags.push('No physical address found');
+          } else if (hasValidAddressData && contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
+            // Address fake / residential mismatch: -15 (only if we have valid address data)
+            trustScore -= 15;
+            for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
+              analysisResult.details.redFlags.push(`Address issue: ${issue}`);
+            }
+          } else if (contactAnalysis.addressAnalysis.isPoBox) {
+            trustScore -= 10;
+            analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
           }
-        } else if (contactAnalysis.addressAnalysis.isPoBox) {
-          trustScore -= 10;
-          analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
-        }
-        
-        // No phone number: -10 for e-commerce, -3 for SaaS (many SaaS companies use chat/email support)
-        if (!contactAnalysis.hasPhoneNumber) {
-          if (isLikelySaaS) {
-            trustScore -= 3;
-            // Don't add red flag for SaaS - chat/email support is common
-          } else {
+          
+          // No phone number: -10 for e-commerce
+          if (!contactAnalysis.hasPhoneNumber) {
             trustScore -= 10;
             analysisResult.details.redFlags.push('No phone number found');
+          } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
+            // Suspicious phone pattern: -10
+            trustScore -= 10;
+            for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
+              analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
+            }
           }
-        } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
-          // Suspicious phone pattern: -10
-          trustScore -= 10;
-          for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
-            analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
+          
+          // Generic email only: -10
+          if (contactAnalysis.hasGenericEmail && !contactAnalysis.hasProfessionalEmail) {
+            trustScore -= 10;
+            analysisResult.details.redFlags.push('Only uses generic email (Gmail/Yahoo) for business contact');
           }
-        }
-        
-        // Generic email only: -10
-        if (contactAnalysis.hasGenericEmail && !contactAnalysis.hasProfessionalEmail) {
-          trustScore -= 10;
-          analysisResult.details.redFlags.push('Only uses generic email (Gmail/Yahoo) for business contact');
-        }
-        
-        // Missing essential pages penalties
-        let missingPagesCount = 0;
-        
-        // Missing privacy policy: -8
-        if (analysisResult.details.business && !analysisResult.details.business.hasPrivacyPolicy) {
-          trustScore -= 8;
-          missingPagesCount++;
-          analysisResult.details.redFlags.push('No privacy policy found');
-        }
-        
-        // Missing terms: -6
-        if (analysisResult.details.business && !analysisResult.details.business.hasTerms) {
-          trustScore -= 6;
-          missingPagesCount++;
-          analysisResult.details.redFlags.push('No terms of service found');
-        }
-        
-        // Missing shipping info: -8 (only for e-commerce, not SaaS)
-        if (analysisResult.details.business && !analysisResult.details.business.hasShippingInfo && !isLikelySaaS) {
-          trustScore -= 8;
-          missingPagesCount++;
-          analysisResult.details.redFlags.push('No shipping information found');
-        }
-        
-        // Missing about page: -5
-        if (analysisResult.details.business && !analysisResult.details.business.hasAboutPage) {
-          trustScore -= 5;
-          missingPagesCount++;
-          analysisResult.details.redFlags.push('No about page found');
-        }
-        
-        // If 2+ essential pages missing: additional -5
-        if (missingPagesCount >= 2) {
-          trustScore -= 5;
-          analysisResult.details.redFlags.push('Multiple essential business pages missing');
-        }
-        
-        // === PAYMENT RISK (15%) ===
-        // Score based on payment status
-        if (paymentAnalysis.paymentStatus === 'crypto_wire_only') {
-          // Confirmed crypto/wire/giftcard only = major risk: -30
-          trustScore -= 30;
-          analysisResult.details.redFlags.push('Only accepts cryptocurrency, wire transfer, or gift cards - no buyer protection');
-        } else if (paymentAnalysis.paymentStatus === 'unusual_only') {
-          // Crypto only (no wire transfer) = moderate risk: -15
-          trustScore -= 15;
-          analysisResult.details.redFlags.push('Accepts cryptocurrency payments - limited buyer protection');
-        } else if (paymentAnalysis.paymentStatus === 'unknown') {
-          // Unknown payment methods = mild risk: -5 (not harsh punishment)
-          trustScore -= 5;
-          // Don't add a red flag for unknown - it's neutral/mild
-        } else if (paymentAnalysis.hasPaymentGateway) {
-          // Has detected payment gateway = positive signal
-          analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
-        }
-        
-        // No refund policy: -15 for e-commerce, -5 for SaaS (they use subscription cancellation instead)
-        if (analysisResult.details.business && !analysisResult.details.business.hasReturnPolicy) {
-          if (isLikelySaaS) {
+          
+          // Missing essential pages penalties
+          let missingPagesCount = 0;
+          
+          // Missing privacy policy: -8
+          if (analysisResult.details.business && !analysisResult.details.business.hasPrivacyPolicy) {
+            trustScore -= 8;
+            missingPagesCount++;
+            analysisResult.details.redFlags.push('No privacy policy found');
+          }
+          
+          // Missing terms: -6
+          if (analysisResult.details.business && !analysisResult.details.business.hasTerms) {
+            trustScore -= 6;
+            missingPagesCount++;
+            analysisResult.details.redFlags.push('No terms of service found');
+          }
+          
+          // Missing shipping info: -8 (only for e-commerce)
+          if (analysisResult.details.business && !analysisResult.details.business.hasShippingInfo) {
+            trustScore -= 8;
+            missingPagesCount++;
+            analysisResult.details.redFlags.push('No shipping information found');
+          }
+          
+          // Missing about page: -5
+          if (analysisResult.details.business && !analysisResult.details.business.hasAboutPage) {
             trustScore -= 5;
-            // Don't add red flag for SaaS - subscription cancellation is different from returns
-          } else {
+            missingPagesCount++;
+            analysisResult.details.redFlags.push('No about page found');
+          }
+          
+          // If 2+ essential pages missing: additional -5
+          if (missingPagesCount >= 2) {
+            trustScore -= 5;
+            analysisResult.details.redFlags.push('Multiple essential business pages missing');
+          }
+          
+          // === PAYMENT RISK (15%) ===
+          // Score based on payment status
+          if (paymentAnalysis.paymentStatus === 'crypto_wire_only') {
+            // Confirmed crypto/wire/giftcard only = major risk: -30
+            trustScore -= 30;
+            analysisResult.details.redFlags.push('Only accepts cryptocurrency, wire transfer, or gift cards - no buyer protection');
+          } else if (paymentAnalysis.paymentStatus === 'unusual_only') {
+            // Crypto only (no wire transfer) = moderate risk: -15
+            trustScore -= 15;
+            analysisResult.details.redFlags.push('Accepts cryptocurrency payments - limited buyer protection');
+          } else if (paymentAnalysis.paymentStatus === 'unknown') {
+            // Unknown payment methods = mild risk: -5 (not harsh punishment)
+            trustScore -= 5;
+            // Don't add a red flag for unknown - it's neutral/mild
+          } else if (paymentAnalysis.hasPaymentGateway) {
+            // Has detected payment gateway = positive signal
+            analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
+          }
+          
+          // No refund policy: -15 for e-commerce
+          if (analysisResult.details.business && !analysisResult.details.business.hasReturnPolicy) {
             trustScore -= 15;
             analysisResult.details.redFlags.push('No refund/return policy found');
           }
+        }
+        
+        // === WELL-KNOWN DOMAIN BONUS ===
+        // Well-known established sites get a significant trust boost
+        if (isWellKnownDomain) {
+          trustScore += 40;
+          analysisResult.details.positiveSignals.push('Well-known established website');
+        } else if (isPortalOrNews && !isWellKnownDomain) {
+          // Portal/news sites that aren't in the well-known list still get a small boost
+          trustScore += 10;
+          analysisResult.details.positiveSignals.push('Appears to be a portal or news site');
         }
         
         // === BEHAVIORAL RED FLAGS (10%) ===
@@ -2644,7 +2699,7 @@ Return ONLY valid JSON in this exact format:
         // URL shortener redirect: -10, but only -3 for professional sites (marketing tracking is common)
         if (linkAnalysis.suspiciousRedirects) {
           const professionalismCheck = analysisResult.details.websiteQuality?.overallProfessionalism;
-          if (professionalismCheck === 'high' || isLikelySaaS) {
+          if (professionalismCheck === 'high' || isNonCommerceSite) {
             trustScore -= 3;
             // Don't add red flag - URL shorteners for marketing/tracking are common on professional sites
           } else {
@@ -2721,7 +2776,7 @@ Return ONLY valid JSON in this exact format:
           trustScore += 8;
         }
         
-        // SaaS/Software bonus: +5 (these sites have different trust indicators than e-commerce)
+        // Non-commerce site bonus: +5 (these sites have different trust indicators than e-commerce)
         if (isLikelySaaS && professionalismLevel === 'high') {
           trustScore += 5;
           analysisResult.details.positiveSignals.push('Established software/SaaS platform');
