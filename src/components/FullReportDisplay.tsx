@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { TrustScoreGauge } from './TrustScoreGauge';
 import { AnalysisCard } from './AnalysisCard';
 import { FlagsList } from './FlagsList';
+import { VerificationChecklist } from './VerificationChecklist';
 import type { AnalysisResult } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 
@@ -520,6 +521,9 @@ export function FullReportDisplay({ result, url, onBack }: FullReportDisplayProp
           </div>
         </div>
       </AnalysisCard>
+
+      {/* Verification Checklist */}
+      <VerificationChecklist result={result} />
 
       {/* What To Do Next - Plain English Recommendation */}
       <motion.div 
