@@ -2,8 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 // Rate limits per 24 hours
 export const RATE_LIMITS = {
-  anonymous: 3,      // Anonymous users: 3 checks per day
-  authenticated: 20, // Logged-in users: 20 checks per day
+  anonymous: 10,     // Anonymous users: 10 checks per day
+  authenticated: 25, // Logged-in users: 25 checks per day
   paid: 100,         // Paid users: 100 checks per day (future)
 };
 

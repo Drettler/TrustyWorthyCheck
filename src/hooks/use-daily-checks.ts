@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'daily_checks_info';
-const DEFAULT_MAX = 3; // Anonymous users get 3 checks
+const DEFAULT_MAX = 10; // Anonymous users get 10 checks
 
 interface ChecksInfo {
   remaining: number;
