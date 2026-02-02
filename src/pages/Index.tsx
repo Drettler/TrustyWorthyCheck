@@ -79,12 +79,44 @@ export default function Index() {
     }
   };
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I check if a website is legit?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Paste the website URL into TrustworthyCheck's free scanner. We analyze domain age, SSL certificates, business registration, user reports, and known scam databases to give you a trust score and safety verdict in under 2 minutes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is TrustworthyCheck free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! TrustworthyCheck offers free website safety checks. You get 3 free scans per day. For unlimited scans and detailed PDF reports, you can upgrade to our premium plan."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does a website trust score mean?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The trust score (0-100) indicates how safe a website is. Scores above 70 are generally safe, 40-70 require caution, and below 40 are high-risk."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="Spot Scams Before They Cost You"
         description="Check if a website is legit before you buy. TrustworthyCheck scans for scams, fake stores, unsafe payments, and suspicious business details in under 3 minutes."
         canonical="https://trustworthycheck.com/"
+        jsonLd={faqSchema}
       />
       <Header />
 

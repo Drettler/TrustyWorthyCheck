@@ -6,12 +6,38 @@ import { SEO } from '@/components/SEO';
 import { Shield, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 
 export default function WebsiteChecker() {
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Check if a Website is Safe",
+    "description": "Use TrustworthyCheck to verify if any website is legitimate and safe to use",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Copy the URL",
+        "text": "Copy the website address from your browser address bar"
+      },
+      {
+        "@type": "HowToStep", 
+        "name": "Paste and Scan",
+        "text": "Paste the URL into TrustworthyCheck's scanner and click Check"
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Review Results",
+        "text": "View the trust score, safety flags, and detailed analysis"
+      }
+    ],
+    "totalTime": "PT2M"
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEO 
-        title="Free Website Safety Checker | TrustworthyCheck"
+        title="Free Website Safety Checker"
         description="Check if any website is safe before you visit or buy. Our free tool analyzes URLs for scams, phishing, and malware in seconds."
         canonical="https://trustworthycheck.com/website-checker"
+        jsonLd={howToSchema}
       />
       
       <Header />
