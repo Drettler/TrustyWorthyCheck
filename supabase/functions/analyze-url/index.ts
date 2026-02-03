@@ -6,6 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-client-id',
 };
 
+// Bump this value whenever analysis/scoring logic changes in a way that should invalidate
+// previously cached results (cache TTL is 24h).
+const ANALYSIS_CACHE_VERSION = '2026-02-03-v2';
+
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
   valid: boolean;
@@ -116,7 +120,7 @@ function normalizeUrl(url: string): string {
 async function hashUrl(url: string): Promise<string> {
   const normalized = normalizeUrl(url);
   const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
+  const data = encoder.encode(`${ANALYSIS_CACHE_VERSION}:${normalized}`);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1019,7 +1023,6 @@ function detectGovernmentScam(content: string, html: string, domain: string): Go
 // Detect subscription/antivirus renewal scams
 function detectSubscriptionScam(content: string, html: string, domain: string): SubscriptionScamIndicators {
   const contentLower = content.toLowerCase();
-  const domainLower = domain.toLowerCase();
   const suspiciousPatterns: string[] = [];
   const mentionedBrands: string[] = [];
   
@@ -1030,18 +1033,41 @@ function detectSubscriptionScam(content: string, html: string, domain: string): 
   let claimsAntivirusSoftware = false;
   let hasUrgentRenewalMessage = false;
   let hasPhoneCallPrompt = false;
+
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const formatBrand = (value: string) => value
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  // Only treat brand mentions as suspicious when they appear in a support/renewal context.
+  // This prevents false positives on legitimate sites that mention things like “Google Play”,
+  // “Apple App Store”, or press/review references.
+  const brandContextPart =
+    '(support|customer\s*service|help\s*desk|technician|subscription|renew|renewal|auto-?renewal|invoice|billing|charge|charged|refund|payment|virus|infected|security\s*(alert|warning)|remote\s*access|toll[- ]?free|call|dial)';
+
+  const isBrandInSuspiciousContext = (brand: string) => {
+    const b = escapeRegExp(brand);
+    const forward = new RegExp(`\\b${b}\\b.{0,60}${brandContextPart}`, 'i');
+    const backward = new RegExp(`${brandContextPart}.{0,60}\\b${b}\\b`, 'i');
+    return forward.test(content) || backward.test(content);
+  };
   
-  // Check for antivirus brand mentions
+  // Check for antivirus/tech brand mentions *in suspicious context*.
+  // (We intentionally do NOT use `domainLower.includes(brand)` here because it creates many false positives.)
   for (const brand of antivirusBrands) {
-    if (contentLower.includes(brand) || domainLower.includes(brand)) {
-      mentionedBrands.push(brand.charAt(0).toUpperCase() + brand.slice(1));
+    const brandMentioned = contentLower.includes(brand);
+    if (brandMentioned && (isBrandInSuspiciousContext(brand))) {
+      mentionedBrands.push(formatBrand(brand));
       claimsAntivirusSoftware = true;
     }
   }
-  
+
   for (const brand of techBrands) {
-    if (contentLower.includes(brand) || domainLower.includes(brand)) {
-      mentionedBrands.push(brand.charAt(0).toUpperCase() + brand.slice(1));
+    const brandMentioned = contentLower.includes(brand);
+    if (brandMentioned && (isBrandInSuspiciousContext(brand))) {
+      mentionedBrands.push(formatBrand(brand));
     }
   }
   
@@ -1073,20 +1099,22 @@ function detectSubscriptionScam(content: string, html: string, domain: string): 
     }
   }
   
-  // Check for phone call prompts (major red flag)
-  const phonePromptPatterns = [
-    /call\s*(us|now|immediately|toll[- ]free)/i,
-    /dial\s*\d/i,
-    /speak\s*(to|with)\s*(a|our)\s*(technician|support|agent)/i,
-    /\d{3}[- ]\d{3}[- ]\d{4}.*call/i,
-    /call.*\d{3}[- ]\d{3}[- ]\d{4}/i
-  ];
-  
-  for (const pattern of phonePromptPatterns) {
-    if (pattern.test(content)) {
-      hasPhoneCallPrompt = true;
-      suspiciousPatterns.push('Prompts user to call a phone number');
-    }
+  // Check for phone call prompts.
+  // IMPORTANT: only flag when there's an explicit call-to-action near a phone number.
+  // Many legitimate sites list phone numbers in a footer; that alone should not be a “tech support scam” signal.
+  const phoneNumberRegex = /(?:\+?\d{1,2}[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}/;
+  const phoneCtaNearNumberRegex = new RegExp(
+    `(?:call|dial|toll[- ]?free).{0,30}${phoneNumberRegex.source}|${phoneNumberRegex.source}.{0,30}(?:call|dial|toll[- ]?free)`,
+    'i'
+  );
+  const supportCtaNearNumberRegex = new RegExp(
+    `(?:support|technician|help\s*desk|customer\s*service|billing|refund).{0,40}${phoneNumberRegex.source}|${phoneNumberRegex.source}.{0,40}(?:support|technician|help\s*desk|customer\s*service|billing|refund)`,
+    'i'
+  );
+
+  hasPhoneCallPrompt = phoneCtaNearNumberRegex.test(content) || (hasUrgentRenewalMessage && supportCtaNearNumberRegex.test(content));
+  if (hasPhoneCallPrompt) {
+    suspiciousPatterns.push('Prompts user to call a phone number');
   }
   
   // Pop-up style indicators in HTML
@@ -1094,17 +1122,25 @@ function detectSubscriptionScam(content: string, html: string, domain: string): 
     'alert-box', 'warning-popup', 'virus-alert', 'security-warning',
     'fullscreen', 'modal-overlay', 'block-page'
   ];
+
+  let popupIndicatorHits = 0;
   
   for (const indicator of popupIndicators) {
     if (html.toLowerCase().includes(indicator)) {
+      popupIndicatorHits += 1;
       suspiciousPatterns.push(`Contains popup/alert indicator: ${indicator}`);
     }
   }
   
-  const isLikelySubscriptionScam = 
-    (claimsAntivirusSoftware && hasUrgentRenewalMessage) ||
-    (hasPhoneCallPrompt && (hasUrgentRenewalMessage || claimsAntivirusSoftware)) ||
-    suspiciousPatterns.length >= 3;
+  const hasPopupIndicators = popupIndicatorHits > 0;
+  const hasStrongAlertLanguage = /(virus\s*detected|pc\s*is\s*infected|computer\s*is\s*infected|security\s*warning|block(ed)?\s*page)/i.test(contentLower);
+  const hasSuspiciousBrandSignals = claimsAntivirusSoftware || mentionedBrands.length > 0;
+
+  // Require *context* (renewal/alert language or popup-like HTML) before escalating to scam.
+  // This avoids flagging legitimate businesses that simply list a phone number and mention brands in reviews.
+  const isLikelySubscriptionScam =
+    (hasUrgentRenewalMessage && (hasPhoneCallPrompt || hasPopupIndicators) && (hasSuspiciousBrandSignals || hasStrongAlertLanguage)) ||
+    (hasPopupIndicators && hasPhoneCallPrompt && (hasSuspiciousBrandSignals || hasStrongAlertLanguage));
   
   return {
     claimsAntivirusSoftware,
