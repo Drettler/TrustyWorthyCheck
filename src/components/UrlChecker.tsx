@@ -832,6 +832,7 @@ export function UrlChecker() {
         onOpenChange={setShowReportDialog}
         url={url}
         trustScore={result?.trustScore}
+        verdict={result?.verdict}
       />
     </div>
   );
