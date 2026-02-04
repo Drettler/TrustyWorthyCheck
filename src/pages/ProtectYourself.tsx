@@ -139,7 +139,7 @@ export default function ProtectYourself() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
           >
-            <div className="bg-background/95 backdrop-blur-lg border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3 safe-bottom">
+            <div className="bg-background/95 backdrop-blur-lg border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <div className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">Stay protected online</p>
