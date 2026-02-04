@@ -26,16 +26,22 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export default function SaveMoney() {
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show sticky CTA after scrolling past hero section
-      setShowStickyCTA(window.scrollY > 400);
+      const currentScrollY = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY;
+      const isPastHero = currentScrollY > 400;
+      
+      // Show sticky CTA when scrolling down past hero section
+      setShowStickyCTA(isPastHero && isScrollingDown);
+      setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const handleActivateClick = () => {
     setShowInterstitial(true);
