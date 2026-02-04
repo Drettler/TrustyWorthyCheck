@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Is This Site Safe?",
+  "name": "TrustWorthyCheck",
   "version": "1.0.0",
   "description": "Instantly check if a website is trustworthy with one click",
   "icons": {
@@ -15,7 +15,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "Check this site"
+    "default_title": "TrustWorthyCheck"
   },
   "permissions": ["activeTab"]
 }
