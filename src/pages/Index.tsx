@@ -9,6 +9,7 @@ import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
+import { ExtensionPrompt } from "@/components/ExtensionPrompt";
 
 const features = [
   {
@@ -546,6 +547,7 @@ export default function Index() {
       </section>
 
       <Footer />
+      <ExtensionPrompt />
     </div>
   );
 }
