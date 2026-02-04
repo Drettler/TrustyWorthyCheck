@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-02-03-v2';
+const ANALYSIS_CACHE_VERSION = '2026-02-04-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -1969,13 +1969,91 @@ Deno.serve(async (req) => {
     const businessVerification = analyzeBusinessVerification(markdown, html);
     const complianceAnalysis = analyzeComplianceIndicators(markdown, html);
     
-    // Run external API checks in parallel
+// Check community reports and threat feeds from database
+    async function checkCommunityReports(domainToCheck: string): Promise<{ reported: boolean; reportCount: number; reasons: string[]; avgTrustScore: number | null }> {
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
+        
+        const { data, error } = await supabase
+          .from('site_reports')
+          .select('report_count, reasons, trust_score')
+          .eq('url_domain', domainToCheck)
+          .maybeSingle();
+        
+        if (error || !data) {
+          return { reported: false, reportCount: 0, reasons: [], avgTrustScore: null };
+        }
+        
+        return {
+          reported: true,
+          reportCount: data.report_count || 0,
+          reasons: data.reasons || [],
+          avgTrustScore: data.trust_score,
+        };
+      } catch (err) {
+        console.error('Community reports check failed:', err);
+        return { reported: false, reportCount: 0, reasons: [], avgTrustScore: null };
+      }
+    }
+    
+    async function checkThreatFeeds(domainToCheck: string): Promise<{ inThreatFeed: boolean; threats: { source: string; threatType: string; severity: string; title: string }[] }> {
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
+        
+        // Check if domain appears in any threat feed entries
+        const { data, error } = await supabase
+          .from('threat_feeds')
+          .select('source, threat_type, severity, title, domains')
+          .not('domains', 'is', null)
+          .limit(100);
+        
+        if (error || !data) {
+          return { inThreatFeed: false, threats: [] };
+        }
+        
+        // Check if the domain matches any threat feed entry
+        const matchingThreats = data.filter((entry: any) => {
+          if (!entry.domains || !Array.isArray(entry.domains)) return false;
+          return entry.domains.some((d: string) => 
+            d.toLowerCase() === domainToCheck.toLowerCase() ||
+            domainToCheck.toLowerCase().includes(d.toLowerCase()) ||
+            d.toLowerCase().includes(domainToCheck.toLowerCase())
+          );
+        }).map((entry: any) => ({
+          source: entry.source,
+          threatType: entry.threat_type,
+          severity: entry.severity,
+          title: entry.title,
+        }));
+        
+        return {
+          inThreatFeed: matchingThreats.length > 0,
+          threats: matchingThreats,
+        };
+      } catch (err) {
+        console.error('Threat feeds check failed:', err);
+        return { inThreatFeed: false, threats: [] };
+      }
+    }
+    
+    // Run external API checks in parallel (including community reports and threat feeds)
     console.log('Running external security checks...');
-    const [virusTotalResult, whoisResult, httpsSecurityCheck] = await Promise.all([
+    const [virusTotalResult, whoisResult, httpsSecurityCheck, communityReports, threatFeedCheck] = await Promise.all([
       checkVirusTotal(domain),
       lookupWhois(domain),
       checkHttpsSecurity(domain),
+      checkCommunityReports(domain),
+      checkThreatFeeds(domain),
     ]);
+    
+    console.log('Community reports:', communityReports);
+    console.log('Threat feed check:', threatFeedCheck);
     
     console.log('Urgency tactics:', urgencyAnalysis);
     console.log('Contact info:', contactAnalysis);
@@ -2093,6 +2171,21 @@ PRICE COMPARISON ANALYSIS (Pro Feature):
 - Market Position: ${priceComparison.marketPosition}
 ${priceComparison.redFlags.length > 0 ? '- Price Red Flags: ' + priceComparison.redFlags.join(', ') : ''}
 ${priceComparison.comparisonNotes.length > 0 ? '- Notes: ' + priceComparison.comparisonNotes.join(', ') : ''}
+
+🚨 COMMUNITY REPORTS (User-submitted scam reports):
+${communityReports.reported 
+  ? `- ⚠️ PREVIOUSLY REPORTED: This domain has been reported ${communityReports.reportCount} time(s)
+- Report Reasons: ${communityReports.reasons.join(', ')}
+- Community Trust Score: ${communityReports.avgTrustScore !== null ? communityReports.avgTrustScore + '/100' : 'Not set'}
+- THIS IS A KNOWN REPORTED SCAM SITE - HEAVILY PENALIZE TRUST SCORE` 
+  : '- No community reports found for this domain'}
+
+🚨 THREAT INTELLIGENCE FEEDS (Security researcher data):
+${threatFeedCheck.inThreatFeed
+  ? `- ⚠️ FOUND IN THREAT FEEDS: This domain appears in threat intelligence databases
+- Matching Threats: ${threatFeedCheck.threats.map(t => `${t.source}: ${t.title} (${t.severity})`).join('; ')}
+- THIS DOMAIN IS FLAGGED BY SECURITY RESEARCHERS - HEAVILY PENALIZE TRUST SCORE`
+  : '- Not found in any threat intelligence feeds'}
 `;
 
     console.log('Analyzing with AI...');
@@ -2635,6 +2728,32 @@ Return ONLY valid JSON in this exact format:
         }
         
         // === REPUTATION (20%) ===
+        
+        // Community reports - user-submitted scam reports: variable penalty
+        if (communityReports.reported) {
+          // Scale penalty based on report count
+          const reportPenalty = Math.min(50, communityReports.reportCount * 5);
+          trustScore -= reportPenalty;
+          analysisResult.details.redFlags.push(`🚨 COMMUNITY REPORTED: This domain has been reported as a scam ${communityReports.reportCount} time(s) - Reasons: ${communityReports.reasons.join(', ')}`);
+          
+          // If many reports, enforce a hard cap on trust score
+          if (communityReports.reportCount >= 10) {
+            trustScore = Math.min(trustScore, 25);
+          } else if (communityReports.reportCount >= 5) {
+            trustScore = Math.min(trustScore, 40);
+          }
+        }
+        
+        // Threat feed matches - security researcher data: -50 minimum
+        if (threatFeedCheck.inThreatFeed) {
+          trustScore -= 50;
+          for (const threat of threatFeedCheck.threats.slice(0, 3)) {
+            analysisResult.details.redFlags.push(`🚨 THREAT INTEL: ${threat.source} - ${threat.title} (${threat.severity})`);
+          }
+          // Threat feed matches should cap trust score
+          trustScore = Math.min(trustScore, 30);
+        }
+        
         // Government scam detected: -60
         if (governmentScamAnalysis.isLikelyGovScam) {
           trustScore -= 60;
@@ -3150,6 +3269,16 @@ Return ONLY valid JSON in this exact format:
         marketPosition: priceComparison.marketPosition,
         comparisonNotes: priceComparison.comparisonNotes,
         redFlags: priceComparison.redFlags,
+      },
+      communityReports: {
+        reported: communityReports.reported,
+        reportCount: communityReports.reportCount,
+        reasons: communityReports.reasons,
+        avgTrustScore: communityReports.avgTrustScore,
+      },
+      threatFeeds: {
+        inThreatFeed: threatFeedCheck.inThreatFeed,
+        threats: threatFeedCheck.threats,
       },
     };
 
