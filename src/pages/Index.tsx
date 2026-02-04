@@ -63,12 +63,21 @@ const controlPanelCards = [
   },
   {
     icon: DollarSign,
-    title: "Save Money & Shop Safe",
-    description: "Activate cashback and avoid fake stores.",
-    buttonText: "Save & Shop Smart",
+    title: "Save Money Shopping",
+    description: "Earn cashback at verified safe stores.",
+    buttonText: "Activate Cashback",
     action: "/save-money",
     color: "success",
     emoji: "💰",
+  },
+  {
+    icon: Lock,
+    title: "Protect Yourself",
+    description: "Identity monitoring, passwords & payment safety.",
+    buttonText: "Get Protected",
+    action: "/protect-yourself",
+    color: "info",
+    emoji: "🔐",
   },
 ];
 
@@ -195,7 +204,7 @@ export default function Index() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-w-6xl mx-auto mb-12">
             {controlPanelCards.map((card, index) => {
               const Icon = card.icon;
               const isScrollAction = card.action === "scroll";
@@ -211,7 +220,8 @@ export default function Index() {
                     ${card.color === "primary" ? "border-primary/20 hover:border-primary/40" : ""}
                     ${card.color === "destructive" ? "border-destructive/20 hover:border-destructive/40" : ""}
                     ${card.color === "success" ? "border-success/20 hover:border-success/40" : ""}
-                    p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1
+                    ${card.color === "info" ? "border-blue-500/20 hover:border-blue-500/40" : ""}
+                    p-5 md:p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1
                   `}
                 >
                   {/* Background glow */}
@@ -221,6 +231,7 @@ export default function Index() {
                       ${card.color === "primary" ? "bg-gradient-to-br from-primary/5 to-transparent" : ""}
                       ${card.color === "destructive" ? "bg-gradient-to-br from-destructive/5 to-transparent" : ""}
                       ${card.color === "success" ? "bg-gradient-to-br from-success/5 to-transparent" : ""}
+                      ${card.color === "info" ? "bg-gradient-to-br from-blue-500/5 to-transparent" : ""}
                     `}
                   />
                   
@@ -228,22 +239,23 @@ export default function Index() {
                     {/* Icon */}
                     <div 
                       className={`
-                        w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-5
+                        w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-4
                         ${card.color === "primary" ? "bg-primary/10 text-primary" : ""}
                         ${card.color === "destructive" ? "bg-destructive/10 text-destructive" : ""}
                         ${card.color === "success" ? "bg-success/10 text-success" : ""}
+                        ${card.color === "info" ? "bg-blue-500/10 text-blue-500" : ""}
                       `}
                     >
-                      <span className="text-3xl md:text-4xl">{card.emoji}</span>
+                      <span className="text-2xl md:text-3xl">{card.emoji}</span>
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-display text-xl md:text-2xl font-bold mb-2 text-foreground">
+                    <h3 className="font-display text-lg md:text-xl font-bold mb-2 text-foreground">
                       {card.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-muted-foreground text-sm md:text-base mb-5 md:mb-6">
+                    <p className="text-muted-foreground text-sm mb-4 md:mb-5 line-clamp-2">
                       {card.description}
                     </p>
 
@@ -251,7 +263,7 @@ export default function Index() {
                     {isScrollAction ? (
                       <Button
                         onClick={scrollToChecker}
-                        size="lg"
+                        size="default"
                         className={`
                           w-full font-semibold
                           ${card.color === "primary" ? "bg-primary hover:bg-primary/90" : ""}
@@ -262,11 +274,12 @@ export default function Index() {
                     ) : (
                       <Button
                         asChild
-                        size="lg"
+                        size="default"
                         variant={card.color === "destructive" ? "destructive" : "default"}
                         className={`
                           w-full font-semibold
                           ${card.color === "success" ? "bg-success hover:bg-success/90 text-success-foreground" : ""}
+                          ${card.color === "info" ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
                         `}
                       >
                         <Link to={card.action}>
