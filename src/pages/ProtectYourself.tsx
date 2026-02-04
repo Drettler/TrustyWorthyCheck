@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Shield, Lock, CreditCard, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { RelatedPages } from '@/components/RelatedPages';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 
@@ -112,6 +113,7 @@ export default function ProtectYourself() {
         </motion.div>
       </main>
 
+      <RelatedPages currentPage="protect-yourself" />
       <Footer />
     </div>
   );
