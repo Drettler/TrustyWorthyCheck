@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { RelatedPages } from "@/components/RelatedPages";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -465,6 +466,7 @@ export default function SaveMoney() {
         </section>
       </main>
 
+      <RelatedPages currentPage="save-money" />
       <Footer />
 
       {/* Interstitial Overlay */}
