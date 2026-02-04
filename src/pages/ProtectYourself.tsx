@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, CreditCard, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -31,6 +32,18 @@ const protectionServices = [
 ];
 
 export default function ProtectYourself() {
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show sticky CTA after scrolling past hero section
+      setShowStickyCTA(window.scrollY > 400);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SEO 
@@ -115,6 +128,39 @@ export default function ProtectYourself() {
 
       <RelatedPages currentPage="protect-yourself" />
       <Footer />
+
+      {/* Sticky Mobile CTA */}
+      <AnimatePresence>
+        {showStickyCTA && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
+          >
+            <div className="bg-background/95 backdrop-blur-lg border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3 safe-bottom">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">Stay protected online</p>
+                  <p className="text-xs text-muted-foreground">Identity, passwords & payments</p>
+                </div>
+                <Button
+                  variant="hero"
+                  size="sm"
+                  className="gap-1.5 flex-shrink-0 shadow-lg"
+                  asChild
+                >
+                  <a href={protectionServices[0].url} target="_blank" rel="noopener noreferrer">
+                    <Shield className="w-4 h-4" />
+                    Protect
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
