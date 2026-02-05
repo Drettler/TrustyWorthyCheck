@@ -135,13 +135,45 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
         </p>
       </motion.div>
 
-      {/* Extra Protection Section */}
+      {/* Featured All-in-One Protection */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.3 }}
+        className="max-w-md mx-auto mb-6 relative rounded-2xl border-2 border-purple-500/50 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-purple-500/10 p-6"
+      >
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xs font-bold text-white">
+          RECOMMENDED
+        </div>
+        <div className="flex items-center justify-center gap-2 mb-3 mt-2">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+        </div>
+        <h4 className="font-display text-lg font-bold text-center mb-2">
+          All-in-One Protection
+        </h4>
+        <p className="text-sm text-muted-foreground text-center mb-4">
+          Get comprehensive protection with identity monitoring, password management, VPN, and more.
+        </p>
+        <Button
+          className="w-full h-12 text-base font-bold rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 transition-opacity text-white"
+          asChild
+        >
+          <a href="https://aurainc.sjv.io/c/6856789/1320868/12398" target="_blank" rel="noopener noreferrer">
+            Get Protected Now
+            <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+          </a>
+        </Button>
+      </motion.div>
+
+      {/* Secondary Protection Options */}
       <div className="max-w-lg mx-auto mb-6 rounded-2xl border border-border/60 bg-card/50 p-6">
-        <h4 className="font-display text-base font-semibold mb-2 text-muted-foreground">
+        <h4 className="font-display text-base font-semibold mb-2 text-muted-foreground text-center">
           Or wait until tomorrow
         </h4>
-        <p className="text-sm text-muted-foreground mb-4">
-          Your free checks reset every 24 hours. In the meantime, protect yourself:
+        <p className="text-sm text-muted-foreground mb-4 text-center">
+          Your free checks reset every 24 hours. More protection options:
         </p>
         <div className="flex flex-col gap-3">
           <Button
@@ -152,7 +184,7 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
           >
             <a href="https://identityguard.y8uw.net/DGT10" target="_blank" rel="noopener noreferrer">
               <ShieldCheck className="w-4 h-4" />
-              Protect My Identity
+              Identity Protection
             </a>
           </Button>
           <Button
@@ -164,16 +196,6 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             <a href="https://identityguard.y8uw.net/DGT10" target="_blank" rel="noopener noreferrer">
               <Eye className="w-4 h-4" />
               Dark Web Monitoring
-            </a>
-          </Button>
-          <Button
-            size="sm"
-            className="w-full gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90"
-            asChild
-          >
-            <a href="https://aurainc.sjv.io/c/6856789/1320868/12398" target="_blank" rel="noopener noreferrer">
-              <Sparkles className="w-4 h-4" />
-              All-in-One Protection
             </a>
           </Button>
         </div>
