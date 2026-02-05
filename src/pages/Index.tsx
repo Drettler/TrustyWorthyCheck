@@ -484,8 +484,17 @@ export default function Index() {
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
+              {
+                icon: Sparkles,
+                emoji: "✨",
+                title: "All-in-One Protection",
+                description: "Complete digital protection in one package.",
+                button: "Get Protected Now",
+                href: "https://aurainc.sjv.io/c/6856789/1320868/12398",
+                featured: true,
+              },
               {
                 icon: UserCheck,
                 emoji: "🛡",
@@ -493,6 +502,7 @@ export default function Index() {
                 description: "Protect your identity and credit if a site feels unsafe.",
                 button: "Protect My Identity",
                 href: "https://identityguard.y8uw.net/DGT10",
+                featured: false,
               },
               {
                 icon: Lock,
@@ -500,7 +510,8 @@ export default function Index() {
                 title: "Password Security",
                 description: "Keep your passwords secure and never get hacked.",
                 button: "Secure My Passwords",
-                href: "https://identityguard.y8uw.net/DGT10",
+                href: "https://aurainc.sjv.io/c/6856789/1320868/12398",
+                featured: false,
               },
               {
                 icon: Shield,
@@ -508,15 +519,8 @@ export default function Index() {
                 title: "VPN Protection",
                 description: "Browse anonymously and protect your data.",
                 button: "Get VPN Protection",
-                href: "https://identityguard.y8uw.net/DGT10",
-              },
-              {
-                icon: Sparkles,
-                emoji: "✨",
-                title: "All-in-One Protection",
-                description: "Complete digital protection in one package.",
-                button: "Get All-in-One",
                 href: "https://aurainc.sjv.io/c/6856789/1320868/12398",
+                featured: false,
               },
             ].map((item, index) => {
               const Icon = item.icon;
@@ -527,14 +531,31 @@ export default function Index() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="group bg-card rounded-2xl p-6 border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-300"
+                  className={`group rounded-2xl p-6 border transition-all duration-300 ${
+                    item.featured
+                      ? 'bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-purple-500/10 border-2 border-purple-500/50 hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-500/20 relative'
+                      : 'bg-card border-border hover:border-primary/30 hover:shadow-lg'
+                  }`}
                 >
+                  {item.featured && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xs font-bold text-white">
+                      RECOMMENDED
+                    </div>
+                  )}
                   <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <span className="text-3xl">{item.emoji}</span>
                   </div>
                   <h3 className="font-display font-bold text-xl mb-2">{item.title}</h3>
                   <p className="text-muted-foreground text-sm mb-4">{item.description}</p>
-                  <Button asChild variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Button 
+                    asChild 
+                    variant={item.featured ? "default" : "outline"} 
+                    className={`w-full transition-colors ${
+                      item.featured 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white font-bold' 
+                        : 'group-hover:bg-primary group-hover:text-primary-foreground'
+                    }`}
+                  >
                     <a href={item.href} target="_blank" rel="noopener noreferrer">
                       {item.button}
                       <ExternalLink className="w-4 h-4 ml-2" />
