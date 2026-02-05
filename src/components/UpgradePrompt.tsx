@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, RotateCcw, ShieldCheck, CreditCard, Eye, Zap, Loader2, ExternalLink } from 'lucide-react';
+import { Lock, RotateCcw, ShieldCheck, Eye, Zap, Loader2, ExternalLink, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -150,7 +150,7 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             className="w-full gap-2"
             asChild
           >
-            <a href="https://aurainc.sjv.io/c/6856789/1320868/12398" target="_blank" rel="noopener noreferrer">
+            <a href="https://identityguard.y8uw.net/DGT10" target="_blank" rel="noopener noreferrer">
               <ShieldCheck className="w-4 h-4" />
               Protect My Identity
             </a>
@@ -161,20 +161,19 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             className="w-full gap-2"
             asChild
           >
-            <a href="https://www.experian.com/consumer-products/credit-monitoring.html" target="_blank" rel="noopener noreferrer">
-              <CreditCard className="w-4 h-4" />
-              Monitor My Credit
+            <a href="https://identityguard.y8uw.net/DGT10" target="_blank" rel="noopener noreferrer">
+              <Eye className="w-4 h-4" />
+              Dark Web Monitoring
             </a>
           </Button>
           <Button
-            variant="outline"
             size="sm"
-            className="w-full gap-2"
+            className="w-full gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90"
             asChild
           >
             <a href="https://aurainc.sjv.io/c/6856789/1320868/12398" target="_blank" rel="noopener noreferrer">
-              <Eye className="w-4 h-4" />
-              Dark Web Monitoring
+              <Sparkles className="w-4 h-4" />
+              All-in-One Protection
             </a>
           </Button>
         </div>
