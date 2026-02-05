@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle, ArrowRight, Shield, Sparkles, FileText, Eye, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FullReportDisplay } from '@/components/FullReportDisplay';
+import { SEO } from '@/components/SEO';
 import type { AnalysisResult } from '@/lib/api/url-check';
 
 export default function PaymentSuccess() {
@@ -59,6 +60,10 @@ export default function PaymentSuccess() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <SEO 
+        title="Payment Successful"
+        description="Your payment was successful. Access your full website safety report now."
+      />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
