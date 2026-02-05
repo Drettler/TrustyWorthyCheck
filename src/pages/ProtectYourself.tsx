@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock, CreditCard, ExternalLink } from 'lucide-react';
+import { Shield, Lock, Globe, Sparkles, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { RelatedPages } from '@/components/RelatedPages';
@@ -12,21 +12,28 @@ const protectionServices = [
     icon: Shield,
     title: 'Identity Protection',
     description: 'Monitor your personal information across the dark web and get alerts when your data appears in breaches. Protect your SSN, email, and financial accounts.',
-    url: 'https://aurainc.sjv.io/c/6856789/1320868/12398',
+    url: 'https://identityguard.y8uw.net/DGT10',
     color: 'from-blue-500 to-cyan-500',
   },
   {
     icon: Lock,
     title: 'Password Security',
     description: 'Use a secure password manager to generate and store strong, unique passwords for all your accounts. Never reuse passwords again.',
-    url: 'https://bitwarden.com',
+    url: 'https://identityguard.y8uw.net/DGT10',
     color: 'from-emerald-500 to-teal-500',
   },
   {
-    icon: CreditCard,
-    title: 'Payment Safety',
-    description: 'Create virtual card numbers for online purchases to protect your real card details from data breaches and unauthorized charges.',
-    url: 'https://privacy.com',
+    icon: Globe,
+    title: 'VPN Protection',
+    description: 'Secure your internet connection and protect your online privacy. Browse safely on public WiFi and keep your data encrypted.',
+    url: 'https://identityguard.y8uw.net/DGT10',
+    color: 'from-orange-500 to-amber-500',
+  },
+  {
+    icon: Sparkles,
+    title: 'All-in-One Protection',
+    description: 'Get comprehensive protection with identity monitoring, password management, VPN, and more—all in one powerful package.',
+    url: 'https://aurainc.sjv.io/c/6856789/1320868/12398',
     color: 'from-purple-500 to-pink-500',
   },
 ];

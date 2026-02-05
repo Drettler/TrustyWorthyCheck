@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink } from "lucide-react";
+import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -492,7 +492,7 @@ export default function Index() {
                 title: "Identity Protection",
                 description: "Protect your identity and credit if a site feels unsafe.",
                 button: "Protect My Identity",
-                href: "https://aurainc.sjv.io/c/6856789/1320868/12398",
+                href: "https://identityguard.y8uw.net/DGT10",
               },
               {
                 icon: Lock,
@@ -500,7 +500,7 @@ export default function Index() {
                 title: "Password Security",
                 description: "Keep your passwords secure and never get hacked.",
                 button: "Secure My Passwords",
-                href: "https://1password.com/",
+                href: "https://identityguard.y8uw.net/DGT10",
               },
               {
                 icon: Shield,
@@ -508,7 +508,15 @@ export default function Index() {
                 title: "VPN Protection",
                 description: "Browse anonymously and protect your data.",
                 button: "Get VPN Protection",
-                href: "https://nordvpn.com/",
+                href: "https://identityguard.y8uw.net/DGT10",
+              },
+              {
+                icon: Sparkles,
+                emoji: "✨",
+                title: "All-in-One Protection",
+                description: "Complete digital protection in one package.",
+                button: "Get All-in-One",
+                href: "https://aurainc.sjv.io/c/6856789/1320868/12398",
               },
             ].map((item, index) => {
               const Icon = item.icon;
