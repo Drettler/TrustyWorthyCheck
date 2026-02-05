@@ -9,32 +9,36 @@ import { Button } from '@/components/ui/button';
 
 const protectionServices = [
   {
-    icon: Shield,
-    title: 'Identity Protection',
-    description: 'Monitor your personal information across the dark web and get alerts when your data appears in breaches. Protect your SSN, email, and financial accounts.',
-    url: 'https://identityguard.y8uw.net/DGT10',
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    icon: Lock,
-    title: 'Password Security',
-    description: 'Use a secure password manager to generate and store strong, unique passwords for all your accounts. Never reuse passwords again.',
-    url: 'https://identityguard.y8uw.net/DGT10',
-    color: 'from-emerald-500 to-teal-500',
-  },
-  {
-    icon: Globe,
-    title: 'VPN Protection',
-    description: 'Secure your internet connection and protect your online privacy. Browse safely on public WiFi and keep your data encrypted.',
-    url: 'https://identityguard.y8uw.net/DGT10',
-    color: 'from-orange-500 to-amber-500',
-  },
-  {
     icon: Sparkles,
     title: 'All-in-One Protection',
     description: 'Get comprehensive protection with identity monitoring, password management, VPN, and more—all in one powerful package.',
     url: 'https://aurainc.sjv.io/c/6856789/1320868/12398',
     color: 'from-purple-500 to-pink-500',
+    featured: true,
+  },
+  {
+    icon: Shield,
+    title: 'Identity Protection',
+    description: 'Monitor your personal information across the dark web and get alerts when your data appears in breaches. Protect your SSN, email, and financial accounts.',
+    url: 'https://identityguard.y8uw.net/DGT10',
+    color: 'from-blue-500 to-cyan-500',
+    featured: false,
+  },
+  {
+    icon: Lock,
+    title: 'Password Security',
+    description: 'Use a secure password manager to generate and store strong, unique passwords for all your accounts. Never reuse passwords again.',
+    url: 'https://aurainc.sjv.io/c/6856789/1320868/12398',
+    color: 'from-emerald-500 to-teal-500',
+    featured: false,
+  },
+  {
+    icon: Globe,
+    title: 'VPN Protection',
+    description: 'Secure your internet connection and protect your online privacy. Browse safely on public WiFi and keep your data encrypted.',
+    url: 'https://aurainc.sjv.io/c/6856789/1320868/12398',
+    color: 'from-orange-500 to-amber-500',
+    featured: false,
   },
 ];
 
@@ -87,15 +91,24 @@ export default function ProtectYourself() {
         </motion.div>
 
         {/* Protection Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16">
           {protectionServices.map((service, index) => (
             <motion.div
               key={service.title}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group relative bg-card rounded-2xl border border-border p-8 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+              className={`group relative rounded-2xl p-8 transition-all duration-300 ${
+                service.featured 
+                  ? 'bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-purple-500/10 border-2 border-purple-500/50 hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-500/20 md:col-span-2 lg:col-span-1' 
+                  : 'bg-card border border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5'
+              }`}
             >
+              {service.featured && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xs font-bold text-white">
+                  RECOMMENDED
+                </div>
+              )}
               {/* Icon */}
               <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                 <service.icon className="w-7 h-7 text-white" />
@@ -109,12 +122,16 @@ export default function ProtectYourself() {
               
               {/* Launch Button */}
               <Button
-                variant="outline"
-                className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                variant={service.featured ? "default" : "outline"}
+                className={`w-full transition-colors ${
+                  service.featured 
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white font-bold' 
+                    : 'group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}
                 asChild
               >
                 <a href={service.url} target="_blank" rel="noopener noreferrer">
-                  Launch
+                  {service.featured ? 'Get Protected Now' : 'Launch'}
                   <ExternalLink className="w-4 h-4 ml-2" />
                 </a>
               </Button>
