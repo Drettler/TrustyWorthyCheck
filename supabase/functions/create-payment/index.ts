@@ -25,7 +25,10 @@ serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
+    
+    // Use environment variable for price ID (fallback to hardcoded for backward compatibility)
+    const priceId = Deno.env.get("STRIPE_PRICE_ID_SINGLE_CHECK") || "price_1Sn0lm4K8Nnge2bHApn35xdK";
+    logStep("Stripe config verified", { hasPriceEnv: !!Deno.env.get("STRIPE_PRICE_ID_SINGLE_CHECK") });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, {
@@ -59,7 +62,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : customerEmail,
       line_items: [
         {
-          price: "price_1Sn0lm4K8Nnge2bHApn35xdK", // $4.99 Pay-Per-Check Report
+          price: priceId,
           quantity: 1,
         },
       ],
