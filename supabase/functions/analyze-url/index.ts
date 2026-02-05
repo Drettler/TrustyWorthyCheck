@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-02-05-v1';
+const ANALYSIS_CACHE_VERSION = '2026-02-05-v2';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2775,38 +2775,66 @@ Return ONLY valid JSON in this exact format:
         
         // Community reports - user-submitted scam reports: variable penalty
         if (communityReports.reported) {
-          // Scale penalty based on report count
-          const reportPenalty = Math.min(50, communityReports.reportCount * 5);
-          trustScore -= reportPenalty;
-          
           // Check if this is a related domain match (different TLD of same brand)
           const isRelatedDomainMatch = communityReports.matchedDomain && 
             communityReports.matchedDomain.toLowerCase() !== domain.toLowerCase();
           
+          // AGGRESSIVE SCORING: Copycat domains get much harsher penalties
+          // Scammers frequently register the same brand name under different TLDs
           if (isRelatedDomainMatch) {
-            analysisResult.details.redFlags.push(`🚨 COMMUNITY REPORTED: Related domain "${communityReports.matchedDomain}" has been reported as a scam ${communityReports.reportCount} time(s) - this domain may be a copycat/variation - Reasons: ${communityReports.reasons.join(', ')}`);
+            // Base penalty for being a TLD variation of a reported scam domain
+            const copycatBasePenalty = 25;
+            // Additional penalty scaled by how many reports the original has
+            const reportScaledPenalty = Math.min(30, communityReports.reportCount * 10);
+            trustScore -= (copycatBasePenalty + reportScaledPenalty);
+            
+            analysisResult.details.redFlags.push(`🚨 COPYCAT ALERT: This domain uses the same brand name as reported scam site "${communityReports.matchedDomain}" (${communityReports.reportCount} reports) - Reasons: ${communityReports.reasons.join(', ')}`);
+            analysisResult.details.redFlags.push(`⚠️ TLD VARIATION SCAM: Scammers often register the same name under different domain extensions to evade detection`);
+            
+            // Very aggressive caps for copycat domains
+            if (communityReports.reportCount >= 5) {
+              // 5+ reports on the original = very likely scam network
+              trustScore = Math.min(trustScore, 20);
+            } else if (communityReports.reportCount >= 2) {
+              // 2+ reports = strong suspicion, cap at 35
+              trustScore = Math.min(trustScore, 35);
+            } else {
+              // Even 1 report on related domain = cap at 45
+              trustScore = Math.min(trustScore, 45);
+            }
           } else {
+            // Direct match - scale penalty based on report count
+            const reportPenalty = Math.min(60, communityReports.reportCount * 8);
+            trustScore -= reportPenalty;
+            
             analysisResult.details.redFlags.push(`🚨 COMMUNITY REPORTED: This domain has been reported as a scam ${communityReports.reportCount} time(s) - Reasons: ${communityReports.reasons.join(', ')}`);
-          }
-          
-          // If many reports, enforce a hard cap on trust score
-          if (communityReports.reportCount >= 10) {
-            trustScore = Math.min(trustScore, 25);
-          } else if (communityReports.reportCount >= 5) {
-            trustScore = Math.min(trustScore, 40);
-          } else if (communityReports.reportCount >= 2 && isRelatedDomainMatch) {
-            // Related domain with reports - cap at 50 since it could be a copycat
-            trustScore = Math.min(trustScore, 50);
+            
+            // Hard caps for directly reported domains
+            if (communityReports.reportCount >= 10) {
+              trustScore = Math.min(trustScore, 15);
+            } else if (communityReports.reportCount >= 5) {
+              trustScore = Math.min(trustScore, 25);
+            } else if (communityReports.reportCount >= 2) {
+              trustScore = Math.min(trustScore, 40);
+            }
           }
         }
         
         // Detect TLD impersonation (e.g., example.com.co trying to look like example.com)
-        const tldImpersonationPatterns = ['.com.co', '.com.br', '.com.cn', '.co.uk', '.org.uk'];
+        // These TLDs are commonly abused to impersonate .com domains
+        const tldImpersonationPatterns = ['.com.co', '.com.br', '.com.cn', '.co.uk', '.org.uk', '.net.co', '.org.co'];
+        const suspiciousAlternateTLDs = ['.net', '.co', '.shop', '.store', '.online', '.site', '.xyz', '.top', '.club'];
         const isTldImpersonation = tldImpersonationPatterns.some(pattern => domain.endsWith(pattern));
-        if (isTldImpersonation && !isEstablishedRetailBrand && !isWellKnownDomain) {
-          // Check if there's a legitimate .com version being impersonated
-          const baseDomainName = domain.replace(/\.(com\.co|com\.br|com\.cn|co\.uk|org\.uk)$/i, '');
-          if (baseDomainName && baseDomainName.length >= 3) {
+        const hasSuspiciousAlternateTLD = suspiciousAlternateTLDs.some(tld => domain.endsWith(tld));
+        
+        if ((isTldImpersonation || hasSuspiciousAlternateTLD) && !isEstablishedRetailBrand && !isWellKnownDomain) {
+          // Extra penalty if this domain has a suspicious TLD AND there are community reports for related domains
+          if (communityReports.reported && communityReports.matchedDomain) {
+            // Already penalized above, but add extra warning
+            trustScore -= 10;
+            analysisResult.details.redFlags.push(`High-risk TLD combined with reported brand name - classic scam pattern`);
+          } else if (isTldImpersonation) {
+            // TLD impersonation without existing reports still gets a penalty
             trustScore -= 15;
             analysisResult.details.redFlags.push(`Domain uses "${domain.split('.').slice(-2).join('.')}" TLD which can impersonate legitimate .com websites`);
           }
