@@ -733,7 +733,9 @@ const scamPatterns = {
   ],
   suspiciousTLDs: [
     '.xyz', '.top', '.work', '.click', '.link', '.info', '.biz', 
-    '.online', '.site', '.club', '.vip', '.win', '.review'
+    '.online', '.site', '.club', '.vip', '.win', '.review',
+    // Country-code TLDs commonly abused to impersonate .com domains
+    '.com.co', '.com.br', '.com.cn', '.co', '.cc', '.ws', '.tk', '.ml', '.ga', '.cf', '.gq'
   ],
   suspiciousEmails: [
     /@gmail\.com$/i, /@yahoo\.com$/i, /@hotmail\.com$/i, 
@@ -1969,30 +1971,72 @@ Deno.serve(async (req) => {
     const businessVerification = analyzeBusinessVerification(markdown, html);
     const complianceAnalysis = analyzeComplianceIndicators(markdown, html);
     
-// Check community reports and threat feeds from database
-    async function checkCommunityReports(domainToCheck: string): Promise<{ reported: boolean; reportCount: number; reasons: string[]; avgTrustScore: number | null }> {
+// Extract base domain name without TLD variations for fuzzy matching
+    // e.g., "peaceinwar.com.co" -> "peaceinwar", "example.shop" -> "example"
+    function extractBaseDomainName(domain: string): string {
+      const parts = domain.toLowerCase().split('.');
+      // Remove common TLDs and country codes to get the brand/name part
+      const tldPatterns = ['com', 'org', 'net', 'co', 'io', 'shop', 'store', 'online', 'site', 'xyz', 'top', 'br', 'cn', 'uk', 'de', 'fr', 'es', 'it', 'ru', 'in', 'au', 'ca'];
+      while (parts.length > 1 && tldPatterns.includes(parts[parts.length - 1])) {
+        parts.pop();
+      }
+      // Return the main name part (usually first meaningful segment)
+      return parts.filter(p => p !== 'www').join('.');
+    }
+    
+    // Check community reports and threat feeds from database
+    async function checkCommunityReports(domainToCheck: string): Promise<{ reported: boolean; reportCount: number; reasons: string[]; avgTrustScore: number | null; matchedDomain?: string }> {
       try {
         const supabase = createClient(
           Deno.env.get("SUPABASE_URL") ?? "",
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
         );
         
-        const { data, error } = await supabase
+        // First try exact match
+        const { data: exactMatch, error: exactError } = await supabase
           .from('site_reports')
-          .select('report_count, reasons, trust_score')
+          .select('url_domain, report_count, reasons, trust_score')
           .eq('url_domain', domainToCheck)
           .maybeSingle();
         
-        if (error || !data) {
-          return { reported: false, reportCount: 0, reasons: [], avgTrustScore: null };
+        if (!exactError && exactMatch) {
+          return {
+            reported: true,
+            reportCount: exactMatch.report_count || 0,
+            reasons: exactMatch.reasons || [],
+            avgTrustScore: exactMatch.trust_score,
+            matchedDomain: exactMatch.url_domain,
+          };
         }
         
-        return {
-          reported: true,
-          reportCount: data.report_count || 0,
-          reasons: data.reasons || [],
-          avgTrustScore: data.trust_score,
-        };
+        // If no exact match, check for related domains (same base name, different TLD)
+        // This catches cases like peaceinwar.com.co matching reports for peaceinwar.com
+        const baseName = extractBaseDomainName(domainToCheck);
+        if (baseName && baseName.length >= 3) {
+          const { data: relatedMatches, error: relatedError } = await supabase
+            .from('site_reports')
+            .select('url_domain, report_count, reasons, trust_score')
+            .ilike('url_domain', `${baseName}%`)
+            .order('report_count', { ascending: false })
+            .limit(5);
+          
+          if (!relatedError && relatedMatches && relatedMatches.length > 0) {
+            // Find the best match (highest report count from related domains)
+            const bestMatch = relatedMatches[0];
+            const totalReports = relatedMatches.reduce((sum, m) => sum + (m.report_count || 0), 0);
+            const allReasons = [...new Set(relatedMatches.flatMap(m => m.reasons || []))];
+            
+            return {
+              reported: true,
+              reportCount: totalReports,
+              reasons: allReasons,
+              avgTrustScore: bestMatch.trust_score,
+              matchedDomain: bestMatch.url_domain,
+            };
+          }
+        }
+        
+        return { reported: false, reportCount: 0, reasons: [], avgTrustScore: null };
       } catch (err) {
         console.error('Community reports check failed:', err);
         return { reported: false, reportCount: 0, reasons: [], avgTrustScore: null };
@@ -2734,13 +2778,37 @@ Return ONLY valid JSON in this exact format:
           // Scale penalty based on report count
           const reportPenalty = Math.min(50, communityReports.reportCount * 5);
           trustScore -= reportPenalty;
-          analysisResult.details.redFlags.push(`🚨 COMMUNITY REPORTED: This domain has been reported as a scam ${communityReports.reportCount} time(s) - Reasons: ${communityReports.reasons.join(', ')}`);
+          
+          // Check if this is a related domain match (different TLD of same brand)
+          const isRelatedDomainMatch = communityReports.matchedDomain && 
+            communityReports.matchedDomain.toLowerCase() !== domain.toLowerCase();
+          
+          if (isRelatedDomainMatch) {
+            analysisResult.details.redFlags.push(`🚨 COMMUNITY REPORTED: Related domain "${communityReports.matchedDomain}" has been reported as a scam ${communityReports.reportCount} time(s) - this domain may be a copycat/variation - Reasons: ${communityReports.reasons.join(', ')}`);
+          } else {
+            analysisResult.details.redFlags.push(`🚨 COMMUNITY REPORTED: This domain has been reported as a scam ${communityReports.reportCount} time(s) - Reasons: ${communityReports.reasons.join(', ')}`);
+          }
           
           // If many reports, enforce a hard cap on trust score
           if (communityReports.reportCount >= 10) {
             trustScore = Math.min(trustScore, 25);
           } else if (communityReports.reportCount >= 5) {
             trustScore = Math.min(trustScore, 40);
+          } else if (communityReports.reportCount >= 2 && isRelatedDomainMatch) {
+            // Related domain with reports - cap at 50 since it could be a copycat
+            trustScore = Math.min(trustScore, 50);
+          }
+        }
+        
+        // Detect TLD impersonation (e.g., example.com.co trying to look like example.com)
+        const tldImpersonationPatterns = ['.com.co', '.com.br', '.com.cn', '.co.uk', '.org.uk'];
+        const isTldImpersonation = tldImpersonationPatterns.some(pattern => domain.endsWith(pattern));
+        if (isTldImpersonation && !isEstablishedRetailBrand && !isWellKnownDomain) {
+          // Check if there's a legitimate .com version being impersonated
+          const baseDomainName = domain.replace(/\.(com\.co|com\.br|com\.cn|co\.uk|org\.uk)$/i, '');
+          if (baseDomainName && baseDomainName.length >= 3) {
+            trustScore -= 15;
+            analysisResult.details.redFlags.push(`Domain uses "${domain.split('.').slice(-2).join('.')}" TLD which can impersonate legitimate .com websites`);
           }
         }
         
