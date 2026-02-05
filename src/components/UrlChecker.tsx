@@ -13,6 +13,8 @@ import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
 import { DetailedReportUpsell } from './DetailedReportUpsell';
 import { ReportSiteDialog } from './ReportSiteDialog';
+import { ScoreBreakdown } from './ScoreBreakdown';
+import { ConfidenceBreakdown } from './ConfidenceBreakdown';
 import { analyzeUrl, type AnalysisResult, type AnalysisError } from '@/lib/api/url-check';
 import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
@@ -553,6 +555,14 @@ export function UrlChecker() {
                   confidence={result.confidence}
                 />
               </div>
+            </div>
+
+            {/* Score Breakdown & Confidence */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <ScoreBreakdown result={result} />
+              {result.confidence && (
+                <ConfidenceBreakdown confidence={result.confidence} />
+              )}
             </div>
 
             {/* Savings Promotion Box - Only show for safe or caution sites */}
