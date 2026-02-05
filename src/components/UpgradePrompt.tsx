@@ -150,7 +150,7 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             className="w-full gap-2"
             asChild
           >
-            <a href="https://www.identityguard.com/" target="_blank" rel="noopener noreferrer">
+            <a href="https://aurainc.sjv.io/c/6856789/1320868/12398" target="_blank" rel="noopener noreferrer">
               <ShieldCheck className="w-4 h-4" />
               Protect My Identity
             </a>
@@ -172,7 +172,7 @@ export function UpgradePrompt({ onResetDemo }: UpgradePromptProps) {
             className="w-full gap-2"
             asChild
           >
-            <a href="https://www.identityguard.com/dark-web-monitoring" target="_blank" rel="noopener noreferrer">
+            <a href="https://aurainc.sjv.io/c/6856789/1320868/12398" target="_blank" rel="noopener noreferrer">
               <Eye className="w-4 h-4" />
               Dark Web Monitoring
             </a>
