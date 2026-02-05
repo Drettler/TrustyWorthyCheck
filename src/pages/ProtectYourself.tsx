@@ -12,7 +12,7 @@ const protectionServices = [
     icon: Shield,
     title: 'Identity Protection',
     description: 'Monitor your personal information across the dark web and get alerts when your data appears in breaches. Protect your SSN, email, and financial accounts.',
-    url: 'https://identityguard.y8uw.net/DGT10',
+    url: 'https://aurainc.sjv.io/c/6856789/1320868/12398',
     color: 'from-blue-500 to-cyan-500',
   },
   {

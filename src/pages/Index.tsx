@@ -492,7 +492,7 @@ export default function Index() {
                 title: "Identity Protection",
                 description: "Protect your identity and credit if a site feels unsafe.",
                 button: "Protect My Identity",
-                href: "https://identityguard.y8uw.net/DGT10",
+                href: "https://aurainc.sjv.io/c/6856789/1320868/12398",
               },
               {
                 icon: Lock,
