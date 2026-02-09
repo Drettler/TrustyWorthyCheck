@@ -2,19 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Chrome, X, Shield, Zap, CheckCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 
 const STORAGE_KEY = 'extension_prompt_dismissed';
 
 export function ExtensionPrompt() {
   const [isVisible, setIsVisible] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     // Check if user has dismissed the prompt before
@@ -32,7 +24,8 @@ export function ExtensionPrompt() {
   };
 
   const handleInstall = () => {
-    setShowInstructions(true);
+    window.open('https://chromewebstore.google.com/detail/trustworthycheck/fbcacgbhohdcofjkabpbcbephpfppmkl', '_blank');
+    handleDismiss();
   };
 
   const benefits = [
@@ -118,85 +111,6 @@ export function ExtensionPrompt() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Installation Instructions Dialog */}
-      <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Chrome className="w-5 h-5 text-primary" />
-              Install TrustWorthy Check Extension
-            </DialogTitle>
-            <DialogDescription>
-              Follow these steps to add the extension to Chrome
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0">
-                1
-              </div>
-              <div>
-                <p className="font-medium">Download the extension</p>
-                <p className="text-sm text-muted-foreground">
-                  <a 
-                    href="https://github.com/user/trustworthy-check-extension/releases" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Download from GitHub
-                  </a>
-                  {" "}or contact us for the latest version.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0">
-                2
-              </div>
-              <div>
-                <p className="font-medium">Open Chrome Extensions</p>
-                <p className="text-sm text-muted-foreground">
-                  Go to <code className="px-1.5 py-0.5 rounded bg-muted text-xs">chrome://extensions</code> in your browser
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0">
-                3
-              </div>
-              <div>
-                <p className="font-medium">Enable Developer Mode</p>
-                <p className="text-sm text-muted-foreground">
-                  Toggle "Developer mode" in the top right corner
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0">
-                4
-              </div>
-              <div>
-                <p className="font-medium">Load the extension</p>
-                <p className="text-sm text-muted-foreground">
-                  Click "Load unpacked" and select the extension folder
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowInstructions(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
