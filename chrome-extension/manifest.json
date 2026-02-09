@@ -17,5 +17,16 @@
     },
     "default_title": "TrustWorthyCheck"
   },
-  "permissions": ["activeTab"]
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.trustworthycheck.com/*",
+        "*://*.trustworthycheck.lovable.app/*",
+        "*://*trustworthycheck*lovable.app/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
 }
