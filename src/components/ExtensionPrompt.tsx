@@ -9,6 +9,10 @@ export function ExtensionPrompt() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Check if extension is already installed (content script sets this attribute)
+    const extensionInstalled = document.documentElement.getAttribute('data-twc-extension') === 'true';
+    if (extensionInstalled) return;
+
     // Check if user has dismissed the prompt before
     const dismissed = localStorage.getItem(STORAGE_KEY);
     if (!dismissed) {
