@@ -149,7 +149,7 @@ export default function ProtectYourself() {
           <h2 className="text-2xl font-bold mb-4">Why These Tools Matter</h2>
           <p className="text-muted-foreground leading-relaxed">
             Scammers don't just create fake websites—they steal identities, crack weak passwords, 
-            and intercept payment information. By combining TrustWorthy Check with these protection 
+            and intercept payment information. By combining TrustWorthyCheck with these protection 
             services, you create multiple layers of defense against online threats. Stay proactive, 
             stay protected.
           </p>

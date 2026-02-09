@@ -23,7 +23,7 @@ export function Header() {
             <Shield className="w-5 h-5 text-white" />
           </div>
           <span className="font-display font-bold text-lg hidden sm:block">
-            TrustWorthy Check
+            TrustWorthyCheck
           </span>
         </a>
 
