@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-02-05-v2';
+const ANALYSIS_CACHE_VERSION = '2026-03-02-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2722,6 +2722,10 @@ Return ONLY valid JSON in this exact format:
         if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 180) {
           trustScore -= 20;
           analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - new domains are higher risk`);
+        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedRetailBrand && !isWellKnownDomain) {
+          // WHOIS data completely unavailable for e-commerce site: -10
+          trustScore -= 10;
+          analysisResult.details.redFlags.push('Domain age could not be verified — WHOIS data unavailable');
         }
         
         // WHOIS hidden + new domain: -15
@@ -3039,6 +3043,12 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('Uses countdown timers or fake urgency tactics');
         }
         
+        // Popups detected: -5 (common in scam/low-quality sites)
+        if (scamPatternAnalysis.hasPopups && !isNonCommerceSite && !isEstablishedRetailBrand) {
+          trustScore -= 5;
+          analysisResult.details.redFlags.push('Uses popup overlays which can be a deceptive tactic');
+        }
+        
         // Fake trust badges: -10
         if (scamPatternAnalysis.suspiciousPatterns.includes('Possibly fake security badge')) {
           trustScore -= 10;
@@ -3113,18 +3123,24 @@ Return ONLY valid JSON in this exact format:
         
         // === PROFESSIONALISM BONUS ===
         // High professionalism + many positive signals = legitimate site
+        // BUT: Do NOT give professionalism bonus if there are significant red flags
         const professionalismLevel = analysisResult.details.websiteQuality?.overallProfessionalism;
         const positiveSignalCount = analysisResult.details.positiveSignals?.length || 0;
         const redFlagCount = analysisResult.details.redFlags?.length || 0;
         
-        // Professional site with strong positive signals: +15
-        if (professionalismLevel === 'high' && positiveSignalCount >= 8 && positiveSignalCount > redFlagCount * 2) {
-          trustScore += 15;
-          analysisResult.details.positiveSignals.push('High professionalism with strong positive indicators');
-        } else if (professionalismLevel === 'high' && positiveSignalCount >= 5) {
-          // Professional site with good signals: +8
-          trustScore += 8;
+        // Only give professionalism bonus if red flags are minimal
+        if (redFlagCount <= 3) {
+          // Professional site with strong positive signals: +15
+          if (professionalismLevel === 'high' && positiveSignalCount >= 8 && positiveSignalCount > redFlagCount * 2) {
+            trustScore += 15;
+            analysisResult.details.positiveSignals.push('High professionalism with strong positive indicators');
+          } else if (professionalismLevel === 'high' && positiveSignalCount >= 5) {
+            // Professional site with good signals: +8
+            trustScore += 8;
+          }
         }
+        // If many red flags, no professionalism bonus regardless of appearance
+        // (Scam sites can look professional)
         
         // Non-commerce site bonus: +5 (these sites have different trust indicators than e-commerce)
         if (isLikelySaaS && professionalismLevel === 'high') {
