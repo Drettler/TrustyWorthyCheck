@@ -11,6 +11,7 @@ import { FlagsList } from './FlagsList';
 import { ScanningAnimation } from './ScanningAnimation';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ScamWarningBanner } from './ScamWarningBanner';
+import { DropshipperWarningBanner } from './DropshipperWarningBanner';
 import { DetailedReportUpsell } from './DetailedReportUpsell';
 import { ReportSiteDialog } from './ReportSiteDialog';
 import { analyzeUrl, type AnalysisResult, type AnalysisError } from '@/lib/api/url-check';
@@ -479,6 +480,11 @@ export function UrlChecker() {
             {/* Scam-Specific Warning Banners */}
             {result.scamIndicators && (
               <ScamWarningBanner scamIndicators={result.scamIndicators} />
+            )}
+
+            {/* Dropshipper Warning Banner */}
+            {result.details?.dropshipperIndicators && (
+              <DropshipperWarningBanner dropshipperIndicators={result.details.dropshipperIndicators} />
             )}
 
             {/* Warning Banner for Danger/Caution (only show if no scam-specific banner) */}
