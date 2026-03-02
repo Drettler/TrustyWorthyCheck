@@ -2975,6 +2975,46 @@ Return ONLY valid JSON in this exact format:
             trustScore -= 15;
             analysisResult.details.redFlags.push('No refund/return policy found');
           }
+          
+          // === PRICING RED FLAGS ===
+          // Suspiciously high average discount: penalize
+          if (priceComparisonResult.averageDiscount >= 70) {
+            trustScore -= 20;
+            analysisResult.details.redFlags.push(`Extremely high average discount of ${priceComparisonResult.averageDiscount}% — common in scam stores`);
+          } else if (priceComparisonResult.averageDiscount >= 50) {
+            trustScore -= 12;
+            analysisResult.details.redFlags.push(`High average discount of ${priceComparisonResult.averageDiscount}% — unusually low prices compared to market`);
+          } else if (priceComparisonResult.averageDiscount >= 40) {
+            trustScore -= 5;
+            analysisResult.details.redFlags.push(`Above-average discounts of ${priceComparisonResult.averageDiscount}%`);
+          }
+          
+          // Market position much lower: additional penalty
+          if (priceComparisonResult.marketPosition === 'much_lower' && priceComparisonResult.productsAnalyzed >= 2) {
+            trustScore -= 8;
+            analysisResult.details.redFlags.push('Prices significantly below market average across multiple products');
+          }
+          
+          // Suspiciously low individual products
+          if (priceComparisonResult.suspiciouslyLowCount > 0) {
+            trustScore -= Math.min(15, priceComparisonResult.suspiciouslyLowCount * 5);
+            analysisResult.details.redFlags.push(`${priceComparisonResult.suspiciouslyLowCount} product(s) priced suspiciously below market value`);
+          }
+          
+          // === ADDRESS QUALITY ===
+          // Address found but doesn't look legitimate (missing city/state/country)
+          if (contactAnalysis.hasPhysicalAddress && !contactAnalysis.addressAnalysis.looksLegitimate && 
+              contactAnalysis.addressAnalysis.suspiciousPatterns.length === 0) {
+            trustScore -= 10;
+            analysisResult.details.redFlags.push('Physical address found but appears incomplete or invalid');
+          }
+          
+          // === COMPLIANCE ===
+          // E-commerce with zero compliance indicators: -8
+          if (complianceAnalysis.complianceScore === 0) {
+            trustScore -= 8;
+            analysisResult.details.redFlags.push('No privacy compliance indicators (GDPR, CCPA, cookie notice)');
+          }
         }
         
         // === WELL-KNOWN DOMAIN BONUS ===
