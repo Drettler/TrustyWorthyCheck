@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-02-v3';
+const ANALYSIS_CACHE_VERSION = '2026-03-04-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2886,22 +2886,21 @@ Return ONLY valid JSON in this exact format:
           }
         }
         
-        // === BUSINESS TRANSPARENCY (15%) ===
-        // Skip these penalties for well-known sites, portals, non-commerce sites, AND established retail brands
-        // Established retail brands are known legitimate businesses - if our scraper can't find their policies,
-        // it's more likely a scraping limitation than an actual red flag
-        if (!isNonCommerceSite && !isEstablishedRetailBrand) {
-          // Only apply address penalties if we have meaningful address data
-          // Skip penalties if extractedAddresses is empty or looks like garbage was filtered out
+        // === BUSINESS TRANSPARENCY ===
+        // GENERAL penalties apply to ALL non-well-known, non-established sites
+        // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
+        const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand;
+        const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedRetailBrand;
+        
+        if (!skipAllPenalties) {
+          // --- GENERAL: Address penalties (apply to ALL sites) ---
           const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
             contactAnalysis.extractedAddresses.some((addr: string) => /\s/.test(addr) && addr.length > 15);
           
-          // No physical address: -20 (only for e-commerce sites)
           if (!contactAnalysis.hasPhysicalAddress) {
-            trustScore -= 20;
+            trustScore -= isCommerceForPenalties ? 20 : 10;
             analysisResult.details.redFlags.push('No physical address found');
           } else if (hasValidAddressData && contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
-            // Address fake / residential mismatch: -15 (only if we have valid address data)
             trustScore -= 15;
             for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
               analysisResult.details.redFlags.push(`Address issue: ${issue}`);
@@ -2911,124 +2910,116 @@ Return ONLY valid JSON in this exact format:
             analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
           }
           
-          // No phone number: -10 for e-commerce
+          // --- GENERAL: Phone penalty (apply to ALL sites, less weight for non-commerce) ---
           if (!contactAnalysis.hasPhoneNumber) {
-            trustScore -= 10;
+            trustScore -= isCommerceForPenalties ? 10 : 5;
             analysisResult.details.redFlags.push('No phone number found');
           } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
-            // Suspicious phone pattern: -10
             trustScore -= 10;
             for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
               analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
             }
           }
           
-          // Generic email only: -10
+          // --- GENERAL: Generic email penalty ---
           if (contactAnalysis.hasGenericEmail && !contactAnalysis.hasProfessionalEmail) {
             trustScore -= 10;
             analysisResult.details.redFlags.push('Only uses generic email (Gmail/Yahoo) for business contact');
           }
           
-          // Missing essential pages penalties
+          // --- GENERAL: Missing essential pages ---
           let missingPagesCount = 0;
           
-          // Missing privacy policy: -8
           if (analysisResult.details.business && !analysisResult.details.business.hasPrivacyPolicy) {
             trustScore -= 8;
             missingPagesCount++;
             analysisResult.details.redFlags.push('No privacy policy found');
           }
           
-          // Missing terms: -6
           if (analysisResult.details.business && !analysisResult.details.business.hasTerms) {
             trustScore -= 6;
             missingPagesCount++;
             analysisResult.details.redFlags.push('No terms of service found');
           }
           
-          // Missing shipping info: -8 (only for e-commerce)
-          if (analysisResult.details.business && !analysisResult.details.business.hasShippingInfo) {
-            trustScore -= 8;
-            missingPagesCount++;
-            analysisResult.details.redFlags.push('No shipping information found');
-          }
-          
-          // Missing about page: -5
           if (analysisResult.details.business && !analysisResult.details.business.hasAboutPage) {
             trustScore -= 5;
             missingPagesCount++;
             analysisResult.details.redFlags.push('No about page found');
           }
           
-          // If 2+ essential pages missing: additional -5
+          // E-COMMERCE ONLY: Shipping info
+          if (isCommerceForPenalties && analysisResult.details.business && !analysisResult.details.business.hasShippingInfo) {
+            trustScore -= 8;
+            missingPagesCount++;
+            analysisResult.details.redFlags.push('No shipping information found');
+          }
+          
           if (missingPagesCount >= 2) {
             trustScore -= 5;
             analysisResult.details.redFlags.push('Multiple essential business pages missing');
           }
           
-          // === PAYMENT RISK (15%) ===
-          // Score based on payment status
+          // --- GENERAL: Payment risk (apply to ALL sites) ---
           if (paymentAnalysis.paymentStatus === 'crypto_wire_only') {
-            // Confirmed crypto/wire/giftcard only = major risk: -30
             trustScore -= 30;
             analysisResult.details.redFlags.push('Only accepts cryptocurrency, wire transfer, or gift cards - no buyer protection');
           } else if (paymentAnalysis.paymentStatus === 'unusual_only') {
-            // Crypto only (no wire transfer) = moderate risk: -15
             trustScore -= 15;
             analysisResult.details.redFlags.push('Accepts cryptocurrency payments - limited buyer protection');
           } else if (paymentAnalysis.paymentStatus === 'unknown') {
-            // Unknown payment methods = mild risk: -5 (not harsh punishment)
             trustScore -= 5;
-            // Don't add a red flag for unknown - it's neutral/mild
           } else if (paymentAnalysis.hasPaymentGateway) {
-            // Has detected payment gateway = positive signal
             analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
           }
           
-          // No refund policy: -15 for e-commerce
-          if (analysisResult.details.business && !analysisResult.details.business.hasReturnPolicy) {
+          // E-COMMERCE ONLY: Refund policy
+          if (isCommerceForPenalties && analysisResult.details.business && !analysisResult.details.business.hasReturnPolicy) {
             trustScore -= 15;
             analysisResult.details.redFlags.push('No refund/return policy found');
           }
           
-          // === PRICING RED FLAGS ===
-          // Suspiciously high average discount: penalize
-          if (priceComparison.averageDiscount >= 70) {
-            trustScore -= 20;
-            analysisResult.details.redFlags.push(`Extremely high average discount of ${priceComparison.averageDiscount}% — common in scam stores`);
-          } else if (priceComparison.averageDiscount >= 50) {
-            trustScore -= 12;
-            analysisResult.details.redFlags.push(`High average discount of ${priceComparison.averageDiscount}% — unusually low prices compared to market`);
-          } else if (priceComparison.averageDiscount >= 40) {
-            trustScore -= 5;
-            analysisResult.details.redFlags.push(`Above-average discounts of ${priceComparison.averageDiscount}%`);
+          // E-COMMERCE ONLY: Pricing red flags
+          if (isCommerceForPenalties) {
+            if (priceComparison.averageDiscount >= 70) {
+              trustScore -= 20;
+              analysisResult.details.redFlags.push(`Extremely high average discount of ${priceComparison.averageDiscount}% — common in scam stores`);
+            } else if (priceComparison.averageDiscount >= 50) {
+              trustScore -= 12;
+              analysisResult.details.redFlags.push(`High average discount of ${priceComparison.averageDiscount}% — unusually low prices compared to market`);
+            } else if (priceComparison.averageDiscount >= 40) {
+              trustScore -= 5;
+              analysisResult.details.redFlags.push(`Above-average discounts of ${priceComparison.averageDiscount}%`);
+            }
+            
+            if (priceComparison.marketPosition === 'much_lower' && priceComparison.productsAnalyzed >= 2) {
+              trustScore -= 8;
+              analysisResult.details.redFlags.push('Prices significantly below market average across multiple products');
+            }
+            
+            if (priceComparison.suspiciouslyLowCount > 0) {
+              trustScore -= Math.min(15, priceComparison.suspiciouslyLowCount * 5);
+              analysisResult.details.redFlags.push(`${priceComparison.suspiciouslyLowCount} product(s) priced suspiciously below market value`);
+            }
           }
           
-          // Market position much lower: additional penalty
-          if (priceComparison.marketPosition === 'much_lower' && priceComparison.productsAnalyzed >= 2) {
-            trustScore -= 8;
-            analysisResult.details.redFlags.push('Prices significantly below market average across multiple products');
-          }
-          
-          // Suspiciously low individual products
-          if (priceComparison.suspiciouslyLowCount > 0) {
-            trustScore -= Math.min(15, priceComparison.suspiciouslyLowCount * 5);
-            analysisResult.details.redFlags.push(`${priceComparison.suspiciouslyLowCount} product(s) priced suspiciously below market value`);
-          }
-          
-          // === ADDRESS QUALITY ===
-          // Address found but doesn't look legitimate (missing city/state/country)
+          // --- GENERAL: Address quality ---
           if (contactAnalysis.hasPhysicalAddress && !contactAnalysis.addressAnalysis.looksLegitimate && 
               contactAnalysis.addressAnalysis.suspiciousPatterns.length === 0) {
             trustScore -= 10;
             analysisResult.details.redFlags.push('Physical address found but appears incomplete or invalid');
           }
           
-          // === COMPLIANCE ===
-          // E-commerce with zero compliance indicators: -8
+          // --- GENERAL: Compliance ---
           if (complianceAnalysis.complianceScore === 0) {
             trustScore -= 8;
             analysisResult.details.redFlags.push('No privacy compliance indicators (GDPR, CCPA, cookie notice)');
+          }
+          
+          // --- GENERAL: No social presence ---
+          if (!linkAnalysis.hasSocialLinks && !linkAnalysis.hasExternalReviews) {
+            trustScore -= 8;
+            analysisResult.details.redFlags.push('No social media presence or external review listings found');
           }
         }
         
