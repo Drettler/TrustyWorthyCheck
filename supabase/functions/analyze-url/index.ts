@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-04-v2';
+const ANALYSIS_CACHE_VERSION = '2026-03-04-v3';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2891,6 +2891,7 @@ Return ONLY valid JSON in this exact format:
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
         const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedRetailBrand;
+        const skipContactPenalties = isNonCommerceSite; // SaaS/tools don't need address/phone
         
         if (!skipAllPenalties) {
           // --- Address penalties (skip for SaaS/tool sites) ---
