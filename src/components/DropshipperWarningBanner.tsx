@@ -13,7 +13,10 @@ interface DropshipperWarningBannerProps {
 
 export function DropshipperWarningBanner({ dropshipperIndicators }: DropshipperWarningBannerProps) {
   if (!dropshipperIndicators) return null;
-  if (!dropshipperIndicators.isLikelyDropshipper || dropshipperIndicators.confidence !== 'high') return null;
+  if (!dropshipperIndicators.isLikelyDropshipper) return null;
+  if (dropshipperIndicators.confidence !== 'high' && dropshipperIndicators.confidence !== 'medium') return null;
+
+  const isMedium = dropshipperIndicators.confidence === 'medium';
 
   return (
     <motion.div
@@ -24,7 +27,7 @@ export function DropshipperWarningBanner({ dropshipperIndicators }: DropshipperW
       <div className="bg-warning px-4 py-2 flex items-center gap-2">
         <Package className="w-5 h-5 text-warning-foreground" />
         <span className="font-bold text-warning-foreground text-sm uppercase tracking-wide">
-          ⚠️ Likely Dropshipper Detected
+          ⚠️ {isMedium ? 'Possible Dropshipper Detected' : 'Likely Dropshipper Detected'}
         </span>
       </div>
       <div className="p-4 space-y-3">
