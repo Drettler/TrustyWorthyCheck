@@ -2685,15 +2685,9 @@ Return ONLY valid JSON in this exact format:
 
             // Remove e-commerce-only expectations for non-commerce sites (SaaS, portals, well-known sites)
             if (isNonCommerceSite) {
+              // Only strip e-commerce-specific flags for non-commerce sites
               if (f.includes('shipping')) return false;
               if (f.includes('refund') || f.includes('return policy') || f.includes('returns')) return false;
-              if (f.includes('physical address') || f.includes('no address')) return false;
-              if (f.includes('no phone')) return false;
-              if (f.includes('payment')) return false;
-              if (f.includes('no privacy policy')) return false;
-              if (f.includes('no terms')) return false;
-              if (f.includes('no about page')) return false;
-              if (f.includes('essential business pages')) return false;
             }
             
             // Established retail brands should not be penalized for country mismatch or clone detection
