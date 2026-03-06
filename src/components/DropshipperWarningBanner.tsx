@@ -13,7 +13,10 @@ interface DropshipperWarningBannerProps {
 
 export function DropshipperWarningBanner({ dropshipperIndicators }: DropshipperWarningBannerProps) {
   if (!dropshipperIndicators) return null;
-  if (!dropshipperIndicators.isLikelyDropshipper || dropshipperIndicators.confidence !== 'high') return null;
+  if (!dropshipperIndicators.isLikelyDropshipper) return null;
+  if (dropshipperIndicators.confidence !== 'high' && dropshipperIndicators.confidence !== 'medium') return null;
+
+  const isMedium = dropshipperIndicators.confidence === 'medium';
 
   return (
     <motion.div
