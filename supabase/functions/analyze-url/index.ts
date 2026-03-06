@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-04-v3';
+const ANALYSIS_CACHE_VERSION = '2026-03-06-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2685,15 +2685,9 @@ Return ONLY valid JSON in this exact format:
 
             // Remove e-commerce-only expectations for non-commerce sites (SaaS, portals, well-known sites)
             if (isNonCommerceSite) {
+              // Only strip e-commerce-specific flags for non-commerce sites
               if (f.includes('shipping')) return false;
               if (f.includes('refund') || f.includes('return policy') || f.includes('returns')) return false;
-              if (f.includes('physical address') || f.includes('no address')) return false;
-              if (f.includes('no phone')) return false;
-              if (f.includes('payment')) return false;
-              if (f.includes('no privacy policy')) return false;
-              if (f.includes('no terms')) return false;
-              if (f.includes('no about page')) return false;
-              if (f.includes('essential business pages')) return false;
             }
             
             // Established retail brands should not be penalized for country mismatch or clone detection
@@ -2891,38 +2885,39 @@ Return ONLY valid JSON in this exact format:
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
         const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedRetailBrand;
-        const skipContactPenalties = isNonCommerceSite; // SaaS/tools don't need address/phone
         
         if (!skipAllPenalties) {
-          // --- Address penalties (skip for SaaS/tool sites) ---
-          if (!skipContactPenalties) {
-            const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
-              contactAnalysis.extractedAddresses.some((addr: string) => /\s/.test(addr) && addr.length > 15);
-            
-            if (!contactAnalysis.hasPhysicalAddress) {
-              trustScore -= isCommerceForPenalties ? 20 : 10;
-              analysisResult.details.redFlags.push('No physical address found');
-            } else if (hasValidAddressData && contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
-              trustScore -= 15;
-              for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
-                analysisResult.details.redFlags.push(`Address issue: ${issue}`);
-              }
-            } else if (contactAnalysis.addressAnalysis.isPoBox) {
+          // --- Address penalties (context-aware for all sites) ---
+          const hasValidAddressData = contactAnalysis.extractedAddresses.length > 0 && 
+            contactAnalysis.extractedAddresses.some((addr: string) => /\s/.test(addr) && addr.length > 15);
+          
+          if (!contactAnalysis.hasPhysicalAddress) {
+            // E-commerce: heavy penalty. Non-commerce: lighter but still penalized
+            trustScore -= isCommerceForPenalties ? 20 : 5;
+            analysisResult.details.redFlags.push('No physical address found');
+          } else if (hasValidAddressData && contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0) {
+            // Address listed but has issues (country mismatch, conflicting data) — full penalty for all
+            trustScore -= 15;
+            for (const issue of contactAnalysis.addressAnalysis.suspiciousPatterns) {
+              analysisResult.details.redFlags.push(`Address issue: ${issue}`);
+            }
+          } else if (contactAnalysis.addressAnalysis.isPoBox) {
+            // PO Box: penalty for e-commerce, neutral for non-commerce (no storefront needed)
+            if (isCommerceForPenalties) {
               trustScore -= 10;
               analysisResult.details.redFlags.push('Uses PO Box instead of physical address');
             }
           }
           
-          // --- Phone penalty (skip for SaaS/tool sites) ---
-          if (!skipContactPenalties) {
-            if (!contactAnalysis.hasPhoneNumber) {
-              trustScore -= isCommerceForPenalties ? 10 : 5;
-              analysisResult.details.redFlags.push('No phone number found');
-            } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
-              trustScore -= 10;
-              for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
-                analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
-              }
+          // --- Phone penalty (context-aware for all sites) ---
+          if (!contactAnalysis.hasPhoneNumber) {
+            trustScore -= isCommerceForPenalties ? 10 : 3;
+            analysisResult.details.redFlags.push('No phone number found');
+          } else if (contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0) {
+            // Suspicious phone (wrong country code, premium number) — full penalty for all
+            trustScore -= 10;
+            for (const issue of contactAnalysis.phoneAnalysis.suspiciousPatterns) {
+              analysisResult.details.redFlags.push(`Phone issue: ${issue}`);
             }
           }
           
@@ -2965,19 +2960,17 @@ Return ONLY valid JSON in this exact format:
             analysisResult.details.redFlags.push('Multiple essential business pages missing');
           }
           
-          // --- Payment risk (skip for SaaS/tool sites - they don't sell products) ---
-          if (!skipContactPenalties) {
-            if (paymentAnalysis.paymentStatus === 'crypto_wire_only') {
-              trustScore -= 30;
-              analysisResult.details.redFlags.push('Only accepts cryptocurrency, wire transfer, or gift cards - no buyer protection');
-            } else if (paymentAnalysis.paymentStatus === 'unusual_only') {
-              trustScore -= 15;
-              analysisResult.details.redFlags.push('Accepts cryptocurrency payments - limited buyer protection');
-            } else if (paymentAnalysis.paymentStatus === 'unknown') {
-              trustScore -= 5;
-            } else if (paymentAnalysis.hasPaymentGateway) {
-              analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
-            }
+          // --- Payment risk (applied to ALL sites) ---
+          if (paymentAnalysis.paymentStatus === 'crypto_wire_only') {
+            trustScore -= 30;
+            analysisResult.details.redFlags.push('Only accepts cryptocurrency, wire transfer, or gift cards - no buyer protection');
+          } else if (paymentAnalysis.paymentStatus === 'unusual_only') {
+            trustScore -= 15;
+            analysisResult.details.redFlags.push('Accepts cryptocurrency payments - limited buyer protection');
+          } else if (paymentAnalysis.paymentStatus === 'unknown') {
+            trustScore -= 5;
+          } else if (paymentAnalysis.hasPaymentGateway) {
+            analysisResult.details.positiveSignals.push('Standard payment gateway detected (cards likely accepted)');
           }
           
           // E-COMMERCE ONLY: Refund policy
