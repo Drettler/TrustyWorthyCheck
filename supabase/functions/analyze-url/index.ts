@@ -2375,6 +2375,11 @@ Evaluate the extracted address and phone information:
 - Links in bio lead to legitimate destinations?
 - Signs of bot activity or fake engagement?
 
+## IMPORTANT CONTEXT RULES
+- Affiliate links (e.g., partner referral URLs) are a NORMAL and legitimate monetization method used by blogs, review sites, comparison tools, and SaaS products. Do NOT treat affiliate links as a red flag or concern.
+- For SaaS products, online tools, blogs, and informational websites: missing physical address or phone number is completely normal and should NOT be mentioned as a concern in the summary.
+- Only flag missing contact info for e-commerce sites selling physical goods.
+
 ## CRITICAL RED FLAGS TO CHECK
 - Domain mimicking known brands?
 - Recently created domain or account?
