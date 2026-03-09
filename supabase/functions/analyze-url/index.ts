@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-09-v2';
+const ANALYSIS_CACHE_VERSION = '2026-03-09-v3';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
