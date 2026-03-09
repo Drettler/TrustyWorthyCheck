@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-09-v1';
+const ANALYSIS_CACHE_VERSION = '2026-03-09-v2';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2305,6 +2305,8 @@ Perform a COMPREHENSIVE analysis covering ALL of the following:
 - Contact methods: professional email (not Gmail/Yahoo), phone, live chat?
 - About page with real team/company info and photos?
 
+IMPORTANT: For SaaS products, online tools, informational sites, and non-commerce websites, missing a physical address or phone number is NOT a red flag. These types of sites commonly operate with just email contact and do not need storefronts. Only penalize missing address/phone for e-commerce/retail sites that sell physical products.
+
 ## ADDRESS & PHONE LEGITIMACY (CRITICAL)
 Evaluate the extracted address and phone information:
 - Is there a complete physical street address (not just city/country)?
@@ -2313,7 +2315,7 @@ Evaluate the extracted address and phone information:
 - Is the phone number in a valid format for the claimed region?
 - Do the phone area code and address location match geographically?
 - For businesses claiming to be US-based: is there a US phone number and US address?
-- Missing both address AND phone is a MAJOR red flag for any business
+- Missing both address AND phone is a MAJOR red flag for e-commerce/retail sites selling physical goods, but NOT for SaaS, tools, or informational websites
 
 ## LEGITIMACY INDICATORS
 - Privacy policy present and comprehensive (not copied/generic)?
