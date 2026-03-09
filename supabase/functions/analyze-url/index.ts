@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-09-v2';
+const ANALYSIS_CACHE_VERSION = '2026-03-09-v3';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2188,7 +2188,7 @@ ADDRESS & PHONE VERIFICATION:
 - Addresses Found: ${contactAnalysis.extractedAddresses.length > 0 ? contactAnalysis.extractedAddresses.join(' | ') : 'None detected'}
 - Address Analysis: ${contactAnalysis.addressAnalysis.found ? 
     `Found=${contactAnalysis.addressAnalysis.found}, Legit=${contactAnalysis.addressAnalysis.looksLegitimate}, POBox=${contactAnalysis.addressAnalysis.isPoBox}, HasStreetNum=${contactAnalysis.addressAnalysis.hasStreetNumber}, HasCity=${contactAnalysis.addressAnalysis.hasCity}, HasPostal=${contactAnalysis.addressAnalysis.hasPostalCode}${contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.addressAnalysis.suspiciousPatterns.join(', ') : ''}` 
-    : 'No address found - MAJOR RED FLAG for business'}
+    : 'No address found (note: not a red flag for SaaS/tool/informational sites)'}
 - Phones Found: ${contactAnalysis.extractedPhones.length > 0 ? contactAnalysis.extractedPhones.join(' | ') : 'None detected'}
 - Phone Analysis: ${contactAnalysis.phoneAnalysis.found ? 
     `Found=${contactAnalysis.phoneAnalysis.found}, Legit=${contactAnalysis.phoneAnalysis.looksLegitimate}, HasCountryCode=${contactAnalysis.phoneAnalysis.hasCountryCode}, ValidFormat=${contactAnalysis.phoneAnalysis.isValidFormat}${contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.phoneAnalysis.suspiciousPatterns.join(', ') : ''}` 
@@ -2374,6 +2374,11 @@ Evaluate the extracted address and phone information:
 - Bio information complete and legitimate?
 - Links in bio lead to legitimate destinations?
 - Signs of bot activity or fake engagement?
+
+## IMPORTANT CONTEXT RULES
+- Affiliate links (e.g., partner referral URLs) are a NORMAL and legitimate monetization method used by blogs, review sites, comparison tools, and SaaS products. Do NOT treat affiliate links as a red flag or concern.
+- For SaaS products, online tools, blogs, and informational websites: missing physical address or phone number is completely normal and should NOT be mentioned as a concern in the summary.
+- Only flag missing contact info for e-commerce sites selling physical goods.
 
 ## CRITICAL RED FLAGS TO CHECK
 - Domain mimicking known brands?
