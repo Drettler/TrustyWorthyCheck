@@ -1728,12 +1728,19 @@ function detectScamPatterns(content: string, html: string): {
   }
   
   // Check for fake trust badges in HTML
-  const fakeBadgePatterns = ['trust-badge', 'secure-badge', 'mcafee', 'norton secured'];
-  for (const badge of fakeBadgePatterns) {
-    if (htmlLower.includes(badge) && !htmlLower.includes('https://www.mcafee.com') && !htmlLower.includes('https://www.norton.com')) {
-      if (badge === 'mcafee' || badge === 'norton secured') {
-        patterns.push('Possibly fake security badge');
-        break;
+  // Skip for security/trust-checking sites that naturally use trust-related CSS classes
+  const isSecuritySite = contentLower.includes('trust score') || contentLower.includes('website checker') || 
+    contentLower.includes('scam checker') || contentLower.includes('site safety') || 
+    contentLower.includes('legitimacy check') || contentLower.includes('verify website');
+  
+  if (!isSecuritySite) {
+    const fakeBadgePatterns = ['trust-badge', 'secure-badge', 'mcafee', 'norton secured'];
+    for (const badge of fakeBadgePatterns) {
+      if (htmlLower.includes(badge) && !htmlLower.includes('https://www.mcafee.com') && !htmlLower.includes('https://www.norton.com')) {
+        if (badge === 'mcafee' || badge === 'norton secured') {
+          patterns.push('Possibly fake security badge');
+          break;
+        }
       }
     }
   }
