@@ -1604,13 +1604,32 @@ function analyzePaymentMethods(content: string, html: string = ''): {
     }
   }
   
-  // Check for crypto mentions
-  for (const indicator of paymentIndicators.crypto) {
-    if (contentLower.includes(indicator)) {
-      acceptsCrypto = true;
-      if (!methods.includes('Cryptocurrency')) methods.push('Cryptocurrency');
-      break;
-    }
+  // Check for crypto mentions — but only if the site appears to ACCEPT crypto,
+  // not merely DISCUSS it (e.g. scam-checking sites, news, educational content).
+  const cryptoDiscussionContext = [
+    'crypto scam', 'cryptocurrency scam', 'bitcoin scam', 'crypto fraud',
+    'avoid crypto', 'report crypto', 'cryptocurrency fraud', 'bitcoin fraud',
+    'how to spot', 'how to avoid', 'check if', 'is it safe', 'is it legit',
+    'trust score', 'website checker', 'scam checker', 'legitimacy',
+    'verify website', 'check website', 'site safety', 'online safety',
+    'scam detection', 'fraud detection', 'protect yourself',
+  ];
+  const isDiscussingCrypto = cryptoDiscussionContext.some(ctx => contentLower.includes(ctx));
+  
+  // Only flag crypto acceptance if:
+  // 1. There are explicit payment-acceptance phrases, OR
+  // 2. The site mentions crypto AND is NOT a discussion/educational context
+  const cryptoAcceptancePhrases = [
+    'pay with crypto', 'pay with bitcoin', 'we accept bitcoin',
+    'we accept crypto', 'checkout with crypto', 'crypto checkout',
+    'bitcoin accepted', 'btc accepted', 'pay in crypto',
+    'cryptocurrency accepted', 'crypto payments accepted',
+  ];
+  const hasExplicitCryptoAcceptance = cryptoAcceptancePhrases.some(p => contentLower.includes(p));
+  
+  if (hasExplicitCryptoAcceptance || (!isDiscussingCrypto && paymentIndicators.crypto.some(ind => contentLower.includes(ind)))) {
+    acceptsCrypto = true;
+    if (!methods.includes('Cryptocurrency')) methods.push('Cryptocurrency');
   }
   
   // Check for unusual/risky payment methods
