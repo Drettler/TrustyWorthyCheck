@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-06-v1';
+const ANALYSIS_CACHE_VERSION = '2026-03-09-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -1457,7 +1457,10 @@ function analyzeContactInfo(content: string, links: string[]): {
         /^[A-Za-z0-9+/=]{20,}$/.test(cleaned) || // Base64-like
         /^[a-f0-9]{8}-[a-f0-9]{4}-/i.test(cleaned) || // UUID
         !/\s/.test(cleaned) || // No spaces = not a real address
-        /^[A-Z0-9]{15,}$/i.test(cleaned); // Long alphanumeric without spaces
+        /^[A-Z0-9]{15,}$/i.test(cleaned) || // Long alphanumeric without spaces
+        /\bno\b/i.test(cleaned) || // Contains "no" — likely UI text like "No complicated steps"
+        /\bnewline\b|\n|\r/i.test(cleaned) || // Contains newlines — scraped garbage
+        cleaned.split(/\s+/).length < 3; // Fewer than 3 words — too short to be a real address
       
       if (cleaned.length > 10 && cleaned.length < 200 && !extractedAddresses.includes(cleaned) && !isGarbage) {
         extractedAddresses.push(cleaned);
@@ -1604,13 +1607,32 @@ function analyzePaymentMethods(content: string, html: string = ''): {
     }
   }
   
-  // Check for crypto mentions
-  for (const indicator of paymentIndicators.crypto) {
-    if (contentLower.includes(indicator)) {
-      acceptsCrypto = true;
-      if (!methods.includes('Cryptocurrency')) methods.push('Cryptocurrency');
-      break;
-    }
+  // Check for crypto mentions — but only if the site appears to ACCEPT crypto,
+  // not merely DISCUSS it (e.g. scam-checking sites, news, educational content).
+  const cryptoDiscussionContext = [
+    'crypto scam', 'cryptocurrency scam', 'bitcoin scam', 'crypto fraud',
+    'avoid crypto', 'report crypto', 'cryptocurrency fraud', 'bitcoin fraud',
+    'how to spot', 'how to avoid', 'check if', 'is it safe', 'is it legit',
+    'trust score', 'website checker', 'scam checker', 'legitimacy',
+    'verify website', 'check website', 'site safety', 'online safety',
+    'scam detection', 'fraud detection', 'protect yourself',
+  ];
+  const isDiscussingCrypto = cryptoDiscussionContext.some(ctx => contentLower.includes(ctx));
+  
+  // Only flag crypto acceptance if:
+  // 1. There are explicit payment-acceptance phrases, OR
+  // 2. The site mentions crypto AND is NOT a discussion/educational context
+  const cryptoAcceptancePhrases = [
+    'pay with crypto', 'pay with bitcoin', 'we accept bitcoin',
+    'we accept crypto', 'checkout with crypto', 'crypto checkout',
+    'bitcoin accepted', 'btc accepted', 'pay in crypto',
+    'cryptocurrency accepted', 'crypto payments accepted',
+  ];
+  const hasExplicitCryptoAcceptance = cryptoAcceptancePhrases.some(p => contentLower.includes(p));
+  
+  if (hasExplicitCryptoAcceptance || (!isDiscussingCrypto && paymentIndicators.crypto.some(ind => contentLower.includes(ind)))) {
+    acceptsCrypto = true;
+    if (!methods.includes('Cryptocurrency')) methods.push('Cryptocurrency');
   }
   
   // Check for unusual/risky payment methods
@@ -1706,12 +1728,19 @@ function detectScamPatterns(content: string, html: string): {
   }
   
   // Check for fake trust badges in HTML
-  const fakeBadgePatterns = ['trust-badge', 'secure-badge', 'mcafee', 'norton secured'];
-  for (const badge of fakeBadgePatterns) {
-    if (htmlLower.includes(badge) && !htmlLower.includes('https://www.mcafee.com') && !htmlLower.includes('https://www.norton.com')) {
-      if (badge === 'mcafee' || badge === 'norton secured') {
-        patterns.push('Possibly fake security badge');
-        break;
+  // Skip for security/trust-checking sites that naturally use trust-related CSS classes
+  const isSecuritySite = contentLower.includes('trust score') || contentLower.includes('website checker') || 
+    contentLower.includes('scam checker') || contentLower.includes('site safety') || 
+    contentLower.includes('legitimacy check') || contentLower.includes('verify website');
+  
+  if (!isSecuritySite) {
+    const fakeBadgePatterns = ['trust-badge', 'secure-badge', 'mcafee', 'norton secured'];
+    for (const badge of fakeBadgePatterns) {
+      if (htmlLower.includes(badge) && !htmlLower.includes('https://www.mcafee.com') && !htmlLower.includes('https://www.norton.com')) {
+        if (badge === 'mcafee' || badge === 'norton secured') {
+          patterns.push('Possibly fake security badge');
+          break;
+        }
       }
     }
   }
