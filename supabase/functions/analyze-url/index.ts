@@ -2188,7 +2188,7 @@ ADDRESS & PHONE VERIFICATION:
 - Addresses Found: ${contactAnalysis.extractedAddresses.length > 0 ? contactAnalysis.extractedAddresses.join(' | ') : 'None detected'}
 - Address Analysis: ${contactAnalysis.addressAnalysis.found ? 
     `Found=${contactAnalysis.addressAnalysis.found}, Legit=${contactAnalysis.addressAnalysis.looksLegitimate}, POBox=${contactAnalysis.addressAnalysis.isPoBox}, HasStreetNum=${contactAnalysis.addressAnalysis.hasStreetNumber}, HasCity=${contactAnalysis.addressAnalysis.hasCity}, HasPostal=${contactAnalysis.addressAnalysis.hasPostalCode}${contactAnalysis.addressAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.addressAnalysis.suspiciousPatterns.join(', ') : ''}` 
-    : 'No address found - MAJOR RED FLAG for business'}
+    : 'No address found (note: not a red flag for SaaS/tool/informational sites)'}
 - Phones Found: ${contactAnalysis.extractedPhones.length > 0 ? contactAnalysis.extractedPhones.join(' | ') : 'None detected'}
 - Phone Analysis: ${contactAnalysis.phoneAnalysis.found ? 
     `Found=${contactAnalysis.phoneAnalysis.found}, Legit=${contactAnalysis.phoneAnalysis.looksLegitimate}, HasCountryCode=${contactAnalysis.phoneAnalysis.hasCountryCode}, ValidFormat=${contactAnalysis.phoneAnalysis.isValidFormat}${contactAnalysis.phoneAnalysis.suspiciousPatterns.length > 0 ? ', Issues: ' + contactAnalysis.phoneAnalysis.suspiciousPatterns.join(', ') : ''}` 
