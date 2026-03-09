@@ -1457,7 +1457,10 @@ function analyzeContactInfo(content: string, links: string[]): {
         /^[A-Za-z0-9+/=]{20,}$/.test(cleaned) || // Base64-like
         /^[a-f0-9]{8}-[a-f0-9]{4}-/i.test(cleaned) || // UUID
         !/\s/.test(cleaned) || // No spaces = not a real address
-        /^[A-Z0-9]{15,}$/i.test(cleaned); // Long alphanumeric without spaces
+        /^[A-Z0-9]{15,}$/i.test(cleaned) || // Long alphanumeric without spaces
+        /\bno\b/i.test(cleaned) || // Contains "no" — likely UI text like "No complicated steps"
+        /\bnewline\b|\n|\r/i.test(cleaned) || // Contains newlines — scraped garbage
+        cleaned.split(/\s+/).length < 3; // Fewer than 3 words — too short to be a real address
       
       if (cleaned.length > 10 && cleaned.length < 200 && !extractedAddresses.includes(cleaned) && !isGarbage) {
         extractedAddresses.push(cleaned);
