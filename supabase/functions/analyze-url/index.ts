@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-09-v3';
+const ANALYSIS_CACHE_VERSION = '2026-03-10-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2375,10 +2375,13 @@ Evaluate the extracted address and phone information:
 - Links in bio lead to legitimate destinations?
 - Signs of bot activity or fake engagement?
 
-## IMPORTANT CONTEXT RULES
-- Affiliate links (e.g., partner referral URLs) are a NORMAL and legitimate monetization method used by blogs, review sites, comparison tools, and SaaS products. Do NOT treat affiliate links as a red flag or concern.
-- For SaaS products, online tools, blogs, and informational websites: missing physical address or phone number is completely normal and should NOT be mentioned as a concern in the summary.
+## IMPORTANT CONTEXT RULES — READ CAREFULLY
+- Affiliate links (e.g., partner referral URLs) are a NORMAL and legitimate monetization method. Do NOT mention affiliate links as a concern or red flag under ANY circumstances.
+- For SaaS products, online tools, blogs, and informational websites: missing physical address, phone number, or business registration details are completely normal. Do NOT mention these as concerns in the summary.
 - Only flag missing contact info for e-commerce sites selling physical goods.
+- Domain age alone is NOT a red flag for legitimate-looking sites with professional content and clear purpose. Many legitimate businesses have newer domains. Only mention domain age as a concern if COMBINED with multiple other serious red flags.
+- Do NOT use phrases like "raise questions about", "raise concerns about", or "raise some questions" regarding affiliate links, missing business registration, or missing physical contact info for non-e-commerce sites.
+- The summary should focus on ACTUAL risks, not theoretical transparency concerns. If a site has a clear purpose, professional design, and useful content, the summary should reflect that positively.
 
 ## CRITICAL RED FLAGS TO CHECK
 - Domain mimicking known brands?
