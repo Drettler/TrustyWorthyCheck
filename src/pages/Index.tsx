@@ -156,8 +156,8 @@ export default function Index() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-secondary/5 to-background pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-primary/10 to-transparent rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Animated gradient blobs */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none">
+        {/* Animated gradient blobs - hidden on mobile for performance */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none hidden md:block">
           <div className="absolute w-[500px] h-[500px] -left-[250px] -top-[100px] bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full blur-[80px] animate-blob-drift" />
           <div className="absolute w-[400px] h-[400px] -left-[100px] -top-[50px] bg-gradient-to-br from-secondary/15 via-secondary/5 to-transparent rounded-full blur-[60px] animate-blob-drift-reverse" />
           <div
@@ -166,26 +166,52 @@ export default function Index() {
           />
         </div>
 
-        <div className="container relative z-10 px-4 pt-12 pb-8 md:pt-20 md:pb-12">
-          <motion.div className="text-center mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            {/* Headline */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+        <div className="container relative z-10 px-4 pt-6 pb-4 md:pt-20 md:pb-12">
+          <motion.div className="text-center mb-4 md:mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            {/* Headline - smaller on mobile to keep input above fold */}
+            <h1 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold mb-2 md:mb-4 leading-tight">
               Should I Trust This Site? <span className="inline-block hover-wiggle">🛡️</span>
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
-              Check a website before you buy, stay ahead of scams, and save money while you shop —{" "}
-              <span className="text-foreground font-medium">all in under 3 minutes.</span>
+            {/* Subheadline - condensed on mobile */}
+            <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto mb-4 md:mb-6">
+              Check a website before you buy —{" "}
+              <span className="text-foreground font-medium">results in seconds.</span>
             </p>
 
-            {/* Pill Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+            {/* Hero URL Input - thumb-friendly on mobile */}
+            <form onSubmit={handleHeroSubmit} className="mt-4 md:mt-8 max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    ref={heroInputRef}
+                    type="url"
+                    inputMode="url"
+                    autoComplete="url"
+                    placeholder="Paste any website URL..."
+                    value={heroUrl}
+                    onChange={(e) => setHeroUrl(e.target.value)}
+                    className="pl-12 h-14 md:h-14 text-base rounded-2xl border-2 border-border/60 bg-card/80 backdrop-blur-sm shadow-lg focus:border-primary/50 focus:shadow-xl focus:shadow-primary/10 transition-all"
+                  />
+                </div>
+                <Button type="submit" variant="hero" size="lg" className="h-14 w-full sm:w-auto px-6 md:px-8 rounded-2xl text-base">
+                  <Shield className="w-5 h-5 mr-1" />
+                  Check Now
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Free • No signup required • Results in seconds
+              </p>
+            </form>
+
+            {/* Pill Badges - hidden on mobile to keep input above fold, shown on desktop */}
+            <div className="hidden md:flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-6">
               <motion.span
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-success/10 border border-success/30 text-success font-medium text-xs md:text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/10 border border-success/30 text-success font-medium text-sm"
               >
                 🧒 Teen-Safe
               </motion.span>
@@ -193,7 +219,7 @@ export default function Index() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.15 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-medium text-xs md:text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-medium text-sm"
               >
                 👪 Parent-Approved
               </motion.span>
@@ -201,36 +227,11 @@ export default function Index() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-medium text-xs md:text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-medium text-sm"
               >
                 🤖 No Tech Skills Needed
               </motion.span>
             </div>
-
-            {/* Hero URL Input */}
-            <form onSubmit={handleHeroSubmit} className="mt-8 max-w-2xl mx-auto">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-                  <Input
-                    ref={heroInputRef}
-                    type="text"
-                    placeholder="Paste any website URL to check..."
-                    value={heroUrl}
-                    onChange={(e) => setHeroUrl(e.target.value)}
-                    className="pl-12 h-14 text-base md:text-lg rounded-2xl border-2 border-border/60 bg-card/80 backdrop-blur-sm shadow-lg focus:border-primary/50 focus:shadow-xl focus:shadow-primary/10 transition-all"
-                  />
-                </div>
-                <Button type="submit" variant="hero" size="lg" className="h-14 px-6 md:px-8 rounded-2xl text-base">
-                  <Shield className="w-5 h-5 mr-1" />
-                  <span className="hidden sm:inline">Check Now</span>
-                  <span className="sm:hidden">Check</span>
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Free • No signup required • Results in seconds
-              </p>
-            </form>
           </motion.div>
         </div>
       </section>
