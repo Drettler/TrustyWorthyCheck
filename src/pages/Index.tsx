@@ -105,13 +105,8 @@ export default function Index() {
       checker.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     
-    // Update URL params so UrlChecker picks it up and auto-runs
-    const params = new URLSearchParams(window.location.search);
-    params.set("check", trimmed);
-    window.history.replaceState({}, "", `?${params.toString()}#checker`);
-    
-    // Dispatch a popstate-like event so UrlChecker re-reads searchParams
-    window.dispatchEvent(new Event("urlcheck"));
+    // Use navigate to update searchParams reactively (UrlChecker watches ?check=)
+    navigate(`/?check=${encodeURIComponent(trimmed)}`, { replace: true });
   };
 
   const faqSchema = {
