@@ -198,6 +198,31 @@ export default function Index() {
                 🤖 No Tech Skills Needed
               </motion.span>
             </div>
+
+            {/* Hero URL Input */}
+            <form onSubmit={handleHeroSubmit} className="mt-8 max-w-2xl mx-auto">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    ref={heroInputRef}
+                    type="text"
+                    placeholder="Paste any website URL to check..."
+                    value={heroUrl}
+                    onChange={(e) => setHeroUrl(e.target.value)}
+                    className="pl-12 h-14 text-base md:text-lg rounded-2xl border-2 border-border/60 bg-card/80 backdrop-blur-sm shadow-lg focus:border-primary/50 focus:shadow-xl focus:shadow-primary/10 transition-all"
+                  />
+                </div>
+                <Button type="submit" variant="hero" size="lg" className="h-14 px-6 md:px-8 rounded-2xl text-base">
+                  <Shield className="w-5 h-5 mr-1" />
+                  <span className="hidden sm:inline">Check Now</span>
+                  <span className="sm:hidden">Check</span>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Free • No signup required • Results in seconds
+              </p>
+            </form>
           </motion.div>
         </div>
       </section>
