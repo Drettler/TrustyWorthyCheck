@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -7,8 +7,9 @@ import { FeatureCard } from "@/components/FeatureCard";
 import { StepGuide } from "@/components/StepGuide";
 import { UrlChecker } from "@/components/UrlChecker";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SEO } from "@/components/SEO";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ExtensionPrompt } from "@/components/ExtensionPrompt";
 
 const features = [
