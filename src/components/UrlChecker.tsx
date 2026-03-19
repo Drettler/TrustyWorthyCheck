@@ -58,11 +58,11 @@ export function UrlChecker() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Handle ?check= URL parameter from Chrome extension
+  // Handle ?check= URL parameter from Chrome extension or hero input
   useEffect(() => {
     const checkUrl = searchParams.get('check');
-    if (checkUrl && !hasAutoChecked.current) {
-      hasAutoChecked.current = true;
+    if (checkUrl && hasAutoChecked.current !== checkUrl) {
+      hasAutoChecked.current = checkUrl;
       setUrl(checkUrl);
 
       // Clear ONLY the `check` parameter (preserve others like ?testReport=true)
