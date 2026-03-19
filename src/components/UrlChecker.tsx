@@ -34,7 +34,7 @@ export function UrlChecker() {
   const { addToHistory } = useUrlHistory();
   const { toast } = useToast();
   const { isLimitReached, useCheck, resetForDemo, checksRemaining, maxChecks, updateFromResponse } = useDailyChecks();
-  const hasAutoChecked = useRef(false);
+  const hasAutoChecked = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputHighlight, setInputHighlight] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
