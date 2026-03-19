@@ -96,9 +96,22 @@ export default function Index() {
 
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (heroUrl.trim()) {
-      navigate(`/?check=${encodeURIComponent(heroUrl.trim())}#checker`);
+    const trimmed = heroUrl.trim();
+    if (!trimmed) return;
+    
+    // Scroll to checker smoothly
+    const checker = document.getElementById("checker");
+    if (checker) {
+      checker.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+    
+    // Update URL params so UrlChecker picks it up and auto-runs
+    const params = new URLSearchParams(window.location.search);
+    params.set("check", trimmed);
+    window.history.replaceState({}, "", `?${params.toString()}#checker`);
+    
+    // Dispatch a popstate-like event so UrlChecker re-reads searchParams
+    window.dispatchEvent(new Event("urlcheck"));
   };
 
   const faqSchema = {
