@@ -83,10 +83,21 @@ const controlPanelCards = [
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
+  const [heroUrl, setHeroUrl] = useState("");
+  const heroInputRef = useRef<HTMLInputElement>(null);
+
   const scrollToChecker = () => {
     const checker = document.getElementById("checker");
     if (checker) {
       checker.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const handleHeroSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (heroUrl.trim()) {
+      navigate(`/website-checker?url=${encodeURIComponent(heroUrl.trim())}`);
     }
   };
 
