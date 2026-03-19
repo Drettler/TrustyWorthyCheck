@@ -97,7 +97,7 @@ export default function Index() {
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (heroUrl.trim()) {
-      navigate(`/website-checker?url=${encodeURIComponent(heroUrl.trim())}`);
+      navigate(`/?check=${encodeURIComponent(heroUrl.trim())}#checker`);
     }
   };
 
