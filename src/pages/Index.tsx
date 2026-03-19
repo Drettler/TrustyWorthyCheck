@@ -96,9 +96,17 @@ export default function Index() {
 
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (heroUrl.trim()) {
-      navigate(`/?check=${encodeURIComponent(heroUrl.trim())}#checker`);
+    const trimmed = heroUrl.trim();
+    if (!trimmed) return;
+    
+    // Scroll to checker smoothly
+    const checker = document.getElementById("checker");
+    if (checker) {
+      checker.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+    
+    // Use navigate to update searchParams reactively (UrlChecker watches ?check=)
+    navigate(`/?check=${encodeURIComponent(trimmed)}`, { replace: true });
   };
 
   const faqSchema = {
