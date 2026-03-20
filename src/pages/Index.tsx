@@ -236,21 +236,36 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Primary Control Panel */}
-      <section className="relative z-10 -mt-2 pb-12">
+      {/* URL Checker — immediately after hero for seamless flow */}
+      <section className="relative z-10 -mt-2 pb-8">
         <div className="container px-4">
           <motion.div
+            id="checker"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="text-center mb-8"
+            className="max-w-4xl mx-auto"
+          >
+            <UrlChecker />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section className="relative z-10 pb-12">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            className="text-center mb-6"
           >
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-              What do you want to do?
+              What else can you do?
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-w-6xl mx-auto mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-w-6xl mx-auto">
             {controlPanelCards.map((card, index) => {
               const Icon = card.icon;
               const isScrollAction = card.action === "scroll";
@@ -258,9 +273,10 @@ export default function Index() {
               return (
                 <motion.div
                   key={card.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ delay: index * 0.08 }}
                   className={`
                     group relative overflow-hidden rounded-2xl bg-card border-2 
                     ${card.color === "primary" ? "border-primary/20 hover:border-primary/40" : ""}
@@ -282,7 +298,6 @@ export default function Index() {
                   />
                   
                   <div className="relative z-10">
-                    {/* Icon */}
                     <div 
                       className={`
                         w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-4
@@ -295,17 +310,14 @@ export default function Index() {
                       <span className="text-2xl md:text-3xl">{card.emoji}</span>
                     </div>
 
-                    {/* Title */}
                     <h3 className="font-display text-lg md:text-xl font-bold mb-2 text-foreground">
                       {card.title}
                     </h3>
 
-                    {/* Description */}
                     <p className="text-muted-foreground text-sm mb-4 md:mb-5 line-clamp-2">
                       {card.description}
                     </p>
 
-                    {/* Button */}
                     {isScrollAction ? (
                       <Button
                         onClick={scrollToChecker}
@@ -338,17 +350,6 @@ export default function Index() {
               );
             })}
           </div>
-
-          {/* URL Checker */}
-          <motion.div
-            id="checker"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="max-w-4xl mx-auto"
-          >
-            <UrlChecker />
-          </motion.div>
         </div>
       </section>
 
@@ -390,61 +391,16 @@ export default function Index() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 md:mb-16"
+            viewport={{ once: true, amount: 0.2 }}
+            className="text-center mb-10"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Simple as 1-2-3</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               No complicated steps. Just paste, wait, and know if it's safe.
             </p>
-            <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-1">
-              <span>⭐</span> Trusted by parents and teens to avoid sketchy online sites every day.
-            </p>
           </motion.div>
 
-          {/* Step Guide */}
           <StepGuide />
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-12">
-            {[
-              {
-                step: "1",
-                emoji: "📋",
-                title: "Paste the Link",
-                description: "Copy the website address from your browser or message and paste it in our checker.",
-              },
-              {
-                step: "2",
-                emoji: "📡",
-                title: "We Do the Work",
-                description: "Our system checks security, reviews business info, and scans for common scam patterns.",
-              },
-              {
-                step: "3",
-                emoji: "✅",
-                title: "Get Your Answer",
-                description: "See a clear, simple verdict with explanations you can actually understand.",
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
-                className="text-center"
-              >
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-6 border-2 border-border">
-                  <span className="text-4xl">{item.emoji}</span>
-                </div>
-                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm mb-4">
-                  {item.step}
-                </div>
-                <h3 className="font-display font-bold text-xl mb-3">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
