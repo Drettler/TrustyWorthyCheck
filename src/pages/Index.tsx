@@ -236,21 +236,36 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Primary Control Panel */}
-      <section className="relative z-10 -mt-2 pb-12">
+      {/* URL Checker — immediately after hero for seamless flow */}
+      <section className="relative z-10 -mt-2 pb-8">
         <div className="container px-4">
           <motion.div
+            id="checker"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="text-center mb-8"
+            className="max-w-4xl mx-auto"
+          >
+            <UrlChecker />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section className="relative z-10 pb-12">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            className="text-center mb-6"
           >
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-              What do you want to do?
+              What else can you do?
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-w-6xl mx-auto mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-w-6xl mx-auto">
             {controlPanelCards.map((card, index) => {
               const Icon = card.icon;
               const isScrollAction = card.action === "scroll";
@@ -258,9 +273,10 @@ export default function Index() {
               return (
                 <motion.div
                   key={card.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ delay: index * 0.08 }}
                   className={`
                     group relative overflow-hidden rounded-2xl bg-card border-2 
                     ${card.color === "primary" ? "border-primary/20 hover:border-primary/40" : ""}
@@ -282,7 +298,6 @@ export default function Index() {
                   />
                   
                   <div className="relative z-10">
-                    {/* Icon */}
                     <div 
                       className={`
                         w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-4
@@ -295,17 +310,14 @@ export default function Index() {
                       <span className="text-2xl md:text-3xl">{card.emoji}</span>
                     </div>
 
-                    {/* Title */}
                     <h3 className="font-display text-lg md:text-xl font-bold mb-2 text-foreground">
                       {card.title}
                     </h3>
 
-                    {/* Description */}
                     <p className="text-muted-foreground text-sm mb-4 md:mb-5 line-clamp-2">
                       {card.description}
                     </p>
 
-                    {/* Button */}
                     {isScrollAction ? (
                       <Button
                         onClick={scrollToChecker}
@@ -338,17 +350,6 @@ export default function Index() {
               );
             })}
           </div>
-
-          {/* URL Checker */}
-          <motion.div
-            id="checker"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="max-w-4xl mx-auto"
-          >
-            <UrlChecker />
-          </motion.div>
         </div>
       </section>
 
