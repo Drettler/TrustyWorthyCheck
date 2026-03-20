@@ -391,61 +391,16 @@ export default function Index() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 md:mb-16"
+            viewport={{ once: true, amount: 0.2 }}
+            className="text-center mb-10"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Simple as 1-2-3</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               No complicated steps. Just paste, wait, and know if it's safe.
             </p>
-            <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-1">
-              <span>⭐</span> Trusted by parents and teens to avoid sketchy online sites every day.
-            </p>
           </motion.div>
 
-          {/* Step Guide */}
           <StepGuide />
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-12">
-            {[
-              {
-                step: "1",
-                emoji: "📋",
-                title: "Paste the Link",
-                description: "Copy the website address from your browser or message and paste it in our checker.",
-              },
-              {
-                step: "2",
-                emoji: "📡",
-                title: "We Do the Work",
-                description: "Our system checks security, reviews business info, and scans for common scam patterns.",
-              },
-              {
-                step: "3",
-                emoji: "✅",
-                title: "Get Your Answer",
-                description: "See a clear, simple verdict with explanations you can actually understand.",
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
-                className="text-center"
-              >
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-6 border-2 border-border">
-                  <span className="text-4xl">{item.emoji}</span>
-                </div>
-                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm mb-4">
-                  {item.step}
-                </div>
-                <h3 className="font-display font-bold text-xl mb-3">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
