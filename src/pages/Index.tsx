@@ -186,7 +186,7 @@ export default function Index() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                   <Input
                     ref={heroInputRef}
-                    type="url"
+                    type="text"
                     inputMode="url"
                     autoComplete="url"
                     placeholder="Paste any website URL..."
