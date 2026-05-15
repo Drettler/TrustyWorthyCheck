@@ -72,7 +72,7 @@ export default function About() {
   return (
     <div className="min-h-screen bg-background">
       <SEO 
-        title="About Us | TrustworthyCheck - Website Safety Experts"
+        title="About Us"
         description="Learn about TrustworthyCheck's mission to protect people from online scams, phishing, and fraudulent websites. Free tools for everyone."
         canonical="https://trustworthycheck.com/about"
       />

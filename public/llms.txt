@@ -1,0 +1,22 @@
+# TrustworthyCheck
+
+> Free website safety checker that helps you spot scams, fake stores, and fraudulent websites before they cost you money. Scans any URL for trust signals in under 2 minutes.
+
+TrustworthyCheck analyzes domain age, SSL certificates, business registration, scam reports, and reputation databases to give any website a trust score and clear safety verdict. Built for shoppers, parents, and anyone who wants to verify a site before they click, buy, or share personal info.
+
+## Pages
+
+- [Home](/): Paste any URL and get an instant trust score and safety verdict.
+- [Website Checker](/website-checker): Free scanner that checks URLs for scams, phishing, and malware.
+- [Threat Feeds](/threats-feed): Live feed of newly reported scam sites and emerging fraud patterns.
+- [Recent Reports](/recent-reports): Community-submitted reports of suspicious websites.
+- [Save Money](/save-money): Cashback and savings on verified safe stores.
+- [Protect Yourself](/protect-yourself): Guides for spotting scams and shopping safely online.
+- [About](/about): Our mission to protect people from online fraud.
+
+## Optional
+
+- [Terms](/terms): Terms of service.
+- [Privacy](/privacy): Privacy policy.
+- [Disclosure](/disclosure): Affiliate disclosure.
+- [Disclaimer](/disclaimer): Site disclaimer.

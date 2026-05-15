@@ -37,6 +37,7 @@ export function SEO({ title, description, canonical, jsonLd }: SEOProps) {
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:type', content: 'website' },
+      ...(canonical ? [{ property: 'og:url', content: canonical }] : []),
     ];
 
     ogTags.forEach(({ property, content }) => {
