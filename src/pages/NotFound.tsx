@@ -14,6 +14,7 @@ const NotFound = () => {
       <SEO 
         title="Page Not Found"
         description="The page you're looking for doesn't exist. Return to TrustworthyCheck to check website safety."
+        canonical="https://trustworthycheck.com/404"
       />
       <div className="flex min-h-screen items-center justify-center bg-muted">
         <div className="text-center">

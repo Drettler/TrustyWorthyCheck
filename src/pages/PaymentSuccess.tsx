@@ -63,6 +63,7 @@ export default function PaymentSuccess() {
       <SEO 
         title="Payment Successful"
         description="Your payment was successful. Access your full website safety report now."
+        canonical="https://trustworthycheck.com/payment-success"
       />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
