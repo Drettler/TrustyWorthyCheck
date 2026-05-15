@@ -144,14 +144,35 @@ export function UrlChecker() {
     return () => clearInterval(interval);
   }, [isLoading]);
 
-  // Basic URL validation
+  // URL validation aligned with server-side validator (analyze-url):
+  // - accepts bare domains, IDN/Unicode, IPs, ports, paths, queries
+  // - rejects spaces, missing TLD/host, non-http(s) schemes, oversized inputs
   const isValidUrl = (input: string): boolean => {
     const trimmed = input.trim();
-    // Must not contain spaces (except possibly in encoded form)
-    if (trimmed.includes(' ')) return false;
-    // Must look like a domain or URL
-    const urlPattern = /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/.*)?$/i;
-    return urlPattern.test(trimmed);
+    if (!trimmed || trimmed.length > 2048) return false;
+    if (/\s/.test(trimmed)) return false;
+
+    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    let parsed: URL;
+    try {
+      parsed = new URL(withProto);
+    } catch {
+      return false;
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+
+    const host = parsed.hostname;
+    if (!host) return false;
+
+    // IPv4 literal
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
+    // IPv6 literal (URL parser strips brackets from .hostname)
+    const ipv6 = host.includes(':');
+    // Hostname must contain a dot (TLD) and at least 2 chars after the last dot,
+    // unless it's an IP literal. Allows IDN/punycode and any registered TLD.
+    const hasTld = /\.[\p{L}\p{N}-]{2,}$/u.test(host);
+
+    return ipv4 || ipv6 || hasTld;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
