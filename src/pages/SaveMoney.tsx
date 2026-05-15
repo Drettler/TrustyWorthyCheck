@@ -215,7 +215,7 @@ export default function SaveMoney() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2 }}
-                className="hidden md:flex items-center text-muted-foreground/50"
+                className="hidden md:flex items-center text-muted-foreground"
               >
                 <Zap className="w-8 h-8" />
               </motion.div>
@@ -242,7 +242,7 @@ export default function SaveMoney() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 }}
-                className="hidden md:flex items-center text-muted-foreground/50"
+                className="hidden md:flex items-center text-muted-foreground"
               >
                 <Zap className="w-8 h-8" />
               </motion.div>

@@ -150,6 +150,7 @@ export default function Index() {
       />
       <Header />
 
+      <main>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Soft gradient background */}
@@ -589,6 +590,8 @@ export default function Index() {
           </motion.div>
         </div>
       </section>
+
+      </main>
 
       <Footer />
       <ExtensionPrompt />

@@ -347,7 +347,7 @@ export default function ThreatFeeds() {
             animate={{ opacity: 1 }}
             className="text-center py-16"
           >
-            <Shield className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+            <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">No Threats Found</h2>
             <p className="text-muted-foreground mb-6">
               {searchQuery || selectedType || selectedSeverity

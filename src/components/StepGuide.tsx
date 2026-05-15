@@ -40,7 +40,7 @@ export function StepGuide() {
           
           {/* Connector arrow (hidden on mobile, hidden on last item) */}
           {index < steps.length - 1 && (
-            <div className="hidden md:block text-muted-foreground/40 text-xl">→</div>
+            <div className="hidden md:block text-muted-foreground text-xl">→</div>
           )}
         </motion.div>
       ))}
