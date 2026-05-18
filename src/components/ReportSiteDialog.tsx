@@ -123,7 +123,7 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) resetForm(); onOpenChange(open); }}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-[34rem] max-h-[calc(100dvh-1rem)] overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)]">
+      <DialogContent className="!flex !max-w-[34rem] flex-col gap-0 overflow-hidden p-0 w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)]">
         <DialogHeader className="border-b border-border/60 px-4 py-4 pr-12 sm:px-5">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${isFeedbackMode ? 'bg-primary/10' : 'bg-danger/10'}`}>
