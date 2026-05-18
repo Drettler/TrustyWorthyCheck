@@ -1,0 +1,1 @@
+DELETE FROM public.threat_feeds WHERE title ILIKE '%page not found%' OR title ILIKE '%404%' OR title ILIKE '%access denied%' OR title ILIKE '%not found%' OR description ILIKE '%page not found%';
