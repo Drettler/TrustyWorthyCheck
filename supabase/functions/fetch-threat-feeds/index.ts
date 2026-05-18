@@ -121,32 +121,53 @@ Deno.serve(async (req) => {
   }
 });
 
+// Junk titles/descriptions that scrapers sometimes return when a source page
+// is unavailable or behind a block. Filtering these protects the feed's credibility.
+const JUNK_PATTERNS = [
+  /page not found/i,
+  /\b404\b/,
+  /access denied/i,
+  /not found/i,
+  /forbidden/i,
+  /are you a robot/i,
+  /verify you are human/i,
+  /enable javascript/i,
+  /just a moment/i,
+  /attention required/i,
+  /cloudflare/i,
+];
+
+function isJunkEntry(title: string, description: string): boolean {
+  const text = `${title} ${description}`.trim();
+  if (!title || title.length < 8) return true;
+  return JUNK_PATTERNS.some((re) => re.test(text));
+}
+
 function extractThreatsFromContent(content: string, source: { name: string; url: string; type: string }): any[] {
   const threats: any[] = [];
-  
-  // Simple extraction - look for patterns that indicate threats
-  const lines = content.split('\n').filter(line => line.trim());
-  
-  // Look for headings and descriptions
+
+  const lines = content.split('\n').filter((line) => line.trim());
+
   let currentTitle = '';
   let currentDescription = '';
-  
+
+  const pushIfValid = () => {
+    if (currentTitle && currentDescription && !isJunkEntry(currentTitle, currentDescription)) {
+      threats.push(createThreatEntry(currentTitle, currentDescription, source));
+    }
+  };
+
   for (const line of lines) {
     if (line.startsWith('#')) {
-      if (currentTitle && currentDescription) {
-        threats.push(createThreatEntry(currentTitle, currentDescription, source));
-      }
+      pushIfValid();
       currentTitle = line.replace(/^#+\s*/, '').trim();
       currentDescription = '';
     } else if (currentTitle && line.length > 50) {
       currentDescription += ' ' + line;
     }
   }
-  
-  // Add last entry
-  if (currentTitle && currentDescription) {
-    threats.push(createThreatEntry(currentTitle, currentDescription, source));
-  }
+
+  pushIfValid();
 
   return threats.slice(0, 5); // Limit entries per source
 }
