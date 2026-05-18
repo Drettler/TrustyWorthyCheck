@@ -84,9 +84,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Filter out junk entries (scraper artifacts like "Page not found", "404", etc.)
+    // that hurt the credibility of the feed if they ever slip into the DB.
+    const JUNK_TITLE_RE = /(page not found|\b404\b|access denied|^not found$|forbidden|are you a robot|verify you are human|just a moment|attention required|cloudflare)/i;
+    const cleaned = (data || []).filter((item) => {
+      const title = (item.title || '').trim();
+      if (!title || title.length < 8) return false;
+      return !JUNK_TITLE_RE.test(title);
+    });
+
     // Return sanitized data with pagination info
     const response = {
-      threats: data?.map((item) => ({
+      threats: cleaned.map((item) => ({
         id: item.id,
         title: item.title,
         description: item.description || null,
@@ -94,7 +103,7 @@ Deno.serve(async (req) => {
         severity: item.severity || "medium",
         type: item.threat_type,
         date: item.published_at || item.created_at,
-      })) || [],
+      })),
       pagination: {
         total: count || 0,
         limit,
