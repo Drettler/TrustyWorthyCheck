@@ -176,7 +176,7 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden p-4 sm:px-5">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden p-4 pb-6 sm:px-5">
           {/* URL Display */}
           <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
             <p className="text-xs text-muted-foreground mb-1">
