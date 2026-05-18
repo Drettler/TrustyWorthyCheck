@@ -9,6 +9,11 @@ export function ExtensionPrompt() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    document.documentElement.toggleAttribute('data-extension-prompt-open', isVisible);
+    return () => document.documentElement.removeAttribute('data-extension-prompt-open');
+  }, [isVisible]);
+
+  useEffect(() => {
     // Check if extension is already installed (content script sets this attribute)
     const extensionInstalled = document.documentElement.getAttribute('data-twc-extension') === 'true';
     if (extensionInstalled) return;
@@ -47,7 +52,7 @@ export function ExtensionPrompt() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-4 right-4 left-4 md:left-auto md:w-[420px] z-50"
+            className="fixed bottom-4 right-4 left-4 z-40 md:left-auto md:w-[420px]"
           >
             <div className="relative bg-card border-2 border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 overflow-hidden">
               {/* Background gradient */}
