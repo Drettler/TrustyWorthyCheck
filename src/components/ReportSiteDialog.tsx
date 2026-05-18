@@ -123,17 +123,17 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) resetForm(); onOpenChange(open); }}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="!flex !max-w-[34rem] flex-col gap-0 overflow-hidden p-0 w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)]">
+        <DialogHeader className="border-b border-border/60 px-4 py-4 pr-12 sm:px-5">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isFeedbackMode ? 'bg-primary/10' : 'bg-danger/10'}`}>
+            <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${isFeedbackMode ? 'bg-primary/10' : 'bg-danger/10'}`}>
               {isFeedbackMode ? (
                 <ThumbsUp className="w-5 h-5 text-primary" />
               ) : (
                 <Flag className="w-5 h-5 text-danger" />
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <DialogTitle className="font-display">
                 {isFeedbackMode ? 'Report Incorrect Score' : 'Report Suspicious Site'}
               </DialogTitle>
@@ -146,43 +146,45 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
           </div>
         </DialogHeader>
 
-        {/* Mode Toggle Tabs */}
-        <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-          <button
-            type="button"
-            onClick={() => setMode('report')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-              mode === 'report'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Flag className="w-4 h-4" />
-            Report Scam
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('feedback')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-              mode === 'feedback'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <ThumbsDown className="w-4 h-4" />
-            Wrong Score
-          </button>
-        </div>
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="border-b border-border/60 p-4 sm:px-5">
+            <div className="flex gap-1 rounded-lg bg-muted/50 p-1">
+              <button
+                type="button"
+                onClick={() => setMode('report')}
+                className={`min-w-0 flex-1 flex items-center justify-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-all ${
+                  mode === 'report'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Flag className="h-4 w-4 shrink-0" />
+                <span className="truncate">Report Scam</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('feedback')}
+                className={`min-w-0 flex-1 flex items-center justify-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-all ${
+                  mode === 'feedback'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <ThumbsDown className="h-4 w-4 shrink-0" />
+                <span className="truncate">Wrong Score</span>
+              </button>
+            </div>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden p-4 pb-6 sm:px-5">
           {/* URL Display */}
           <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
             <p className="text-xs text-muted-foreground mb-1">
               {isFeedbackMode ? 'Providing feedback for:' : 'Reporting:'}
             </p>
-            <p className="text-sm font-medium text-foreground truncate">{url}</p>
+            <p className="break-all text-sm font-medium text-foreground">{url}</p>
             {trustScore !== undefined && (
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex flex-wrap items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">
                   Trust Score: <span className={trustScore < 50 ? 'text-danger' : trustScore < 70 ? 'text-warning' : 'text-success'}>{trustScore}/100</span>
                 </p>
@@ -242,19 +244,19 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Why are you reporting this site?
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {reportReasons.map(reason => (
                   <button
                     key={reason.id}
                     type="button"
                     onClick={() => toggleReason(reason.id)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-left text-sm transition-all ${
+                    className={`min-w-0 flex items-center gap-2 p-2.5 rounded-lg border text-left text-sm transition-all ${
                       selectedReasons.includes(reason.id)
                         ? 'bg-danger/10 border-danger/40 text-danger'
                         : 'bg-card border-border hover:border-primary/40 text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <span>{reason.emoji}</span>
+                    <span className="shrink-0">{reason.emoji}</span>
                     <span className="truncate">{reason.label}</span>
                   </button>
                 ))}
@@ -291,8 +293,11 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
             />
           </div>
 
+          </div>
+
           {/* Submit Button */}
-          <div className="flex gap-3 pt-2">
+          <div className="shrink-0 border-t border-border/60 bg-background p-4 sm:px-5">
+          <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
@@ -326,7 +331,7 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
             </Button>
           </div>
 
-          <div className="flex flex-col items-center gap-2">
+          <div className="mt-3 flex flex-col items-center gap-2 text-center">
             <p className="text-xs text-muted-foreground">
               {isFeedbackMode 
                 ? 'Feedback is anonymous and helps improve our scoring accuracy.'
@@ -340,6 +345,7 @@ export function ReportSiteDialog({ open, onOpenChange, url, trustScore, verdict 
               <ExternalLink className="w-3 h-3" />
               View recently reported sites
             </Link>
+          </div>
           </div>
         </form>
       </DialogContent>
