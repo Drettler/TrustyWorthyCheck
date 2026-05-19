@@ -148,24 +148,14 @@ Deno.serve(async (req) => {
     for (const source of THREAT_SOURCES) {
       try {
         console.log(`[recheck] scraping ${source.name}`);
-        const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${firecrawlKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            url: source.url,
-            formats: ["markdown"],
-            onlyMainContent: true,
-          }),
-        });
+        const res = await scrapeWithRetry(source.url, firecrawlKey);
 
-        if (!res.ok) {
-          console.warn(`[recheck] ${source.name} -> ${res.status}`);
+        if (!res || !res.ok) {
+          console.warn(`[recheck] ${source.name} -> ${res?.status ?? "no-response"} after retries`);
           report.push({ source: source.name, candidates: 0, inserted: 0, skipped: 0 });
           continue;
         }
+
 
         const data = await res.json();
         const markdown = data.data?.markdown || data.markdown || "";
