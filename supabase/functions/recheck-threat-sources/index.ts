@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
         let inserted = 0;
         let skipped = 0;
         for (const entry of candidates) {
-          const key = `${entry.source}::${entry.title}`;
+          const key = dedupKey(entry.source, entry.title, entry.description, entry.source_url);
           if (seen.has(key)) {
             skipped++;
             continue;
@@ -308,6 +308,7 @@ Deno.serve(async (req) => {
           allNew.push(entry);
           inserted++;
         }
+
 
         await supabase.from("threat_feed_sources").upsert(
           {
