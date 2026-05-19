@@ -107,7 +107,7 @@ function extractCandidates(markdown: string, source: { name: string; url: string
       const { threatType, severity } = classifyThreat(c.title, c.description);
       return {
         source: source.name,
-        source_url: source.url,
+        source_url: canonicalizeUrl(source.url),
         title: c.title.substring(0, 200),
         description: c.description.substring(0, 500),
         threat_type: threatType,
@@ -115,7 +115,73 @@ function extractCandidates(markdown: string, source: { name: string; url: string
         published_at: new Date().toISOString(),
       };
     });
+
 }
+
+// --- Deduplication helpers -------------------------------------------------
+
+// Lowercase, strip diacritics, collapse punctuation/whitespace, drop stop words,
+// and trim. Used to compare titles/descriptions that differ only cosmetically.
+function normalizeText(input: string | null | undefined): string {
+  if (!input) return "";
+  return input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}]+/gu, " ") // punctuation + symbols -> space
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// First N normalized words of a description — used as a fuzzy fingerprint
+// so trivial trailing edits don't defeat deduplication.
+function descriptionFingerprint(desc: string, words = 12): string {
+  return normalizeText(desc).split(" ").slice(0, words).join(" ");
+}
+
+// Canonicalize a URL: lowercase host, strip "www.", remove default ports,
+// drop tracking params (utm_*, gclid, fbclid, ref, mc_*), strip fragments,
+// remove trailing slash, sort remaining query params.
+const TRACKING_PARAMS = /^(utm_|mc_|hsa_|_hs)|^(gclid|fbclid|msclkid|yclid|ref|ref_src|ref_url|igshid|mkt_tok|spm)$/i;
+
+function canonicalizeUrl(raw: string | null | undefined): string {
+  if (!raw) return "";
+  try {
+    const u = new URL(raw.trim());
+    u.protocol = u.protocol.toLowerCase();
+    u.hostname = u.hostname.toLowerCase().replace(/^www\./, "");
+    if (
+      (u.protocol === "http:" && u.port === "80") ||
+      (u.protocol === "https:" && u.port === "443")
+    ) {
+      u.port = "";
+    }
+    u.hash = "";
+
+    const params = [...u.searchParams.entries()].filter(([k]) => !TRACKING_PARAMS.test(k));
+    params.sort(([a], [b]) => a.localeCompare(b));
+    u.search = "";
+    for (const [k, v] of params) u.searchParams.append(k, v);
+
+    let out = u.toString();
+    if (out.endsWith("/") && u.pathname === "/") out = out.slice(0, -1);
+    else if (u.pathname.length > 1 && out.endsWith("/")) out = out.slice(0, -1);
+    return out;
+  } catch {
+    return raw.trim().toLowerCase();
+  }
+}
+
+// Build the dedup key used both for the in-memory seen-set and existing rows.
+function dedupKey(source: string, title: string, description: string, sourceUrl: string): string {
+  return [
+    normalizeText(source),
+    normalizeText(title),
+    descriptionFingerprint(description),
+    canonicalizeUrl(sourceUrl),
+  ].join("|");
+}
+
 
 // Retry transient failures (timeouts, 429, 5xx) with exponential backoff + jitter.
 // Permanent failures (4xx except 408/425/429) short-circuit and return immediately.
@@ -197,13 +263,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Pull existing titles per source so we don't re-insert duplicates.
+    // Pull existing entries (title + description + source_url) so we can build
+    // normalized dedup keys and skip near-duplicates.
     const { data: existing } = await supabase
       .from("threat_feeds")
-      .select("source, title")
+      .select("source, title, description, source_url")
       .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString());
 
-    const seen = new Set((existing ?? []).map((r) => `${r.source}::${r.title}`));
+    const seen = new Set(
+      (existing ?? []).map((r) =>
+        dedupKey(r.source ?? "", r.title ?? "", r.description ?? "", r.source_url ?? ""),
+      ),
+    );
+
 
     const allNew: any[] = [];
     const report: { source: string; candidates: number; inserted: number; skipped: number }[] = [];
@@ -227,7 +299,7 @@ Deno.serve(async (req) => {
         let inserted = 0;
         let skipped = 0;
         for (const entry of candidates) {
-          const key = `${entry.source}::${entry.title}`;
+          const key = dedupKey(entry.source, entry.title, entry.description, entry.source_url);
           if (seen.has(key)) {
             skipped++;
             continue;
@@ -236,6 +308,7 @@ Deno.serve(async (req) => {
           allNew.push(entry);
           inserted++;
         }
+
 
         await supabase.from("threat_feed_sources").upsert(
           {
