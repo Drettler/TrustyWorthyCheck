@@ -263,13 +263,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Pull existing titles per source so we don't re-insert duplicates.
+    // Pull existing entries (title + description + source_url) so we can build
+    // normalized dedup keys and skip near-duplicates.
     const { data: existing } = await supabase
       .from("threat_feeds")
-      .select("source, title")
+      .select("source, title, description, source_url")
       .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString());
 
-    const seen = new Set((existing ?? []).map((r) => `${r.source}::${r.title}`));
+    const seen = new Set(
+      (existing ?? []).map((r) =>
+        dedupKey(r.source ?? "", r.title ?? "", r.description ?? "", r.source_url ?? ""),
+      ),
+    );
+
 
     const allNew: any[] = [];
     const report: { source: string; candidates: number; inserted: number; skipped: number }[] = [];
