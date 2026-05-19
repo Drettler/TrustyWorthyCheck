@@ -29,3 +29,11 @@ verify_jwt = false
 name = "refresh-threat-feeds"
 schedule = "0 */6 * * *"
 command = "SELECT net.http_post(url := 'https://xpbnmybvddkoujsklqom.supabase.co/functions/v1/fetch-threat-feeds', headers := '{\"Content-Type\": \"application/json\"}'::jsonb, body := '{}'::jsonb)"
+
+# Daily recheck of previously filtered/removed sources — only re-adds entries
+# that pass the junk and credibility checks.
+[[cron_jobs]]
+name = "recheck-threat-sources"
+schedule = "0 3 * * *"
+command = "SELECT net.http_post(url := 'https://xpbnmybvddkoujsklqom.supabase.co/functions/v1/recheck-threat-sources', headers := '{\"Content-Type\": \"application/json\"}'::jsonb, body := '{}'::jsonb)"
+
