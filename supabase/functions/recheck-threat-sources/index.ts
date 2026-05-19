@@ -120,6 +120,8 @@ function extractCandidates(markdown: string, source: { name: string; url: string
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
