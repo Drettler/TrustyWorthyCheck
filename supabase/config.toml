@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.fetch-threat-feeds]
 verify_jwt = false
 
+[functions.recheck-threat-sources]
+verify_jwt = false
+
 # Cron job to refresh threat feeds every 6 hours
 [[cron_jobs]]
 name = "refresh-threat-feeds"
