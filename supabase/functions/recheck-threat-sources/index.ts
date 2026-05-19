@@ -117,6 +117,71 @@ function extractCandidates(markdown: string, source: { name: string; url: string
     });
 }
 
+// --- Deduplication helpers -------------------------------------------------
+
+// Lowercase, strip diacritics, collapse punctuation/whitespace, drop stop words,
+// and trim. Used to compare titles/descriptions that differ only cosmetically.
+function normalizeText(input: string | null | undefined): string {
+  if (!input) return "";
+  return input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}]+/gu, " ") // punctuation + symbols -> space
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// First N normalized words of a description — used as a fuzzy fingerprint
+// so trivial trailing edits don't defeat deduplication.
+function descriptionFingerprint(desc: string, words = 12): string {
+  return normalizeText(desc).split(" ").slice(0, words).join(" ");
+}
+
+// Canonicalize a URL: lowercase host, strip "www.", remove default ports,
+// drop tracking params (utm_*, gclid, fbclid, ref, mc_*), strip fragments,
+// remove trailing slash, sort remaining query params.
+const TRACKING_PARAMS = /^(utm_|mc_|hsa_|_hs)|^(gclid|fbclid|msclkid|yclid|ref|ref_src|ref_url|igshid|mkt_tok|spm)$/i;
+
+function canonicalizeUrl(raw: string | null | undefined): string {
+  if (!raw) return "";
+  try {
+    const u = new URL(raw.trim());
+    u.protocol = u.protocol.toLowerCase();
+    u.hostname = u.hostname.toLowerCase().replace(/^www\./, "");
+    if (
+      (u.protocol === "http:" && u.port === "80") ||
+      (u.protocol === "https:" && u.port === "443")
+    ) {
+      u.port = "";
+    }
+    u.hash = "";
+
+    const params = [...u.searchParams.entries()].filter(([k]) => !TRACKING_PARAMS.test(k));
+    params.sort(([a], [b]) => a.localeCompare(b));
+    u.search = "";
+    for (const [k, v] of params) u.searchParams.append(k, v);
+
+    let out = u.toString();
+    if (out.endsWith("/") && u.pathname === "/") out = out.slice(0, -1);
+    else if (u.pathname.length > 1 && out.endsWith("/")) out = out.slice(0, -1);
+    return out;
+  } catch {
+    return raw.trim().toLowerCase();
+  }
+}
+
+// Build the dedup key used both for the in-memory seen-set and existing rows.
+function dedupKey(source: string, title: string, description: string, sourceUrl: string): string {
+  return [
+    normalizeText(source),
+    normalizeText(title),
+    descriptionFingerprint(description),
+    canonicalizeUrl(sourceUrl),
+  ].join("|");
+}
+
+
 // Retry transient failures (timeouts, 429, 5xx) with exponential backoff + jitter.
 // Permanent failures (4xx except 408/425/429) short-circuit and return immediately.
 async function scrapeWithRetry(
