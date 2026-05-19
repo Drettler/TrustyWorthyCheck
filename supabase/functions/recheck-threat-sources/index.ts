@@ -107,7 +107,7 @@ function extractCandidates(markdown: string, source: { name: string; url: string
       const { threatType, severity } = classifyThreat(c.title, c.description);
       return {
         source: source.name,
-        source_url: source.url,
+        source_url: canonicalizeUrl(source.url),
         title: c.title.substring(0, 200),
         description: c.description.substring(0, 500),
         threat_type: threatType,
@@ -115,6 +115,7 @@ function extractCandidates(markdown: string, source: { name: string; url: string
         published_at: new Date().toISOString(),
       };
     });
+
 }
 
 // --- Deduplication helpers -------------------------------------------------
