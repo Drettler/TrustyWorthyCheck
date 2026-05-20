@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { UrlChecker } from '@/components/UrlChecker';
 import { SEO } from '@/components/SEO';
-import { Shield, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
+import { Shield, CheckCircle2, AlertTriangle, Clock, ArrowRight } from 'lucide-react';
 
 export default function WebsiteChecker() {
   const howToSchema = {
