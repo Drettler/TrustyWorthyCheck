@@ -21,6 +21,7 @@ const ThreatFeeds = lazy(() => import("./pages/ThreatFeeds"));
 const Terms = lazy(() => import("./pages/Terms"));
 const WebsiteChecker = lazy(() => import("./pages/WebsiteChecker"));
 const About = lazy(() => import("./pages/About"));
+const CheckDomain = lazy(() => import("./pages/CheckDomain"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Minimal loading fallback
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/disclosure" element={<Disclosure />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/check/:domain" element={<CheckDomain />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
