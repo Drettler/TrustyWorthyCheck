@@ -1,6 +1,6 @@
 import { memo, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles } from "lucide-react";
+import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -402,6 +402,50 @@ export default function Index() {
           </motion.div>
 
           <StepGuide />
+        </div>
+      </section>
+
+      {/* Popular Domain Checks — internal links for SEO discovery */}
+      <section className="py-12 md:py-16 bg-muted/20 border-y border-border/30">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+              Popular Safety Checks
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              See if these well-known sites are safe to shop, browse, and buy from.
+            </p>
+          </motion.div>
+
+          <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+            {[
+              { domain: "temu.com", label: "Temu" },
+              { domain: "shein.com", label: "Shein" },
+              { domain: "amazon.com", label: "Amazon" },
+              { domain: "etsy.com", label: "Etsy" },
+              { domain: "coinbase.com", label: "Coinbase" },
+              { domain: "booking.com", label: "Booking.com" },
+              { domain: "roblox.com", label: "Roblox" },
+              { domain: "aliexpress.com", label: "AliExpress" },
+            ].map((item) => (
+              <Link
+                key={item.domain}
+                to={`/check/${item.domain}`}
+                className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <Shield className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+                <span className="text-sm font-medium text-foreground">
+                  Is {item.label} safe?
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
