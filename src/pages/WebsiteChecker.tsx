@@ -132,9 +132,10 @@ export default function WebsiteChecker() {
 
         {/* Popular Domain Checks — internal links for SEO discovery */}
         <motion.section
-          initial={{ opacity: 1, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
           className="mt-20"
         >
           <div className="text-center mb-8">
