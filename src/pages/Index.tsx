@@ -1,6 +1,6 @@
 import { memo, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles } from "lucide-react";
+import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FeatureCard } from "@/components/FeatureCard";
