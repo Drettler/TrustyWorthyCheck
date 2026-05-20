@@ -409,7 +409,7 @@ export default function Index() {
       <section className="py-12 md:py-16 bg-muted/20 border-y border-border/30">
         <div className="container px-4">
           <motion.div
-            initial={{ opacity: 1, y: 20 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-8"
