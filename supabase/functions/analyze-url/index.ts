@@ -2772,6 +2772,18 @@ Return ONLY valid JSON in this exact format:
           const filtered = analysisResult.details.redFlags.filter((flag: string) => {
             const f = (flag || '').toLowerCase();
 
+            // Professional corporate/brand sites often have JS-rendered contact details,
+            // geo-specific subdomains, and temporary shop/catalog notices. Those are not
+            // scam indicators when independent reputation checks are clean.
+            if (isCorporateBrand || isCredibleBrandSite) {
+              if (f.includes('country mismatch') || f.includes('location mismatch')) return false;
+              if (f.includes('online shop currently unavailable')) return false;
+              if (f.includes('physical address') || f.includes('no address')) return false;
+              if (f.includes('phone number') || f.includes('no phone')) return false;
+              if (f.includes('unknown domain age') || f.includes('domain age could not be verified')) return false;
+              if (f.includes('essential business pages')) return false;
+            }
+
             // Remove e-commerce-only expectations for non-commerce sites (SaaS, portals, well-known sites)
             if (isNonCommerceSite) {
               // Only strip e-commerce-specific flags for non-commerce sites
@@ -2816,7 +2828,7 @@ Return ONLY valid JSON in this exact format:
         if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 180) {
           trustScore -= 20;
           analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - new domains are higher risk`);
-        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedRetailBrand && !isWellKnownDomain) {
+        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedRetailBrand && !isWellKnownDomain && !isCredibleBrandSite) {
           // WHOIS data completely unavailable for e-commerce site: -10
           trustScore -= 10;
           analysisResult.details.redFlags.push('Domain age could not be verified — WHOIS data unavailable');
