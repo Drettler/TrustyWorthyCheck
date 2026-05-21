@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-05-21-corporate-v1';
+const ANALYSIS_CACHE_VERSION = '2026-05-21-brand-context-v2';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2688,13 +2688,17 @@ Return ONLY valid JSON in this exact format:
         
         // Also check if it's clearly NOT an e-commerce site (avoid false-positives like "product" on SaaS pages)
         // We only treat it as e-commerce if we see *strong* commerce cues like cart/checkout.
-        const strongEcommerceIndicators = [
+        const transactionalEcommerceIndicators = [
           'add to cart',
           'checkout',
+          'secure checkout',
           'shopping cart',
-          'cart',
-          'order tracking',
           'buy now',
+          'pay now',
+          'place order',
+        ];
+        const catalogCommerceIndicators = [
+          'order tracking',
           'shop now',
           'free shipping',
           'warranty',
@@ -2706,7 +2710,9 @@ Return ONLY valid JSON in this exact format:
           'discount',
           'price',
         ];
-        const hasStrongEcommerceIndicators = strongEcommerceIndicators.some((kw) => combinedText.includes(kw));
+        const hasTransactionalEcommerceIndicators = transactionalEcommerceIndicators.some((kw) => combinedText.includes(kw));
+        const hasCatalogCommerceIndicators = catalogCommerceIndicators.some((kw) => combinedText.includes(kw));
+        const hasStrongEcommerceIndicators = hasTransactionalEcommerceIndicators || hasCatalogCommerceIndicators;
 
         const isPortalOrNews = isWellKnownDomain || 
           (portalNewsKeywords.filter(kw => combinedText.includes(kw)).length >= 3 && !hasStrongEcommerceIndicators);
@@ -2729,8 +2735,23 @@ Return ONLY valid JSON in this exact format:
         ];
         const corporateHits = corporateKeywords.filter(kw => combinedText.includes(kw)).length;
         const hasCorporateCopyright = /©\s*(19|20)\d{2}.{0,80}(inc\.?|corp\.?|corporation|company|gmbh|s\.a\.|s\.p\.a\.|plc|ltd\.?|n\.v\.|holdings)/i.test(markdown || '');
-        const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright))
-          && !hasStrongEcommerceIndicators;
+        const businessDetails = analysisResult.details?.business || {};
+        const hasCoreBusinessPages = Boolean(businessDetails.hasPrivacyPolicy && businessDetails.hasTerms && businessDetails.hasAboutPage);
+        const hasProfessionalSignals = analysisResult.details?.websiteQuality?.overallProfessionalism === 'high' ||
+          analysisResult.details?.websiteQuality?.designQuality === 'professional';
+        const hasCleanExternalReputation = !suspiciousTLD && !typosquattingCheck.isSuspicious &&
+          !communityReports.reported && !threatFeedCheck.inThreatFeed &&
+          !virusTotalResult.isMalicious && virusTotalResult.suspiciousCount <= 2;
+        const positiveText = (analysisResult.details?.positiveSignals || []).join(' ').toLowerCase();
+        const hasOfficialBrandSignals = positiveText.includes('official brand') ||
+          positiveText.includes('well-established') ||
+          positiveText.includes('comprehensive product information') ||
+          combinedText.includes('global brand') ||
+          combinedText.includes('official website');
+        const isCredibleBrandSite = hasProfessionalSignals && hasCleanExternalReputation && hasCoreBusinessPages &&
+          linkAnalysis.socialPlatforms.length >= 3 && hasOfficialBrandSignals;
+        const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright) || isCredibleBrandSite)
+          && (!hasTransactionalEcommerceIndicators || isCredibleBrandSite);
 
         const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain || isCorporateBrand;
 
@@ -2750,6 +2771,18 @@ Return ONLY valid JSON in this exact format:
         if (analysisResult.details?.redFlags?.length) {
           const filtered = analysisResult.details.redFlags.filter((flag: string) => {
             const f = (flag || '').toLowerCase();
+
+            // Professional corporate/brand sites often have JS-rendered contact details,
+            // geo-specific subdomains, and temporary shop/catalog notices. Those are not
+            // scam indicators when independent reputation checks are clean.
+            if (isCorporateBrand || isCredibleBrandSite) {
+              if (f.includes('country mismatch') || f.includes('location mismatch')) return false;
+              if (f.includes('online shop currently unavailable')) return false;
+              if (f.includes('physical address') || f.includes('no address')) return false;
+              if (f.includes('phone number') || f.includes('no phone')) return false;
+              if (f.includes('unknown domain age') || f.includes('domain age could not be verified')) return false;
+              if (f.includes('essential business pages')) return false;
+            }
 
             // Remove e-commerce-only expectations for non-commerce sites (SaaS, portals, well-known sites)
             if (isNonCommerceSite) {
@@ -2795,7 +2828,7 @@ Return ONLY valid JSON in this exact format:
         if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 180) {
           trustScore -= 20;
           analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - new domains are higher risk`);
-        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedRetailBrand && !isWellKnownDomain) {
+        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedRetailBrand && !isWellKnownDomain && !isCredibleBrandSite) {
           // WHOIS data completely unavailable for e-commerce site: -10
           trustScore -= 10;
           analysisResult.details.redFlags.push('Domain age could not be verified — WHOIS data unavailable');
@@ -2952,7 +2985,7 @@ Return ONLY valid JSON in this exact format:
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand;
+        const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand || isCredibleBrandSite;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedRetailBrand;
         
         if (!skipAllPenalties) {
@@ -3106,6 +3139,9 @@ Return ONLY valid JSON in this exact format:
           // are legitimate companies — not e-commerce scams.
           trustScore += 25;
           analysisResult.details.positiveSignals.push('Corporate brand website with investor/careers/press sections');
+        } else if (isCredibleBrandSite) {
+          trustScore += 20;
+          analysisResult.details.positiveSignals.push('Credible brand website with clean reputation signals');
         } else if (isPortalOrNews && !isWellKnownDomain) {
           // Portal/news sites that aren't in the well-known list still get a small boost
           trustScore += 10;
