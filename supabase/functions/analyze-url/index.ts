@@ -2712,13 +2712,35 @@ Return ONLY valid JSON in this exact format:
           (portalNewsKeywords.filter(kw => combinedText.includes(kw)).length >= 3 && !hasStrongEcommerceIndicators);
 
         const isLikelySaaS = isSaaSOrSoftware && !hasStrongEcommerceIndicators;
-        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain;
+
+        // Corporate / brand website detection (e.g. philips.com, siemens.com, ge.com).
+        // These are informational sites for large companies. They commonly:
+        //  - have WHOIS privacy / redacted records
+        //  - geo-redirect (causing false "country mismatch")
+        //  - render contact info in JS footers
+        //  - show cookie + region-selector overlays
+        // They should NOT be penalized like e-commerce scam sites.
+        const corporateKeywords = [
+          'investor relations', 'investors', 'careers', 'press release', 'press releases',
+          'newsroom', 'our company', 'leadership team', 'board of directors',
+          'annual report', 'sustainability', 'corporate responsibility',
+          'esg', 'global presence', 'subsidiaries', 'media center', 'press kit',
+          'corporate governance', 'shareholders',
+        ];
+        const corporateHits = corporateKeywords.filter(kw => combinedText.includes(kw)).length;
+        const hasCorporateCopyright = /©\s*(19|20)\d{2}.{0,80}(inc\.?|corp\.?|corporation|company|gmbh|s\.a\.|s\.p\.a\.|plc|ltd\.?|n\.v\.|holdings)/i.test(markdown || '');
+        const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright))
+          && !hasStrongEcommerceIndicators;
+
+        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain || isCorporateBrand;
 
         // Store site type in result for transparency + normalize AI red flags that don't apply
         if (isWellKnownDomain) {
           analysisResult.siteType = 'well_known';
         } else if (isEstablishedRetailBrand) {
           analysisResult.siteType = 'established_retail';
+        } else if (isCorporateBrand) {
+          analysisResult.siteType = 'corporate';
         } else if (isPortalOrNews) {
           analysisResult.siteType = 'portal';
         } else if (isLikelySaaS) {
