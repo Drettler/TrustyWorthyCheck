@@ -424,14 +424,14 @@ export default function Index() {
 
           <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
             {[
-              { domain: "temu.com", label: "Temu" },
-              { domain: "shein.com", label: "Shein" },
               { domain: "amazon.com", label: "Amazon" },
+              { domain: "ebay.com", label: "eBay" },
               { domain: "etsy.com", label: "Etsy" },
-              { domain: "coinbase.com", label: "Coinbase" },
+              { domain: "walmart.com", label: "Walmart" },
+              { domain: "target.com", label: "Target" },
+              { domain: "bestbuy.com", label: "Best Buy" },
+              { domain: "paypal.com", label: "PayPal" },
               { domain: "booking.com", label: "Booking.com" },
-              { domain: "roblox.com", label: "Roblox" },
-              { domain: "aliexpress.com", label: "AliExpress" },
             ].map((item) => (
               <Link
                 key={item.domain}
