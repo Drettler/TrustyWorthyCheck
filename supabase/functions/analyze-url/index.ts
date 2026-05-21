@@ -1699,11 +1699,18 @@ function detectScamPatterns(content: string, html: string): {
     contentLower.includes('offer expires');
   if (hasCountdownTimer) patterns.push('Countdown timer detected');
   
-  // Check for aggressive popups
-  const hasPopups = 
-    htmlLower.includes('popup') || 
-    htmlLower.includes('modal') ||
-    htmlLower.includes('exit-intent');
+  // Check for aggressive popups (exit-intent / blocking overlays only).
+  // Generic words like "modal" or "popup" appear in nearly every modern site's CSS
+  // (Bootstrap, Tailwind, Material, etc.) and produce false positives on legitimate
+  // corporate sites. Require strong intent signals.
+  const aggressivePopupSignals = [
+    'exit-intent', 'exitintent', 'data-exit-intent',
+    'before you leave', "don't leave yet", 'wait! before you go',
+    'spin to win', 'spin-to-win', 'wheel of fortune',
+    'lucky spin', 'claim your prize', 'you have won',
+    'subscribe-popup', 'newsletter-popup-overlay',
+  ];
+  const hasPopups = aggressivePopupSignals.some(s => htmlLower.includes(s) || contentLower.includes(s));
   
   // Check for fake review indicators
   const hasFakeReviewIndicators = 
