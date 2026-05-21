@@ -2807,8 +2807,9 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('WHOIS privacy enabled on a new domain');
         }
         
-        // Country mismatch: -15 (but skip for established retail brands which have international operations)
-        if (businessVerification.countriesMismatch && !isEstablishedRetailBrand) {
+        // Country mismatch: -15 (skip for established retail + non-commerce sites; large
+        // corporates and portals legitimately geo-redirect, which trips this heuristic).
+        if (businessVerification.countriesMismatch && !isEstablishedRetailBrand && !isNonCommerceSite) {
           trustScore -= 15;
           analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
         }
