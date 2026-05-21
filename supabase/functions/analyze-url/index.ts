@@ -2985,7 +2985,7 @@ Return ONLY valid JSON in this exact format:
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand;
+        const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand || isCredibleBrandSite;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedRetailBrand;
         
         if (!skipAllPenalties) {
@@ -3139,6 +3139,9 @@ Return ONLY valid JSON in this exact format:
           // are legitimate companies — not e-commerce scams.
           trustScore += 25;
           analysisResult.details.positiveSignals.push('Corporate brand website with investor/careers/press sections');
+        } else if (isCredibleBrandSite) {
+          trustScore += 20;
+          analysisResult.details.positiveSignals.push('Credible brand website with clean reputation signals');
         } else if (isPortalOrNews && !isWellKnownDomain) {
           // Portal/news sites that aren't in the well-known list still get a small boost
           trustScore += 10;
