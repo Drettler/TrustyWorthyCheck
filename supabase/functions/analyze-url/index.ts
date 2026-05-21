@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-03-10-v1';
+const ANALYSIS_CACHE_VERSION = '2026-05-21-corporate-v1';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -1699,11 +1699,18 @@ function detectScamPatterns(content: string, html: string): {
     contentLower.includes('offer expires');
   if (hasCountdownTimer) patterns.push('Countdown timer detected');
   
-  // Check for aggressive popups
-  const hasPopups = 
-    htmlLower.includes('popup') || 
-    htmlLower.includes('modal') ||
-    htmlLower.includes('exit-intent');
+  // Check for aggressive popups (exit-intent / blocking overlays only).
+  // Generic words like "modal" or "popup" appear in nearly every modern site's CSS
+  // (Bootstrap, Tailwind, Material, etc.) and produce false positives on legitimate
+  // corporate sites. Require strong intent signals.
+  const aggressivePopupSignals = [
+    'exit-intent', 'exitintent', 'data-exit-intent',
+    'before you leave', "don't leave yet", 'wait! before you go',
+    'spin to win', 'spin-to-win', 'wheel of fortune',
+    'lucky spin', 'claim your prize', 'you have won',
+    'subscribe-popup', 'newsletter-popup-overlay',
+  ];
+  const hasPopups = aggressivePopupSignals.some(s => htmlLower.includes(s) || contentLower.includes(s));
   
   // Check for fake review indicators
   const hasFakeReviewIndicators = 
@@ -2705,13 +2712,35 @@ Return ONLY valid JSON in this exact format:
           (portalNewsKeywords.filter(kw => combinedText.includes(kw)).length >= 3 && !hasStrongEcommerceIndicators);
 
         const isLikelySaaS = isSaaSOrSoftware && !hasStrongEcommerceIndicators;
-        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain;
+
+        // Corporate / brand website detection (e.g. philips.com, siemens.com, ge.com).
+        // These are informational sites for large companies. They commonly:
+        //  - have WHOIS privacy / redacted records
+        //  - geo-redirect (causing false "country mismatch")
+        //  - render contact info in JS footers
+        //  - show cookie + region-selector overlays
+        // They should NOT be penalized like e-commerce scam sites.
+        const corporateKeywords = [
+          'investor relations', 'investors', 'careers', 'press release', 'press releases',
+          'newsroom', 'our company', 'leadership team', 'board of directors',
+          'annual report', 'sustainability', 'corporate responsibility',
+          'esg', 'global presence', 'subsidiaries', 'media center', 'press kit',
+          'corporate governance', 'shareholders',
+        ];
+        const corporateHits = corporateKeywords.filter(kw => combinedText.includes(kw)).length;
+        const hasCorporateCopyright = /©\s*(19|20)\d{2}.{0,80}(inc\.?|corp\.?|corporation|company|gmbh|s\.a\.|s\.p\.a\.|plc|ltd\.?|n\.v\.|holdings)/i.test(markdown || '');
+        const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright))
+          && !hasStrongEcommerceIndicators;
+
+        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain || isCorporateBrand;
 
         // Store site type in result for transparency + normalize AI red flags that don't apply
         if (isWellKnownDomain) {
           analysisResult.siteType = 'well_known';
         } else if (isEstablishedRetailBrand) {
           analysisResult.siteType = 'established_retail';
+        } else if (isCorporateBrand) {
+          analysisResult.siteType = 'corporate';
         } else if (isPortalOrNews) {
           analysisResult.siteType = 'portal';
         } else if (isLikelySaaS) {
@@ -2778,8 +2807,9 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.redFlags.push('WHOIS privacy enabled on a new domain');
         }
         
-        // Country mismatch: -15 (but skip for established retail brands which have international operations)
-        if (businessVerification.countriesMismatch && !isEstablishedRetailBrand) {
+        // Country mismatch: -15 (skip for established retail + non-commerce sites; large
+        // corporates and portals legitimately geo-redirect, which trips this heuristic).
+        if (businessVerification.countriesMismatch && !isEstablishedRetailBrand && !isNonCommerceSite) {
           trustScore -= 15;
           analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
         }
@@ -3071,6 +3101,11 @@ Return ONLY valid JSON in this exact format:
           // Established retail brands get a trust boost (known legitimate businesses)
           trustScore += 35;
           analysisResult.details.positiveSignals.push('Established retail brand with known physical presence');
+        } else if (isCorporateBrand) {
+          // Corporate / brand websites (investors, careers, sustainability, etc.)
+          // are legitimate companies — not e-commerce scams.
+          trustScore += 25;
+          analysisResult.details.positiveSignals.push('Corporate brand website with investor/careers/press sections');
         } else if (isPortalOrNews && !isWellKnownDomain) {
           // Portal/news sites that aren't in the well-known list still get a small boost
           trustScore += 10;
