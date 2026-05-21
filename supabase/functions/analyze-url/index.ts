@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-05-21-corporate-v1';
+const ANALYSIS_CACHE_VERSION = '2026-05-21-brand-context-v2';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2688,13 +2688,17 @@ Return ONLY valid JSON in this exact format:
         
         // Also check if it's clearly NOT an e-commerce site (avoid false-positives like "product" on SaaS pages)
         // We only treat it as e-commerce if we see *strong* commerce cues like cart/checkout.
-        const strongEcommerceIndicators = [
+        const transactionalEcommerceIndicators = [
           'add to cart',
           'checkout',
+          'secure checkout',
           'shopping cart',
-          'cart',
-          'order tracking',
           'buy now',
+          'pay now',
+          'place order',
+        ];
+        const catalogCommerceIndicators = [
+          'order tracking',
           'shop now',
           'free shipping',
           'warranty',
@@ -2706,7 +2710,9 @@ Return ONLY valid JSON in this exact format:
           'discount',
           'price',
         ];
-        const hasStrongEcommerceIndicators = strongEcommerceIndicators.some((kw) => combinedText.includes(kw));
+        const hasTransactionalEcommerceIndicators = transactionalEcommerceIndicators.some((kw) => combinedText.includes(kw));
+        const hasCatalogCommerceIndicators = catalogCommerceIndicators.some((kw) => combinedText.includes(kw));
+        const hasStrongEcommerceIndicators = hasTransactionalEcommerceIndicators || hasCatalogCommerceIndicators;
 
         const isPortalOrNews = isWellKnownDomain || 
           (portalNewsKeywords.filter(kw => combinedText.includes(kw)).length >= 3 && !hasStrongEcommerceIndicators);
@@ -2729,8 +2735,23 @@ Return ONLY valid JSON in this exact format:
         ];
         const corporateHits = corporateKeywords.filter(kw => combinedText.includes(kw)).length;
         const hasCorporateCopyright = /©\s*(19|20)\d{2}.{0,80}(inc\.?|corp\.?|corporation|company|gmbh|s\.a\.|s\.p\.a\.|plc|ltd\.?|n\.v\.|holdings)/i.test(markdown || '');
-        const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright))
-          && !hasStrongEcommerceIndicators;
+        const businessDetails = analysisResult.details?.business || {};
+        const hasCoreBusinessPages = Boolean(businessDetails.hasPrivacyPolicy && businessDetails.hasTerms && businessDetails.hasAboutPage);
+        const hasProfessionalSignals = analysisResult.details?.websiteQuality?.overallProfessionalism === 'high' ||
+          analysisResult.details?.websiteQuality?.designQuality === 'professional';
+        const hasCleanExternalReputation = !suspiciousTLD && !typosquattingCheck.isSuspicious &&
+          !communityReports.reported && !threatFeedCheck.inThreatFeed &&
+          !virusTotalResult.isMalicious && virusTotalResult.suspiciousCount <= 2;
+        const positiveText = (analysisResult.details?.positiveSignals || []).join(' ').toLowerCase();
+        const hasOfficialBrandSignals = positiveText.includes('official brand') ||
+          positiveText.includes('well-established') ||
+          positiveText.includes('comprehensive product information') ||
+          combinedText.includes('global brand') ||
+          combinedText.includes('official website');
+        const isCredibleBrandSite = hasProfessionalSignals && hasCleanExternalReputation && hasCoreBusinessPages &&
+          linkAnalysis.socialPlatforms.length >= 3 && hasOfficialBrandSignals;
+        const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright) || isCredibleBrandSite)
+          && (!hasTransactionalEcommerceIndicators || isCredibleBrandSite);
 
         const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain || isCorporateBrand;
 
