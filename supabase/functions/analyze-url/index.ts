@@ -3101,6 +3101,11 @@ Return ONLY valid JSON in this exact format:
           // Established retail brands get a trust boost (known legitimate businesses)
           trustScore += 35;
           analysisResult.details.positiveSignals.push('Established retail brand with known physical presence');
+        } else if (isCorporateBrand) {
+          // Corporate / brand websites (investors, careers, sustainability, etc.)
+          // are legitimate companies — not e-commerce scams.
+          trustScore += 25;
+          analysisResult.details.positiveSignals.push('Corporate brand website with investor/careers/press sections');
         } else if (isPortalOrNews && !isWellKnownDomain) {
           // Portal/news sites that aren't in the well-known list still get a small boost
           trustScore += 10;
