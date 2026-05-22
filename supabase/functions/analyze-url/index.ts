@@ -3591,8 +3591,17 @@ Return ONLY valid JSON in this exact format:
       }
     }
 
-    // Add price comparison red flags (for display only, not scoring again)
+    // Add price comparison red flags (for display only, not scoring again).
+    // Skip weak promo/catalog flags for clean, established retailers; those sites often
+    // contain luxury marketplace listings and sale language without indicating fraud.
     for (const flag of priceComparison.redFlags) {
+      const flagLower = flag.toLowerCase();
+      const cleanEstablishedRetail = analysisResult.siteType === 'well_known' || analysisResult.siteType === 'established_retail';
+      if (cleanEstablishedRetail && !virusTotalResult.isMalicious && virusTotalResult.suspiciousCount <= 2 &&
+          (flagLower.includes('discount') || flagLower.includes('suspiciously low') || flagLower.includes('luxury brand'))) {
+        continue;
+      }
+
       analysisResult.details.redFlags = analysisResult.details.redFlags || [];
       if (!analysisResult.details.redFlags.includes(flag)) {
         analysisResult.details.redFlags.push(flag);
