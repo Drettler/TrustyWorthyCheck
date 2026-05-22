@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-05-21-brand-context-v2';
+const ANALYSIS_CACHE_VERSION = '2026-05-22-retail-promos-v5';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2045,8 +2045,9 @@ Deno.serve(async (req) => {
           };
         }
         
-        // If no exact match, check for related domains (same base name, different TLD)
-        // This catches cases like peaceinwar.com.co matching reports for peaceinwar.com
+        // If no exact match, check for related domains (same base label, different TLD).
+        // This catches cases like peaceinwar.com.co matching peaceinwar.com, but avoids
+        // applying reports for phishing domains like amazon-prime-renewal.net to amazon.com.
         const baseName = extractBaseDomainName(domainToCheck);
         if (baseName && baseName.length >= 3) {
           const { data: relatedMatches, error: relatedError } = await supabase
@@ -2056,11 +2057,15 @@ Deno.serve(async (req) => {
             .order('report_count', { ascending: false })
             .limit(5);
           
-          if (!relatedError && relatedMatches && relatedMatches.length > 0) {
+          const sameBaseMatches = (relatedMatches || []).filter((match) =>
+            extractBaseDomainName(match.url_domain || '') === baseName
+          );
+
+          if (!relatedError && sameBaseMatches.length > 0) {
             // Find the best match (highest report count from related domains)
-            const bestMatch = relatedMatches[0];
-            const totalReports = relatedMatches.reduce((sum, m) => sum + (m.report_count || 0), 0);
-            const allReasons = [...new Set(relatedMatches.flatMap(m => m.reasons || []))];
+            const bestMatch = sameBaseMatches[0];
+            const totalReports = sameBaseMatches.reduce((sum, m) => sum + (m.report_count || 0), 0);
+            const allReasons = [...new Set(sameBaseMatches.flatMap(m => m.reasons || []))];
             
             return {
               reported: true,
@@ -2801,6 +2806,15 @@ Return ONLY valid JSON in this exact format:
               if (f.includes('essential business pages')) return false;
             }
 
+            // Large established retailers often have flash deals, countdown-style promo UI,
+            // luxury brand catalog pages, and third-party seller discounts. Treat those as
+            // weak signals unless independent reputation/security sources also show risk.
+            if ((isWellKnownDomain || isEstablishedRetailBrand) && hasCleanExternalReputation) {
+              if (f.includes('countdown') || f.includes('urgency') || f.includes('limited time')) return false;
+              if (f.includes('discount') || f.includes('suspiciously low') || f.includes('luxury brand')) return false;
+              if (f.includes('community reports') || f.includes('community trust score')) return false;
+            }
+
             // If our deterministic scam detectors say "not a gov scam", don't keep vague gov-mention flags
             if (!governmentScamAnalysis.isLikelyGovScam && f.includes('government')) return false;
 
@@ -3150,7 +3164,9 @@ Return ONLY valid JSON in this exact format:
         
         // === BEHAVIORAL RED FLAGS (10%) ===
         // Countdown timers / fake urgency: -10
-        if (scamPatternAnalysis.hasCountdownTimer || urgencyAnalysis.hasUrgencyTactics) {
+        const hasCleanEstablishedRetailContext = (isWellKnownDomain || isEstablishedRetailBrand) && hasCleanExternalReputation;
+
+        if ((scamPatternAnalysis.hasCountdownTimer || urgencyAnalysis.hasUrgencyTactics) && !hasCleanEstablishedRetailContext) {
           trustScore -= 10;
           analysisResult.details.redFlags.push('Uses countdown timers or fake urgency tactics');
         }
@@ -3188,6 +3204,11 @@ Return ONLY valid JSON in this exact format:
         
         // Add remaining scam patterns as red flags
         for (const pattern of scamPatternAnalysis.suspiciousPatterns) {
+          const p = pattern.toLowerCase();
+          if (hasCleanEstablishedRetailContext && (p.includes('countdown') || p.includes('discount'))) {
+            continue;
+          }
+
           if (!analysisResult.details.redFlags.includes(pattern) && 
               pattern !== 'Possibly fake security badge') {
             analysisResult.details.redFlags.push(pattern);
@@ -3570,8 +3591,17 @@ Return ONLY valid JSON in this exact format:
       }
     }
 
-    // Add price comparison red flags (for display only, not scoring again)
+    // Add price comparison red flags (for display only, not scoring again).
+    // Skip weak promo/catalog flags for clean, established retailers; those sites often
+    // contain luxury marketplace listings and sale language without indicating fraud.
     for (const flag of priceComparison.redFlags) {
+      const flagLower = flag.toLowerCase();
+      const cleanEstablishedRetail = analysisResult.siteType === 'well_known' || analysisResult.siteType === 'established_retail';
+      if (cleanEstablishedRetail && !virusTotalResult.isMalicious && virusTotalResult.suspiciousCount <= 2 &&
+          (flagLower.includes('discount') || flagLower.includes('suspiciously low') || flagLower.includes('luxury brand'))) {
+        continue;
+      }
+
       analysisResult.details.redFlags = analysisResult.details.redFlags || [];
       if (!analysisResult.details.redFlags.includes(flag)) {
         analysisResult.details.redFlags.push(flag);
