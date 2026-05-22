@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-05-21-brand-context-v2';
+const ANALYSIS_CACHE_VERSION = '2026-05-22-related-domain-v3';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2045,8 +2045,9 @@ Deno.serve(async (req) => {
           };
         }
         
-        // If no exact match, check for related domains (same base name, different TLD)
-        // This catches cases like peaceinwar.com.co matching reports for peaceinwar.com
+        // If no exact match, check for related domains (same base label, different TLD).
+        // This catches cases like peaceinwar.com.co matching peaceinwar.com, but avoids
+        // applying reports for phishing domains like amazon-prime-renewal.net to amazon.com.
         const baseName = extractBaseDomainName(domainToCheck);
         if (baseName && baseName.length >= 3) {
           const { data: relatedMatches, error: relatedError } = await supabase
@@ -2056,11 +2057,15 @@ Deno.serve(async (req) => {
             .order('report_count', { ascending: false })
             .limit(5);
           
-          if (!relatedError && relatedMatches && relatedMatches.length > 0) {
+          const sameBaseMatches = (relatedMatches || []).filter((match) =>
+            extractBaseDomainName(match.url_domain || '') === baseName
+          );
+
+          if (!relatedError && sameBaseMatches.length > 0) {
             // Find the best match (highest report count from related domains)
-            const bestMatch = relatedMatches[0];
-            const totalReports = relatedMatches.reduce((sum, m) => sum + (m.report_count || 0), 0);
-            const allReasons = [...new Set(relatedMatches.flatMap(m => m.reasons || []))];
+            const bestMatch = sameBaseMatches[0];
+            const totalReports = sameBaseMatches.reduce((sum, m) => sum + (m.report_count || 0), 0);
+            const allReasons = [...new Set(sameBaseMatches.flatMap(m => m.reasons || []))];
             
             return {
               reported: true,
