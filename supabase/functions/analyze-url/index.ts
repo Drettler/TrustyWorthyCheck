@@ -2806,6 +2806,15 @@ Return ONLY valid JSON in this exact format:
               if (f.includes('essential business pages')) return false;
             }
 
+            // Large established retailers often have flash deals, countdown-style promo UI,
+            // luxury brand catalog pages, and third-party seller discounts. Treat those as
+            // weak signals unless independent reputation/security sources also show risk.
+            if ((isWellKnownDomain || isEstablishedRetailBrand) && hasCleanExternalReputation) {
+              if (f.includes('countdown') || f.includes('urgency') || f.includes('limited time')) return false;
+              if (f.includes('discount') || f.includes('suspiciously low') || f.includes('luxury brand')) return false;
+              if (f.includes('community reports') || f.includes('community trust score')) return false;
+            }
+
             // If our deterministic scam detectors say "not a gov scam", don't keep vague gov-mention flags
             if (!governmentScamAnalysis.isLikelyGovScam && f.includes('government')) return false;
 
@@ -3155,7 +3164,9 @@ Return ONLY valid JSON in this exact format:
         
         // === BEHAVIORAL RED FLAGS (10%) ===
         // Countdown timers / fake urgency: -10
-        if (scamPatternAnalysis.hasCountdownTimer || urgencyAnalysis.hasUrgencyTactics) {
+        const hasCleanEstablishedRetailContext = (isWellKnownDomain || isEstablishedRetailBrand) && hasCleanExternalReputation;
+
+        if ((scamPatternAnalysis.hasCountdownTimer || urgencyAnalysis.hasUrgencyTactics) && !hasCleanEstablishedRetailContext) {
           trustScore -= 10;
           analysisResult.details.redFlags.push('Uses countdown timers or fake urgency tactics');
         }
@@ -3193,6 +3204,11 @@ Return ONLY valid JSON in this exact format:
         
         // Add remaining scam patterns as red flags
         for (const pattern of scamPatternAnalysis.suspiciousPatterns) {
+          const p = pattern.toLowerCase();
+          if (hasCleanEstablishedRetailContext && (p.includes('countdown') || p.includes('discount'))) {
+            continue;
+          }
+
           if (!analysisResult.details.redFlags.includes(pattern) && 
               pattern !== 'Possibly fake security badge') {
             analysisResult.details.redFlags.push(pattern);
