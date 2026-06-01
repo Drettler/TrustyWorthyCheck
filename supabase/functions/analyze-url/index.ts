@@ -2704,12 +2704,33 @@ Return ONLY valid JSON in this exact format:
         const isCorporateBrand = (corporateHits >= 3 || (corporateHits >= 2 && hasCorporateCopyright) || isCredibleBrandSite)
           && (!hasTransactionalEcommerceIndicators || isCredibleBrandSite);
 
-        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isWellKnownDomain || isCorporateBrand;
+        // === ESTABLISHED LEGITIMATE SITE (signal-based, no whitelist) ===
+        // True when independent, hard-to-fake signals all line up. Scammers cannot
+        // fabricate a multi-year WHOIS record + clean VirusTotal reputation + valid
+        // TLS + proper business pages, so this is a reliable legitimacy proxy.
+        const domainAgeYears = (whoisResult.domainAgeInDays || 0) / 365;
+        const isEstablishedLegitimateSite =
+          domainAgeYears >= 2 &&
+          hasCleanExternalReputation &&
+          httpsSecurityCheck.hasHttps && httpsSecurityCheck.tlsOk &&
+          !typosquattingCheck.isSuspicious &&
+          !suspiciousTLD &&
+          (hasCoreBusinessPages || hasProfessionalSignals);
+
+        // Highly established: 5+ years old AND clean reputation — strongest legitimacy signal.
+        const isHighlyEstablishedSite =
+          domainAgeYears >= 5 &&
+          hasCleanExternalReputation &&
+          httpsSecurityCheck.hasHttps && httpsSecurityCheck.tlsOk &&
+          !typosquattingCheck.isSuspicious &&
+          !suspiciousTLD;
+
+        const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isCorporateBrand;
 
         // Store site type in result for transparency + normalize AI red flags that don't apply
-        if (isWellKnownDomain) {
+        if (isHighlyEstablishedSite && !hasStrongEcommerceIndicators) {
           analysisResult.siteType = 'well_known';
-        } else if (isEstablishedRetailBrand) {
+        } else if (isHighlyEstablishedSite && hasStrongEcommerceIndicators) {
           analysisResult.siteType = 'established_retail';
         } else if (isCorporateBrand) {
           analysisResult.siteType = 'corporate';
@@ -2718,6 +2739,7 @@ Return ONLY valid JSON in this exact format:
         } else if (isLikelySaaS) {
           analysisResult.siteType = 'saas';
         }
+
 
         if (analysisResult.details?.redFlags?.length) {
           const filtered = analysisResult.details.redFlags.filter((flag: string) => {
