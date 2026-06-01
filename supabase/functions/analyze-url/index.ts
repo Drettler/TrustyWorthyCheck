@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-06-01-wellknown-travel-v6';
+const ANALYSIS_CACHE_VERSION = '2026-06-01-signal-based-v7';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2665,7 +2665,7 @@ Return ONLY valid JSON in this exact format:
         const hasCatalogCommerceIndicators = catalogCommerceIndicators.some((kw) => combinedText.includes(kw));
         const hasStrongEcommerceIndicators = hasTransactionalEcommerceIndicators || hasCatalogCommerceIndicators;
 
-        const isPortalOrNews = isWellKnownDomain || 
+        const isPortalOrNews = 
           (portalNewsKeywords.filter(kw => combinedText.includes(kw)).length >= 3 && !hasStrongEcommerceIndicators);
 
         const isLikelySaaS = isSaaSOrSoftware && !hasStrongEcommerceIndicators;
@@ -2766,7 +2766,8 @@ Return ONLY valid JSON in this exact format:
             
             // Established retail brands should not be penalized for country mismatch or clone detection
             // These are known legitimate businesses that may have international operations
-            if (isEstablishedRetailBrand) {
+            if (isEstablishedLegitimateSite) {
+
               if (f.includes('country mismatch') || f.includes('location mismatch')) return false;
               if (f.includes('cloned') || f.includes('templated')) return false;
               if (f.includes('physical address') || f.includes('no address')) return false;
@@ -2777,7 +2778,7 @@ Return ONLY valid JSON in this exact format:
             // Large established retailers often have flash deals, countdown-style promo UI,
             // luxury brand catalog pages, and third-party seller discounts. Treat those as
             // weak signals unless independent reputation/security sources also show risk.
-            if ((isWellKnownDomain || isEstablishedRetailBrand) && hasCleanExternalReputation) {
+            if (isEstablishedLegitimateSite) {
               if (f.includes('countdown') || f.includes('urgency') || f.includes('limited time')) return false;
               if (f.includes('discount') || f.includes('suspiciously low') || f.includes('luxury brand')) return false;
               if (f.includes('community reports') || f.includes('community trust score')) return false;
@@ -2810,7 +2811,7 @@ Return ONLY valid JSON in this exact format:
         if (whoisResult.domainAgeInDays && whoisResult.domainAgeInDays < 180) {
           trustScore -= 20;
           analysisResult.details.redFlags.push(`Domain is only ${whoisResult.domainAge} old - new domains are higher risk`);
-        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedRetailBrand && !isWellKnownDomain && !isCredibleBrandSite) {
+        } else if ((!whoisResult.domainAgeInDays || whoisResult.domainAgeInDays === 0) && !isNonCommerceSite && !isEstablishedLegitimateSite && !isCredibleBrandSite) {
           // WHOIS data completely unavailable for e-commerce site: -10
           trustScore -= 10;
           analysisResult.details.redFlags.push('Domain age could not be verified — WHOIS data unavailable');
@@ -2824,7 +2825,7 @@ Return ONLY valid JSON in this exact format:
         
         // Country mismatch: -15 (skip for established retail + non-commerce sites; large
         // corporates and portals legitimately geo-redirect, which trips this heuristic).
-        if (businessVerification.countriesMismatch && !isEstablishedRetailBrand && !isNonCommerceSite) {
+        if (businessVerification.countriesMismatch && !isEstablishedLegitimateSite && !isNonCommerceSite) {
           trustScore -= 15;
           analysisResult.details.redFlags.push(`Location mismatch: Claims to be in ${businessVerification.claimedCountry} but indicators suggest ${businessVerification.actualIndicatedCountry}`);
         }
@@ -2920,7 +2921,7 @@ Return ONLY valid JSON in this exact format:
         const isTldImpersonation = tldImpersonationPatterns.some(pattern => domain.endsWith(pattern));
         const hasSuspiciousAlternateTLD = suspiciousAlternateTLDs.some(tld => domain.endsWith(tld));
         
-        if ((isTldImpersonation || hasSuspiciousAlternateTLD) && !isEstablishedRetailBrand && !isWellKnownDomain) {
+        if ((isTldImpersonation || hasSuspiciousAlternateTLD) && !isEstablishedLegitimateSite) {
           // Extra penalty if this domain has a suspicious TLD AND there are community reports for related domains
           if (communityReports.reported && communityReports.matchedDomain) {
             // Already penalized above, but add extra warning
@@ -2967,8 +2968,9 @@ Return ONLY valid JSON in this exact format:
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isWellKnownDomain || isEstablishedRetailBrand || isCredibleBrandSite;
-        const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedRetailBrand;
+        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite;
+        const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedLegitimateSite;
+
         
         if (!skipAllPenalties) {
           // --- Address penalties (context-aware for all sites) ---
@@ -3107,32 +3109,34 @@ Return ONLY valid JSON in this exact format:
           }
         }
         
-        // === WELL-KNOWN DOMAIN BONUS ===
-        // Well-known established sites get a significant trust boost
-        if (isWellKnownDomain) {
+        // === ESTABLISHED-SITE BONUS (signal-based, no whitelist) ===
+        // Boost is earned by independent signals (domain age, clean reputation, valid TLS,
+        // proper business pages) — not by being on a list.
+        if (isHighlyEstablishedSite && hasCoreBusinessPages) {
           trustScore += 40;
-          analysisResult.details.positiveSignals.push('Well-known established website');
-        } else if (isEstablishedRetailBrand) {
-          // Established retail brands get a trust boost (known legitimate businesses)
-          trustScore += 35;
-          analysisResult.details.positiveSignals.push('Established retail brand with known physical presence');
+          analysisResult.details.positiveSignals.push(
+            `Long-established website (${Math.floor(domainAgeYears)}+ years) with clean reputation`
+          );
+        } else if (isEstablishedLegitimateSite) {
+          trustScore += 25;
+          analysisResult.details.positiveSignals.push(
+            `Established website (${Math.floor(domainAgeYears)}+ years) with clean security & reputation signals`
+          );
         } else if (isCorporateBrand) {
-          // Corporate / brand websites (investors, careers, sustainability, etc.)
-          // are legitimate companies — not e-commerce scams.
           trustScore += 25;
           analysisResult.details.positiveSignals.push('Corporate brand website with investor/careers/press sections');
         } else if (isCredibleBrandSite) {
           trustScore += 20;
           analysisResult.details.positiveSignals.push('Credible brand website with clean reputation signals');
-        } else if (isPortalOrNews && !isWellKnownDomain) {
-          // Portal/news sites that aren't in the well-known list still get a small boost
+        } else if (isPortalOrNews) {
           trustScore += 10;
           analysisResult.details.positiveSignals.push('Appears to be a portal or news site');
         }
+
         
         // === BEHAVIORAL RED FLAGS (10%) ===
         // Countdown timers / fake urgency: -10
-        const hasCleanEstablishedRetailContext = (isWellKnownDomain || isEstablishedRetailBrand) && hasCleanExternalReputation;
+        const hasCleanEstablishedRetailContext = isEstablishedLegitimateSite;
 
         if ((scamPatternAnalysis.hasCountdownTimer || urgencyAnalysis.hasUrgencyTactics) && !hasCleanEstablishedRetailContext) {
           trustScore -= 10;
@@ -3140,7 +3144,7 @@ Return ONLY valid JSON in this exact format:
         }
         
         // Popups detected: -5 (common in scam/low-quality sites)
-        if (scamPatternAnalysis.hasPopups && !isNonCommerceSite && !isEstablishedRetailBrand) {
+        if (scamPatternAnalysis.hasPopups && !isNonCommerceSite && !isEstablishedLegitimateSite) {
           trustScore -= 5;
           analysisResult.details.redFlags.push('Uses popup overlays which can be a deceptive tactic');
         }
@@ -3165,7 +3169,7 @@ Return ONLY valid JSON in this exact format:
         
         // Plagiarized content: -10 (from AI analysis websiteQuality)
         // Skip for established retail brands (they often use standard e-commerce platforms like Shopify)
-        if (!isEstablishedRetailBrand && (analysisResult.details.websiteQuality?.isTemplatedSite || scamPatternAnalysis.hasCloneIndicators)) {
+        if (!isEstablishedLegitimateSite && (analysisResult.details.websiteQuality?.isTemplatedSite || scamPatternAnalysis.hasCloneIndicators)) {
           trustScore -= 10;
           analysisResult.details.redFlags.push('Website appears to use cloned/templated content');
         }
