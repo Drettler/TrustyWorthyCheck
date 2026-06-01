@@ -46,7 +46,7 @@ export async function checkRateLimit(
 
   // Determine identifier and limit
   let identifier: string;
-  let identifierType: "ip" | "user" | "client";
+  let identifierType: "ip" | "user";
   let maxRequests: number;
 
   if (isAuthenticated && userId) {
@@ -60,7 +60,7 @@ export async function checkRateLimit(
 
     if (clientId) {
       identifier = clientId;
-      identifierType = "client";
+      identifierType = "ip";
     } else {
       // Fallback to IP for anonymous users
       identifier =
