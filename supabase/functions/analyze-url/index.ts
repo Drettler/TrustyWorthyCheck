@@ -2601,81 +2601,15 @@ Return ONLY valid JSON in this exact format:
         // Use the new payment status for scoring
         const hasCryptoWireOnly = paymentAnalysis.paymentStatus === 'crypto_wire_only';
         
-        // === WELL-KNOWN TRUSTED DOMAINS ===
-        // Major web portals, search engines, social media, and established companies
-        // These should NOT be penalized for missing e-commerce features
-        const wellKnownDomains = [
-          // Major portals & search engines
-          'google.com', 'yahoo.com', 'bing.com', 'duckduckgo.com', 'baidu.com', 'yandex.com',
-          // Social media
-          'facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'linkedin.com', 'tiktok.com',
-          'pinterest.com', 'reddit.com', 'tumblr.com', 'snapchat.com', 'youtube.com',
-          // Major tech companies
-          'microsoft.com', 'apple.com', 'amazon.com', 'netflix.com', 'spotify.com',
-          'adobe.com', 'salesforce.com', 'oracle.com', 'ibm.com', 'cisco.com',
-          // News & media
-          'cnn.com', 'bbc.com', 'nytimes.com', 'washingtonpost.com', 'reuters.com',
-          'theguardian.com', 'forbes.com', 'bloomberg.com', 'wsj.com', 'npr.org',
-          // Popular services
-          'github.com', 'gitlab.com', 'stackoverflow.com', 'medium.com', 'wordpress.com',
-          'dropbox.com', 'zoom.us', 'slack.com', 'notion.so', 'figma.com',
-          'paypal.com', 'stripe.com', 'square.com', 'venmo.com',
-          // Email providers
-          'gmail.com', 'outlook.com', 'proton.me', 'protonmail.com',
-          // Utilities & reference
-          'wikipedia.org', 'archive.org', 'weather.com', 'imdb.com',
-          // Travel & hospitality (large multi-region portals — geo-redirect, JS-rendered footers)
-          'booking.com', 'expedia.com', 'airbnb.com', 'tripadvisor.com', 'kayak.com',
-          'hotels.com', 'priceline.com', 'vrbo.com', 'agoda.com', 'trivago.com',
-          'marriott.com', 'hilton.com', 'hyatt.com', 'ihg.com', 'choicehotels.com',
-          'united.com', 'delta.com', 'aa.com', 'southwest.com', 'jetblue.com',
-          // Marketplaces & major retail portals commonly tripped by heuristics
-          'ebay.com', 'etsy.com', 'aliexpress.com', 'walmart.com', 'target.com',
-          'bestbuy.com', 'homedepot.com', 'lowes.com', 'costco.com', 'macys.com',
-          // Food / on-demand
-          'doordash.com', 'ubereats.com', 'grubhub.com', 'instacart.com',
-          // Shipping & logistics
-          'usps.com', 'fedex.com', 'ups.com', 'dhl.com',
-        ];
-        
-        // Established retail/fashion brands - legitimate e-commerce that shouldn't be penalized
-        // These are known brands with physical presence even if web scraping misses some data
-        const establishedRetailBrands = [
-          // Fashion & Apparel
-          'brandymelville.com', 'zara.com', 'hm.com', 'uniqlo.com', 'gap.com', 'oldnavy.com',
-          'forever21.com', 'urbanoutfitters.com', 'anthropologie.com', 'freepeople.com',
-          'asos.com', 'boohoo.com', 'shein.com', 'fashionnova.com', 'prettylittlething.com',
-          'nordstrom.com', 'macys.com', 'bloomingdales.com', 'saksoff5th.com', 'neimanmarcus.com',
-          'jcrew.com', 'bananarepublic.com', 'abercrombie.com', 'hollisterco.com',
-          'ae.com', 'pacsun.com', 'tillys.com', 'zumiez.com', 'hottoopic.com',
-          'lululemon.com', 'nike.com', 'adidas.com', 'puma.com', 'underarmour.com',
-          'reebok.com', 'newbalance.com', 'asics.com', 'vans.com', 'converse.com',
-          // Department stores & general retail
-          'target.com', 'walmart.com', 'costco.com', 'kohls.com', 'jcpenney.com',
-          'belk.com', 'dillards.com', 'bedbathandbeyond.com', 'wayfair.com', 'overstock.com',
-          'etsy.com', 'ebay.com', 'wish.com', 'aliexpress.com',
-          // Beauty & cosmetics
-          'sephora.com', 'ulta.com', 'glossier.com', 'colourpop.com', 'elfcosmetics.com',
-          'fentybeauty.com', 'maccosmetics.com', 'urbandecay.com', 'tartecosmetics.com',
-          // Home & furniture
-          'ikea.com', 'westelm.com', 'potterybarn.com', 'crateandbarrel.com', 'cb2.com',
-          'homedepot.com', 'lowes.com', 'bedbathandbeyond.com', 'williams-sonoma.com',
-          // Electronics
-          'bestbuy.com', 'newegg.com', 'bhphotovideo.com', 'adorama.com',
-          // Luxury
-          'gucci.com', 'louisvuitton.com', 'prada.com', 'chanel.com', 'dior.com',
-          'burberry.com', 'balenciaga.com', 'versace.com', 'fendi.com', 'armani.com',
-        ];
-        
-        const isEstablishedRetailBrand = establishedRetailBrands.some(brand => 
-          domain === brand || domain.endsWith('.' + brand) || 
-          brand.replace('.com', '').includes(domain.split('.')[0]) ||
-          domain.includes(brand.replace('.com', ''))
-        );
-        
-        const isWellKnownDomain = wellKnownDomains.some(known => 
-          domain === known || domain.endsWith('.' + known)
-        );
+        // === SIGNAL-BASED LEGITIMACY (no whitelists) ===
+        // A site is treated as "established legitimate" purely from independent,
+        // hard-to-fake signals: long domain history, valid TLS, clean external
+        // reputation (VirusTotal, threat feeds, community reports), no typosquatting
+        // / abused TLD. Scammers cannot fabricate a multi-year WHOIS record +
+        // clean VirusTotal reputation, so this replaces the previous hardcoded lists.
+        const isEstablishedRetailBrand = false;
+        const isWellKnownDomain = false;
+
         
         // === DETECT SITE TYPE (SaaS/Software vs E-commerce vs Portal/News) ===
         // Non-commerce sites shouldn't be penalized for missing shipping/return policies
