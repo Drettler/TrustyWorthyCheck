@@ -219,6 +219,12 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     throw new Error(error.message || 'Failed to analyze URL');
   }
 
+  // Some deployed/cached responses may contain a valid result without the newer
+  // `success: true` wrapper. Treat those as successful so the UI can render.
+  if (data?.result && data.success !== false) {
+    return data.result;
+  }
+
   // Handle rate limit response (if backend returns 200 with an error payload)
   if (!data.success && data.error === 'rate_limit_exceeded') {
     const rateLimitError: RateLimitError = {
