@@ -2602,13 +2602,13 @@ Return ONLY valid JSON in this exact format:
         const hasCryptoWireOnly = paymentAnalysis.paymentStatus === 'crypto_wire_only';
         
         // === SIGNAL-BASED LEGITIMACY (no whitelists) ===
-        // A site is treated as "established legitimate" purely from independent,
-        // hard-to-fake signals: long domain history, valid TLS, clean external
-        // reputation (VirusTotal, threat feeds, community reports), no typosquatting
-        // / abused TLD. Scammers cannot fabricate a multi-year WHOIS record +
-        // clean VirusTotal reputation, so this replaces the previous hardcoded lists.
-        const isEstablishedRetailBrand = false;
-        const isWellKnownDomain = false;
+        // Legitimacy is derived from independent, hard-to-fake signals: long domain
+        // history, valid TLS, clean external reputation (VirusTotal, threat feeds,
+        // community reports), no typosquatting / abused TLD. A scammer cannot fabricate
+        // a multi-year WHOIS record together with a clean VirusTotal reputation —
+        // so the combination is a reliable proxy for a real business.
+        // See `isEstablishedLegitimateSite` and `isHighlyEstablishedSite` below.
+
 
         
         // === DETECT SITE TYPE (SaaS/Software vs E-commerce vs Portal/News) ===
