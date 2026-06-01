@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-05-22-retail-promos-v5';
+const ANALYSIS_CACHE_VERSION = '2026-06-01-wellknown-travel-v6';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2624,6 +2624,18 @@ Return ONLY valid JSON in this exact format:
           'gmail.com', 'outlook.com', 'proton.me', 'protonmail.com',
           // Utilities & reference
           'wikipedia.org', 'archive.org', 'weather.com', 'imdb.com',
+          // Travel & hospitality (large multi-region portals — geo-redirect, JS-rendered footers)
+          'booking.com', 'expedia.com', 'airbnb.com', 'tripadvisor.com', 'kayak.com',
+          'hotels.com', 'priceline.com', 'vrbo.com', 'agoda.com', 'trivago.com',
+          'marriott.com', 'hilton.com', 'hyatt.com', 'ihg.com', 'choicehotels.com',
+          'united.com', 'delta.com', 'aa.com', 'southwest.com', 'jetblue.com',
+          // Marketplaces & major retail portals commonly tripped by heuristics
+          'ebay.com', 'etsy.com', 'aliexpress.com', 'walmart.com', 'target.com',
+          'bestbuy.com', 'homedepot.com', 'lowes.com', 'costco.com', 'macys.com',
+          // Food / on-demand
+          'doordash.com', 'ubereats.com', 'grubhub.com', 'instacart.com',
+          // Shipping & logistics
+          'usps.com', 'fedex.com', 'ups.com', 'dhl.com',
         ];
         
         // Established retail/fashion brands - legitimate e-commerce that shouldn't be penalized
