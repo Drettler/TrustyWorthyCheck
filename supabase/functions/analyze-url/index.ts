@@ -2708,7 +2708,47 @@ Return ONLY valid JSON in this exact format:
         // True when independent, hard-to-fake signals all line up. Scammers cannot
         // fabricate a multi-year WHOIS record + clean VirusTotal reputation + valid
         // TLS + proper business pages, so this is a reliable legitimacy proxy.
-        const domainAgeYears = (whoisResult.domainAgeInDays || 0) / 365;
+        //
+        // WHOIS lookups fail or get rate-limited for many TLDs (booking.com, .io,
+        // .co, country-codes, etc.). When that happens we fall back to AI-extracted
+        // age strings ("Over 25 years", "established 1996", "since 2003"). We only
+        // trust the AI fallback when external reputation is also clean — preventing
+        // a scam page from claiming "since 1995" and bypassing the check.
+        function parseAgeYearsFromText(...sources: (string | undefined | null)[]): number {
+          for (const s of sources) {
+            if (!s) continue;
+            const text = String(s);
+            const yearsMatch = text.match(/(\d{1,3})\+?\s*(?:\+\s*)?years?/i);
+            if (yearsMatch) return parseInt(yearsMatch[1], 10);
+            const sinceMatch = text.match(/(?:since|established|founded|registered|created)\s*(?:in\s*)?(\d{4})/i);
+            if (sinceMatch) {
+              const yr = parseInt(sinceMatch[1], 10);
+              if (yr > 1980 && yr <= new Date().getFullYear()) {
+                return new Date().getFullYear() - yr;
+              }
+            }
+            const bareYear = text.match(/\b(19[8-9]\d|20[0-2]\d)\b/);
+            if (bareYear) {
+              const yr = parseInt(bareYear[1], 10);
+              if (yr <= new Date().getFullYear() - 1) {
+                return new Date().getFullYear() - yr;
+              }
+            }
+          }
+          return 0;
+        }
+
+        const whoisAgeYears = (whoisResult.domainAgeInDays || 0) / 365;
+        const aiAgeYears = parseAgeYearsFromText(
+          analysisResult.details?.domain?.age,
+          analysisResult.details?.business?.businessAge,
+        );
+        // Trust AI age only when external reputation is clean (prevents spoofed claims)
+        const effectiveAgeYears = whoisAgeYears > 0
+          ? whoisAgeYears
+          : (hasCleanExternalReputation ? aiAgeYears : 0);
+        const domainAgeYears = effectiveAgeYears;
+
         const isEstablishedLegitimateSite =
           domainAgeYears >= 2 &&
           hasCleanExternalReputation &&
@@ -2724,6 +2764,7 @@ Return ONLY valid JSON in this exact format:
           httpsSecurityCheck.hasHttps && httpsSecurityCheck.tlsOk &&
           !typosquattingCheck.isSuspicious &&
           !suspiciousTLD;
+
 
         const isNonCommerceSite = isLikelySaaS || isPortalOrNews || isCorporateBrand;
 
