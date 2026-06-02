@@ -160,7 +160,7 @@ export default function WebsiteChecker() {
             ].map((item) => (
               <a
                 key={item.domain}
-                href={`/check/${item.domain}`}
+                href={`/?check=${encodeURIComponent(item.domain)}#checker`}
                 className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
               >
                 <Shield className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
