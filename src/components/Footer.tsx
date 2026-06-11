@@ -1,4 +1,4 @@
-import { Shield, Mail } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export function Footer() {
   const mainLinks = [
