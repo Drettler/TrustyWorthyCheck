@@ -99,9 +99,11 @@ function analyzeUsernamePatterns(username: string): { concerns: string[]; patter
 
 // AI-powered bio analysis
 async function analyzeBioWithAI(bio: string, lovableApiKey: string): Promise<{ concerns: string[]; positives: string[]; riskIndicators: string[] }> {
+  // Strip control characters and neutralize prompt-breaking sequences before embedding.
+  const safeBio = bio.replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/`/g, "'").slice(0, 3000);
   const prompt = `Analyze this social media seller's bio/description for scam red flags. Be specific and concise.
 
-Bio: "${bio}"
+Bio: "${safeBio}"
 
 Look for:
 1. Urgency language ("DM now!", "Limited time!", "Act fast!")
@@ -234,6 +236,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Input size limits to prevent abuse / AI token exhaustion
+    if (username && username.length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Username too long (max 100 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (bio && bio.length > 3000) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Bio too long (max 3000 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (platform && (typeof platform !== 'string' || platform.length > 50)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid platform' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
       console.error('LOVABLE_API_KEY not configured');
@@ -325,7 +347,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-social-seller:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
+      JSON.stringify({ success: false, error: 'Analysis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

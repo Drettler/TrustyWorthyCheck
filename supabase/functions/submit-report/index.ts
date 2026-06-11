@@ -15,11 +15,43 @@ Deno.serve(async (req) => {
     const { url, reasons, details, trustScore } = await req.json();
 
     // Validate required fields
-    if (!url || !reasons || !Array.isArray(reasons) || reasons.length === 0) {
+    if (!url || typeof url !== 'string' || !reasons || !Array.isArray(reasons) || reasons.length === 0) {
       return new Response(
         JSON.stringify({ error: 'URL and at least one reason are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Input validation: enforce length/type/range limits
+    if (url.length > 2048) {
+      return new Response(
+        JSON.stringify({ error: 'URL too long (max 2048 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (reasons.length > 20 || reasons.some((r: unknown) => typeof r !== 'string' || (r as string).length === 0 || (r as string).length > 200)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid reasons (max 20 items, each 1-200 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (details !== undefined && details !== null) {
+      if (typeof details !== 'string' || details.length > 2000) {
+        return new Response(
+          JSON.stringify({ error: 'Details must be a string up to 2000 characters' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    let normalizedTrustScore: number | null = null;
+    if (trustScore !== undefined && trustScore !== null) {
+      if (typeof trustScore !== 'number' || !Number.isFinite(trustScore) || trustScore < 0 || trustScore > 100) {
+        return new Response(
+          JSON.stringify({ error: 'trustScore must be a number between 0 and 100' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      normalizedTrustScore = Math.round(trustScore);
     }
 
     // Extract domain from URL
@@ -57,7 +89,7 @@ Deno.serve(async (req) => {
           report_count: existing.report_count + 1,
           last_reported_at: new Date().toISOString(),
           details: details || undefined,
-          trust_score: trustScore || undefined,
+          trust_score: normalizedTrustScore ?? undefined,
         })
         .eq('id', existing.id);
 
@@ -74,7 +106,7 @@ Deno.serve(async (req) => {
           url_domain: domain,
           reasons,
           details: details || null,
-          trust_score: trustScore || null,
+          trust_score: normalizedTrustScore,
         });
 
       if (insertError) {
