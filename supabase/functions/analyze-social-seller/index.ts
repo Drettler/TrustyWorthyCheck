@@ -234,6 +234,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Input size limits to prevent abuse / AI token exhaustion
+    if (username && username.length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Username too long (max 100 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (bio && bio.length > 3000) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Bio too long (max 3000 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (platform && (typeof platform !== 'string' || platform.length > 50)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid platform' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
       console.error('LOVABLE_API_KEY not configured');
