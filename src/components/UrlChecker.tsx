@@ -58,26 +58,53 @@ export function UrlChecker() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Handle ?check= URL parameter from Chrome extension or hero input
+  const runExternalCheck = (checkUrl: string) => {
+    const trimmed = checkUrl.trim();
+    if (!trimmed) return;
+
+    setUrl(trimmed);
+    setShowDetails(false);
+    setShowFullReport(false);
+    document.getElementById('checker')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    setTimeout(() => {
+      if (isValidUrl(trimmed) && !isLimitReached) {
+        handleAutoSubmit(trimmed);
+      }
+    }, 100);
+  };
+
+  // Handle ?check= URL parameter from Chrome extension, hero input, SEO pages, or popular checks
   useEffect(() => {
     const checkUrl = searchParams.get('check');
+    if (!checkUrl) {
+      hasAutoChecked.current = null;
+      return;
+    }
+
     if (checkUrl && hasAutoChecked.current !== checkUrl) {
       hasAutoChecked.current = checkUrl;
-      setUrl(checkUrl);
 
       // Clear ONLY the `check` parameter (preserve others like ?testReport=true)
       const next = new URLSearchParams(searchParams);
       next.delete('check');
       setSearchParams(next, { replace: true });
 
-      // Auto-submit after a brief delay to allow state to update
-      setTimeout(() => {
-        if (isValidUrl(checkUrl) && !isLimitReached) {
-          handleAutoSubmit(checkUrl);
-        }
-      }, 100);
+      runExternalCheck(checkUrl);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const handlePopularCheck = (event: Event) => {
+      const checkUrl = (event as CustomEvent<string>).detail;
+      if (typeof checkUrl === 'string') {
+        runExternalCheck(checkUrl);
+      }
+    };
+
+    window.addEventListener('twc:run-check', handlePopularCheck);
+    return () => window.removeEventListener('twc:run-check', handlePopularCheck);
+  }, [isLimitReached]);
 
   const handleAutoSubmit = async (urlToCheck: string) => {
     // Flip into loading state first so the UI never swaps to the limit screen mid-check
