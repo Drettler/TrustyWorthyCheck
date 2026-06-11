@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
           report_count: existing.report_count + 1,
           last_reported_at: new Date().toISOString(),
           details: details || undefined,
-          trust_score: trustScore || undefined,
+          trust_score: normalizedTrustScore ?? undefined,
         })
         .eq('id', existing.id);
 
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
           url_domain: domain,
           reasons,
           details: details || null,
-          trust_score: trustScore || null,
+          trust_score: normalizedTrustScore,
         });
 
       if (insertError) {
