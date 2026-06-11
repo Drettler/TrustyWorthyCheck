@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-social-seller:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
+      JSON.stringify({ success: false, error: 'Analysis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
