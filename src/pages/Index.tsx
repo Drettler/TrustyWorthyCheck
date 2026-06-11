@@ -1,4 +1,4 @@
-import { memo, useState, useRef } from "react";
+import { memo, useState, useRef, type MouseEvent } from "react";
 import { motion } from "framer-motion";
 import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -107,6 +107,13 @@ export default function Index() {
     
     // Use navigate to update searchParams reactively (UrlChecker watches ?check=)
     navigate(`/?check=${encodeURIComponent(trimmed)}`, { replace: true });
+  };
+
+  const handlePopularCheck = (event: MouseEvent<HTMLAnchorElement>, domain: string) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    window.dispatchEvent(new CustomEvent('twc:run-check', { detail: domain }));
+    navigate('/#checker', { replace: true });
   };
 
   const faqSchema = {
@@ -436,6 +443,7 @@ export default function Index() {
               <Link
                 key={item.domain}
                 to={`/?check=${encodeURIComponent(item.domain)}#checker`}
+                onClick={(event) => handlePopularCheck(event, item.domain)}
                 className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
               >
                 <Shield className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
