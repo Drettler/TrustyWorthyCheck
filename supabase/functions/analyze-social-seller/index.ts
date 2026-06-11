@@ -99,9 +99,11 @@ function analyzeUsernamePatterns(username: string): { concerns: string[]; patter
 
 // AI-powered bio analysis
 async function analyzeBioWithAI(bio: string, lovableApiKey: string): Promise<{ concerns: string[]; positives: string[]; riskIndicators: string[] }> {
+  // Strip control characters and neutralize prompt-breaking sequences before embedding.
+  const safeBio = bio.replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/`/g, "'").slice(0, 3000);
   const prompt = `Analyze this social media seller's bio/description for scam red flags. Be specific and concise.
 
-Bio: "${bio}"
+Bio: "${safeBio}"
 
 Look for:
 1. Urgency language ("DM now!", "Limited time!", "Act fast!")
