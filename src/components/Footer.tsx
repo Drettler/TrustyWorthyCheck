@@ -41,14 +41,6 @@ export function Footer() {
               ))}
             </nav>
 
-            {/* Contact */}
-            <a 
-              href="mailto:support@trustworthycheck.com"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Mail className="w-4 h-4" />
-              support@trustworthycheck.com
-            </a>
           </div>
 
           {/* Bottom row: Legal links + Copyright */}
