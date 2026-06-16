@@ -1914,24 +1914,45 @@ Deno.serve(async (req) => {
 
     // Step 1: Scrape the website with Firecrawl - using all available formats
     const waitTime = platformInfo.isSocialMedia ? 5000 : 3000;
-    
-    console.log('Scraping website with Firecrawl (all formats)...');
-    const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ['markdown', 'html', 'links', 'screenshot', 'rawHtml'],
-        onlyMainContent: false,
-        waitFor: waitTime,
-      }),
-    });
 
-    const scrapeData = await scrapeResponse.json();
+    async function callFirecrawl(body: Record<string, unknown>) {
+      return await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+    }
+
+    console.log('Scraping website with Firecrawl (all formats)...');
+    let scrapeResponse = await callFirecrawl({
+      url: formattedUrl,
+      formats: ['markdown', 'html', 'links', 'screenshot', 'rawHtml'],
+      onlyMainContent: false,
+      waitFor: waitTime,
+      timeout: 45000,
+    });
+    let scrapeData = await scrapeResponse.json();
     console.log('Scrape response status:', scrapeResponse.status);
+
+    // Retry with lighter payload if Firecrawl timed out
+    const timedOut = !scrapeResponse.ok &&
+      typeof scrapeData?.error === 'string' &&
+      /timed out|timeout/i.test(scrapeData.error);
+    if (timedOut) {
+      console.log('Firecrawl timed out — retrying with lighter scrape...');
+      scrapeResponse = await callFirecrawl({
+        url: formattedUrl,
+        formats: ['markdown', 'links'],
+        onlyMainContent: true,
+        waitFor: 1500,
+        timeout: 60000,
+      });
+      scrapeData = await scrapeResponse.json();
+      console.log('Retry scrape response status:', scrapeResponse.status);
+    }
 
     // Handle Firecrawl failure with fallback for known platforms
     let scrapedContent: ScrapedData;
