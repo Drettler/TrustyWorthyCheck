@@ -98,15 +98,10 @@ export default function Index() {
     e.preventDefault();
     const trimmed = heroUrl.trim();
     if (!trimmed) return;
-    
-    // Scroll to checker smoothly
-    const checker = document.getElementById("checker");
-    if (checker) {
-      checker.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-    
-    // Use navigate to update searchParams reactively (UrlChecker watches ?check=)
-    navigate(`/?check=${encodeURIComponent(trimmed)}`, { replace: true });
+
+    // Trigger the checker directly on the homepage instead of relying on a URL-param round trip.
+    window.dispatchEvent(new CustomEvent('twc:run-check', { detail: trimmed }));
+    navigate('/#checker', { replace: true });
   };
 
   const handlePopularCheck = (event: MouseEvent<HTMLAnchorElement>, domain: string) => {
