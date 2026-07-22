@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-06-01-signal-based-v8';
+const ANALYSIS_CACHE_VERSION = '2026-07-22-clean-signal-floor-v9';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -3338,6 +3338,34 @@ Return ONLY valid JSON in this exact format:
         
         // Clamp score to 0-100
         trustScore = Math.max(0, Math.min(100, trustScore));
+
+        // === CLEAN-SIGNAL FLOOR (signal-driven, no whitelist) ===
+        // If a site has independently strong legitimacy signals — clean VirusTotal
+        // scan across 50+ engines, not in any threat feed, no community reports,
+        // valid HTTPS/TLS, no typosquatting, no suspicious TLD, no critical issue —
+        // and has at most 2 minor red flags, it should not be stuck in "caution"
+        // simply because ancillary heuristics (WHOIS rate-limits, missing cookie
+        // banner, etc.) shaved a few points. These signals are hard to fake.
+        const hasStrongCleanReputation =
+          !hasCriticalIssue &&
+          !virusTotalResult.error &&
+          virusTotalResult.totalEngines >= 50 &&
+          virusTotalResult.maliciousCount === 0 &&
+          virusTotalResult.suspiciousCount === 0 &&
+          !threatFeedCheck.inThreatFeed &&
+          !communityReports.reported &&
+          httpsSecurityCheck.hasHttps &&
+          httpsSecurityCheck.tlsOk &&
+          !typosquattingCheck.isSuspicious &&
+          !suspiciousTLD;
+
+        const minorRedFlagCount = (analysisResult.details?.redFlags?.length || 0);
+        if (hasStrongCleanReputation && minorRedFlagCount <= 2 && trustScore < 85) {
+          trustScore = 85;
+          analysisResult.details.positiveSignals.push(
+            'Clean reputation across 50+ security engines with valid TLS and no threat listings'
+          );
+        }
         
         // === DETERMINE VERDICT ===
         // 85-100: Likely Legit (safe)
