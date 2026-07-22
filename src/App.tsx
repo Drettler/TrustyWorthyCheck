@@ -23,6 +23,7 @@ const WebsiteChecker = lazy(() => import("./pages/WebsiteChecker"));
 const About = lazy(() => import("./pages/About"));
 const CheckDomain = lazy(() => import("./pages/CheckDomain"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Calibrate = lazy(() => import("./pages/Calibrate"));
 
 // Minimal loading fallback
 const PageLoader = () => (
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/disclosure" element={<Disclosure />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/check/:domain" element={<CheckDomain />} />
+            <Route path="/calibrate" element={<Calibrate />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
