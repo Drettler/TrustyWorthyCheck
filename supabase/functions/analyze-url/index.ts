@@ -3382,13 +3382,27 @@ Return ONLY valid JSON in this exact format:
           !typosquattingCheck.isSuspicious &&
           !suspiciousTLD;
 
-        const minorRedFlagCount = (analysisResult.details?.redFlags?.length || 0);
-        if (hasStrongCleanReputation && minorRedFlagCount <= 2 && trustScore < 85) {
+        // Only substantive red flags block the floor — "not found" style flags come from
+        // failed extraction, not from observed bad behavior.
+        const substantiveRedFlags = (analysisResult.details?.redFlags || []).filter((f: string) => {
+          const t = (f || '').toLowerCase();
+          if (t.includes('could not') || t.includes('unknown')) return false;
+          return !(t.includes('no ') && (t.includes('found') || t.includes('policy') || t.includes('page')));
+        });
+        if (hasStrongCleanReputation && substantiveRedFlags.length <= 2 && trustScore < 85) {
           trustScore = 85;
           analysisResult.details.positiveSignals.push(
             'Clean reputation across 50+ security engines with valid TLS and no threat listings'
           );
         }
+
+        // If the page blocked inspection AND external reputation is not strongly clean,
+        // stay in "caution" rather than claiming safety we cannot substantiate.
+        if (hasThinExtraction && !hasStrongCleanReputation && trustScore > 75) {
+          trustScore = 75;
+          analysisResult.details.redFlags.push('Website blocked automated inspection — limited verification possible');
+        }
+
         
         // === DETERMINE VERDICT ===
         // 85-100: Likely Legit (safe)
