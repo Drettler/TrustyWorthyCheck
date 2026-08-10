@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-07-22-clean-signal-floor-v9';
+const ANALYSIS_CACHE_VERSION = '2026-08-10-extraction-quality-v11';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2741,6 +2741,10 @@ Return ONLY valid JSON in this exact format:
             const text = String(s);
             const yearsMatch = text.match(/(\d{1,3})\+?\s*(?:\+\s*)?years?/i);
             if (yearsMatch) return parseInt(yearsMatch[1], 10);
+            // Qualitative age descriptions returned by the AI when WHOIS is unavailable.
+            if (/\bdecades?\b/i.test(text)) return 20;
+            if (/\b(long[- ]?established|well[- ]?established|established brand|legacy brand)\b/i.test(text)) return 10;
+
             const sinceMatch = text.match(/(?:since|established|founded|registered|created)\s*(?:in\s*)?(\d{4})/i);
             if (sinceMatch) {
               const yr = parseInt(sinceMatch[1], 10);
@@ -3027,11 +3031,34 @@ Return ONLY valid JSON in this exact format:
           }
         }
         
+        // === EXTRACTION QUALITY GUARD ===
+        // Large sites (Walmart, Target, airlines, banks) render everything client-side or
+        // actively block scrapers, so the scrape comes back nearly empty. Absence of evidence
+        // is NOT evidence of fraud — applying "missing X" penalties to a blocked page produces
+        // false "High Risk" verdicts. Detect thin extraction and suppress those penalties.
+        const extractionSignals = [
+          contactAnalysis.hasPhoneNumber || contactAnalysis.hasProfessionalEmail || contactAnalysis.hasPhysicalAddress,
+          linkAnalysis.hasSocialLinks || linkAnalysis.hasExternalReviews,
+          paymentAnalysis.methods.length > 0 || paymentAnalysis.hasPaymentGateway,
+          complianceAnalysis.complianceScore > 0,
+          Boolean(analysisResult.details?.business?.hasPrivacyPolicy || analysisResult.details?.business?.hasTerms),
+        ].filter(Boolean).length;
+        const hasThinExtraction = (markdown || '').length < 2500 || extractionSignals <= 1;
+
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite;
+        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite || hasThinExtraction;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedLegitimateSite;
+
+        if (hasThinExtraction) {
+          analysisResult.details.positiveSignals = analysisResult.details.positiveSignals || [];
+          analysisResult.details.redFlags = (analysisResult.details.redFlags || []).filter((f: string) => {
+            const t = (f || '').toLowerCase();
+            return !(t.includes('no ') && (t.includes('found') || t.includes('policy') || t.includes('page')));
+          });
+        }
+
 
         
         if (!skipAllPenalties) {
@@ -3359,13 +3386,32 @@ Return ONLY valid JSON in this exact format:
           !typosquattingCheck.isSuspicious &&
           !suspiciousTLD;
 
-        const minorRedFlagCount = (analysisResult.details?.redFlags?.length || 0);
-        if (hasStrongCleanReputation && minorRedFlagCount <= 2 && trustScore < 85) {
+        // Only substantive red flags block the floor — "not found" style flags come from
+        // failed extraction, not from observed bad behavior.
+        const substantiveRedFlags = Array.from(
+          new Set((analysisResult.details?.redFlags || []).map((f: string) => (f || '').toLowerCase().trim()))
+        ).filter((t: string) => {
+          if (t.includes('could not') || t.includes('unknown')) return false;
+          // Flags the analyzer itself annotates as normal marketing behavior
+          if (t.includes('not a fraud indicator') || t.includes('common for') || t.includes('common practice')) return false;
+          if (t.includes('discount claim') || t.includes('url shortener')) return false;
+          return !(t.includes('no ') && (t.includes('found') || t.includes('policy') || t.includes('page')));
+        });
+
+        if (hasStrongCleanReputation && substantiveRedFlags.length <= 2 && trustScore < 85) {
           trustScore = 85;
           analysisResult.details.positiveSignals.push(
             'Clean reputation across 50+ security engines with valid TLS and no threat listings'
           );
         }
+
+        // If the page blocked inspection AND external reputation is not strongly clean,
+        // stay in "caution" rather than claiming safety we cannot substantiate.
+        if (hasThinExtraction && !hasStrongCleanReputation && trustScore > 75) {
+          trustScore = 75;
+          analysisResult.details.redFlags.push('Website blocked automated inspection — limited verification possible');
+        }
+
         
         // === DETERMINE VERDICT ===
         // 85-100: Likely Legit (safe)
