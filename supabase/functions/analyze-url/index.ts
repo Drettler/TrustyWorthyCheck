@@ -2741,6 +2741,10 @@ Return ONLY valid JSON in this exact format:
             const text = String(s);
             const yearsMatch = text.match(/(\d{1,3})\+?\s*(?:\+\s*)?years?/i);
             if (yearsMatch) return parseInt(yearsMatch[1], 10);
+            // Qualitative age descriptions returned by the AI when WHOIS is unavailable.
+            if (/\bdecades?\b/i.test(text)) return 20;
+            if (/\b(long[- ]?established|well[- ]?established|established brand|legacy brand)\b/i.test(text)) return 10;
+
             const sinceMatch = text.match(/(?:since|established|founded|registered|created)\s*(?:in\s*)?(\d{4})/i);
             if (sinceMatch) {
               const yr = parseInt(sinceMatch[1], 10);
