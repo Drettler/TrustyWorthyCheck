@@ -3027,11 +3027,34 @@ Return ONLY valid JSON in this exact format:
           }
         }
         
+        // === EXTRACTION QUALITY GUARD ===
+        // Large sites (Walmart, Target, airlines, banks) render everything client-side or
+        // actively block scrapers, so the scrape comes back nearly empty. Absence of evidence
+        // is NOT evidence of fraud — applying "missing X" penalties to a blocked page produces
+        // false "High Risk" verdicts. Detect thin extraction and suppress those penalties.
+        const extractionSignals = [
+          contactAnalysis.hasPhoneNumber || contactAnalysis.hasProfessionalEmail || contactAnalysis.hasPhysicalAddress,
+          linkAnalysis.hasSocialLinks || linkAnalysis.hasExternalReviews,
+          paymentAnalysis.methods.length > 0 || paymentAnalysis.hasPaymentGateway,
+          complianceAnalysis.complianceScore > 0,
+          Boolean(analysisResult.details?.business?.hasPrivacyPolicy || analysisResult.details?.business?.hasTerms),
+        ].filter(Boolean).length;
+        const hasThinExtraction = (markdown || '').length < 2500 || extractionSignals <= 1;
+
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite;
+        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite || hasThinExtraction;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedLegitimateSite;
+
+        if (hasThinExtraction) {
+          analysisResult.details.positiveSignals = analysisResult.details.positiveSignals || [];
+          analysisResult.details.redFlags = (analysisResult.details.redFlags || []).filter((f: string) => {
+            const t = (f || '').toLowerCase();
+            return !(t.includes('no ') && (t.includes('found') || t.includes('policy') || t.includes('page')));
+          });
+        }
+
 
         
         if (!skipAllPenalties) {
