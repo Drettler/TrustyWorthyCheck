@@ -3388,11 +3388,16 @@ Return ONLY valid JSON in this exact format:
 
         // Only substantive red flags block the floor — "not found" style flags come from
         // failed extraction, not from observed bad behavior.
-        const substantiveRedFlags = (analysisResult.details?.redFlags || []).filter((f: string) => {
-          const t = (f || '').toLowerCase();
+        const substantiveRedFlags = Array.from(
+          new Set((analysisResult.details?.redFlags || []).map((f: string) => (f || '').toLowerCase().trim()))
+        ).filter((t: string) => {
           if (t.includes('could not') || t.includes('unknown')) return false;
+          // Flags the analyzer itself annotates as normal marketing behavior
+          if (t.includes('not a fraud indicator') || t.includes('common for') || t.includes('common practice')) return false;
+          if (t.includes('discount claim') || t.includes('url shortener')) return false;
           return !(t.includes('no ') && (t.includes('found') || t.includes('policy') || t.includes('page')));
         });
+
         if (hasStrongCleanReputation && substantiveRedFlags.length <= 2 && trustScore < 85) {
           trustScore = 85;
           analysisResult.details.positiveSignals.push(
