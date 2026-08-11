@@ -107,16 +107,13 @@ export default function ThreatFeeds() {
   const refreshFeeds = async () => {
     setIsRefreshing(true);
     try {
-      const { error } = await supabase.functions.invoke('fetch-threat-feeds');
-      
-      if (error) throw error;
-      
+      // Scraping runs on a scheduled backend job; the UI just reloads the latest feed.
+      await fetchThreats();
+
       toast({
         title: '🔄 Feeds Updated',
-        description: 'Threat intelligence has been refreshed from sources.',
+        description: 'Showing the latest threat intelligence.',
       });
-      
-      await fetchThreats();
     } catch (error) {
       console.error('Error refreshing feeds:', error);
       toast({
@@ -128,6 +125,7 @@ export default function ThreatFeeds() {
       setIsRefreshing(false);
     }
   };
+
 
   const filteredThreats = threats.filter(threat => {
     const matchesSearch = !searchQuery || 
