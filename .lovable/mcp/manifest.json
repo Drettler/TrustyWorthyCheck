@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "trustworthy",
+      "version": "0.1.0",
+      "title": "TrustWorthy"
+    },
+    "tools": [
+      {
+        "name": "check_website",
+        "title": "Check website trustworthiness",
+        "description": "Run a full legitimacy check on a website URL or domain and return its trust score (0-100), verdict (safe / caution / danger), summary, red flags and positive signals. Analysis can take up to a minute for domains that have not been checked recently.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Website URL or bare domain to analyze, e.g. example.com"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_threat_feed",
+        "title": "List recent scam threats",
+        "description": "List recent scam and fraud threats from TrustWorthyCheck's public threat feed (aggregated from public security and consumer-protection sources).",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of threats to return (1-50). Defaults to 20."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_community_reports",
+        "title": "List community site reports",
+        "description": "List public community-submitted reports about suspicious or scam websites on TrustWorthyCheck.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of reports to return (1-50). Defaults to 20."
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "recent",
+                "most_reported"
+              ],
+              "description": "Sort order. Defaults to recent."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
