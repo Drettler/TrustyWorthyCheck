@@ -36,6 +36,7 @@ export default function TikTokSellerCheck() {
   const [product, setProduct] = useState("");
   const [price, setPrice] = useState("");
   const [result, setResult] = useState<SellerResult | null>(null);
+  const [checkedWithBio, setCheckedWithBio] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -57,6 +58,7 @@ export default function TikTokSellerCheck() {
     setLoading(true);
     setError("");
     setResult(null);
+    setCheckedWithBio(bio.trim().length > 0);
     const { data, error: invokeError } = await supabase.functions.invoke("analyze-social-seller", {
       body: { username, bio: bio.trim(), platform: "TikTok" },
     });
@@ -68,7 +70,7 @@ export default function TikTokSellerCheck() {
     setLoading(false);
   };
 
-  const riskLabel = result?.riskLevel === "high" ? "Many warning signs" : result?.riskLevel === "medium" ? "Use extra caution" : "Fewer profile warnings";
+  const riskLabel = !checkedWithBio ? "Not enough information" : result?.riskLevel === "high" ? "Many warning signs" : result?.riskLevel === "medium" ? "Use extra caution" : "Fewer profile warnings";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -130,11 +132,15 @@ export default function TikTokSellerCheck() {
                 <div className="rounded-2xl border bg-card p-6 md:p-8 shadow-lg">
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Preliminary profile check</p><h2 className="font-display text-3xl font-bold mt-1">{riskLabel}</h2></div>
-                    <span className={`rounded-full px-3 py-1.5 text-sm font-bold ${result.riskLevel === "high" ? "bg-destructive/10 text-destructive" : result.riskLevel === "medium" ? "bg-amber-100 text-amber-800" : "bg-success/10 text-success"}`}>{result.riskScore}/100 profile risk</span>
+                    {checkedWithBio ? (
+                      <span className={`rounded-full px-3 py-1.5 text-sm font-bold ${result.riskLevel === "high" ? "bg-destructive/10 text-destructive" : result.riskLevel === "medium" ? "bg-amber-100 text-amber-800" : "bg-success/10 text-success"}`}>{result.riskScore}/100 profile risk</span>
+                    ) : (
+                      <span className="rounded-full px-3 py-1.5 text-sm font-bold bg-muted text-muted-foreground">Username pattern only</span>
+                    )}
                   </div>
-                  <p className="text-muted-foreground mt-4">{result.summary}</p>
+                  <p className="text-muted-foreground mt-4">{checkedWithBio ? result.summary : "The username did not match the limited suspicious patterns checked. That does not establish the seller's identity, history, customer service, product authenticity, or legitimacy."}</p>
                   {result.redFlags.length > 0 && <div className="mt-6"><h3 className="font-bold">Warning signals</h3><ul className="mt-3 space-y-3">{result.redFlags.map((flag, index) => <li key={`${flag.type}-${index}`} className="flex gap-3 text-sm"><AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" /><span>{flag.description}</span></li>)}</ul></div>}
-                  {result.positiveSignals.length > 0 && <div className="mt-6"><h3 className="font-bold">Positive profile signals</h3><ul className="mt-3 space-y-3">{result.positiveSignals.map((signal, index) => <li key={index} className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-success shrink-0" /><span>{signal}</span></li>)}</ul></div>}
+                  {checkedWithBio && result.positiveSignals.length > 0 && <div className="mt-6"><h3 className="font-bold">Positive profile signals</h3><ul className="mt-3 space-y-3">{result.positiveSignals.map((signal, index) => <li key={index} className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-success shrink-0" /><span>{signal}</span></li>)}</ul></div>}
                   <div className="mt-6 rounded-xl bg-muted/50 p-4 text-sm"><strong>Important:</strong> This is a pattern-based screen, not proof that a seller is legitimate. Confirm reviews, return terms, platform badges and payment protections before buying.</div>
                 </div>
               )}
