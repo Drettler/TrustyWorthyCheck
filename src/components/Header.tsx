@@ -8,6 +8,7 @@ export function Header() {
 
   const navLinks = [
     { label: 'Website Checker', href: '/website-checker' },
+    { label: 'TikTok Seller Check', href: '/tiktok-seller-check' },
     { label: 'Threats Feed', href: '/threats-feed' },
     { label: 'Save-Money', href: '/save-money' },
     { label: 'Protect Yourself', href: '/protect-yourself' },
@@ -28,7 +29,7 @@ export function Header() {
         </a>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
             <a
               key={link.label}
@@ -49,7 +50,7 @@ export function Header() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
+            className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -62,7 +63,7 @@ export function Header() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="md:hidden border-t border-border bg-background"
+          className="lg:hidden border-t border-border bg-background"
         >
           <nav className="container px-4 py-4 flex flex-col gap-2">
             {navLinks.map((link) => (

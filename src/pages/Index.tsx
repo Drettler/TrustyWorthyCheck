@@ -1,6 +1,6 @@
 import { memo, useState, useRef, type MouseEvent } from "react";
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
+import { Shield, AlertTriangle, DollarSign, Search, Zap, UserCheck, Lock, CreditCard, ExternalLink, Sparkles, ArrowRight, ShoppingBag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -251,6 +251,24 @@ export default function Index() {
           >
             <UrlChecker />
           </motion.div>
+        </div>
+      </section>
+
+      <section className="relative z-10 pb-8">
+        <div className="container px-4">
+          <Link
+            to="/tiktok-seller-check"
+            className="max-w-4xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-2xl border-2 border-primary/25 bg-gradient-to-r from-primary/10 via-card to-secondary/10 p-5 md:p-6 shadow-lg hover:shadow-xl hover:border-primary/40 transition-all"
+          >
+            <div className="w-12 h-12 shrink-0 rounded-xl bg-foreground text-background flex items-center justify-center">
+              <ShoppingBag className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <p className="font-display text-xl md:text-2xl font-bold">Buying from a TikTok seller?</p>
+              <p className="text-muted-foreground mt-1">Check the seller profile for warning signs and compare the product price before buying.</p>
+            </div>
+            <span className="inline-flex items-center gap-2 font-semibold text-primary">Check seller <ArrowRight className="w-4 h-4" /></span>
+          </Link>
         </div>
       </section>
 

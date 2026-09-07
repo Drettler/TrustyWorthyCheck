@@ -24,6 +24,7 @@ const About = lazy(() => import("./pages/About"));
 const CheckDomain = lazy(() => import("./pages/CheckDomain"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Calibrate = lazy(() => import("./pages/Calibrate"));
+const TikTokSellerCheck = lazy(() => import("./pages/TikTokSellerCheck"));
 
 // Minimal loading fallback
 const PageLoader = () => (
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/check/:domain" element={<CheckDomain />} />
             <Route path="/calibrate" element={<Calibrate />} />
+            <Route path="/tiktok-seller-check" element={<TikTokSellerCheck />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
