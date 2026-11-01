@@ -249,8 +249,15 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   // Require a shared secret so anonymous callers cannot trigger paid scraping.
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (!cronSecret || req.headers.get("x-cron-secret") !== cronSecret) {
+  const providedSecret = req.headers.get("x-cron-secret") ?? "";
+  const envSecret = Deno.env.get("CRON_SECRET");
+  let authorized = !!envSecret && providedSecret === envSecret;
+  if (!authorized && providedSecret) {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data } = await admin.rpc("verify_cron_secret", { p_secret: providedSecret });
+    authorized = data === true;
+  }
+  if (!authorized) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
