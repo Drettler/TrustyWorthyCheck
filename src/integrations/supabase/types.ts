@@ -247,6 +247,7 @@ export type Database = {
           reset_at: string
         }[]
       }
+      verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
