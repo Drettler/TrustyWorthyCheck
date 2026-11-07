@@ -180,7 +180,7 @@ export default function Calibrate() {
           </p>
         </div>
 
-        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="rounded-xl border bg-card p-4"><div className="text-2xl font-bold">{rows.length}</div><div className="text-sm text-muted-foreground">Live controls</div></div>
           <div className="rounded-xl border bg-card p-4"><div className="text-2xl font-bold text-success">{passed}</div><div className="text-sm text-muted-foreground">Passing</div></div>
           <div className="rounded-xl border bg-card p-4"><div className="text-2xl font-bold text-destructive">{failed}</div><div className="text-sm text-muted-foreground">Scoring failures</div></div>

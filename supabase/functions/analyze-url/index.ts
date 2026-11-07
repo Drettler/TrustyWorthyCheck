@@ -12,7 +12,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-bbb-review-candidates-v14';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-calibration-protocols-v15';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
