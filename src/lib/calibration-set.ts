@@ -80,5 +80,5 @@ export const KNOWN_CAUTION = CALIBRATION_ENTRIES.filter((item) => item.expected 
 export function isCalibrationReviewDue(item: CalibrationEntry, now = new Date()): boolean {
   const reviewed = new Date(`${item.reviewedOn}T00:00:00Z`).getTime();
   if (!Number.isFinite(reviewed)) return true;
-  return now.getTime() - reviewed.getTime() > CALIBRATION_REVIEW_DAYS * 24 * 60 * 60 * 1000;
+  return now.getTime() - reviewed > CALIBRATION_REVIEW_DAYS * 24 * 60 * 60 * 1000;
 }
