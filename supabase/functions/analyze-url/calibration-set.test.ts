@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { CALIBRATION_ENTRIES, isCalibrationReviewDue } from './calibration-set.ts';
+import { CALIBRATION_ENTRIES, isCalibrationReviewDue } from '../../../src/lib/calibration-set.ts';
 
 Deno.test('calibration scenario IDs are unique and reviewed dates are valid', () => {
   const ids = CALIBRATION_ENTRIES.map((entry) => entry.id);
