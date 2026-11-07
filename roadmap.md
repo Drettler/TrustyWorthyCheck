@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Run a broad live calibration matrix across varied site types and URL forms.
+- [ ] Investigate any scoring failures without adding site-specific exceptions.
+- [ ] Report live pass/fail/error results and remaining coverage limits.
 - [x] Expand calibration with versioned live-site and synthetic edge-case coverage.
 - [x] Add protocol, IDN, redirect, storefront, marketplace, and legitimacy regression tests.
 - [x] Make calibration results resilient to stale cache, rate limits, and changing third-party sites.
