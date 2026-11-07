@@ -11,7 +11,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-bbb-exact-domain-v13';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-bbb-review-candidates-v14';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
