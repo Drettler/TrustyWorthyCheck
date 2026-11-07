@@ -5,6 +5,7 @@ export type ExpectedVerdict = 'safe' | 'caution' | 'danger';
 export type CalibrationCategory =
   | 'retail'
   | 'marketplace'
+  | 'dropshipping'
   | 'financial'
   | 'travel'
   | 'corporate'
@@ -57,6 +58,11 @@ export const CALIBRATION_ENTRIES: CalibrationEntry[] = [
   entry('retail-nike', 'nike.com', 'retail', 'safe', 'Brand-operated direct storefront.', 85),
   entry('marketplace-ebay', 'ebay.com', 'marketplace', 'safe', 'Third-party seller complaints are not evidence against the marketplace host.', 80),
   entry('marketplace-etsy', 'etsy.com', 'marketplace', 'safe', 'Marketplace with independent sellers and changing storefront content.', 80),
+  entry('dropshipping-cj', 'cjdropshipping.com', 'dropshipping', 'safe', 'Established dropshipping fulfillment platform; its business model alone is not fraud.', 75),
+  entry('dropshipping-spocket', 'spocket.co', 'dropshipping', 'safe', 'Dropshipping supplier marketplace; distinguish fulfillment model from scam evidence.', 75),
+  entry('dropshipping-zendrop', 'zendrop.com', 'dropshipping', 'safe', 'Dropshipping fulfillment service with SaaS and e-commerce signals.', 75),
+  entry('dropshipping-dsers', 'dsers.com', 'dropshipping', 'safe', 'Dropshipping order-management SaaS; do not require direct-retail policies.', 75),
+  entry('dropshipping-aliexpress', 'aliexpress.com', 'dropshipping', 'safe', 'International marketplace commonly used by dropshippers; seller issues do not condemn the host.', 80),
   entry('financial-paypal', 'paypal.com', 'financial', 'safe', 'Financial login pages require strict impersonation separation.', 85),
   entry('travel-booking', 'booking.com', 'travel', 'safe', 'Travel marketplace with international redirects and third-party inventory.', 80),
   entry('corporate-philips', 'usa.philips.com', 'corporate', 'safe', 'Regional corporate subdomain; do not confuse it with a lookalike retail domain.', 80),
