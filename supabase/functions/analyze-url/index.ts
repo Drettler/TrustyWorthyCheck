@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard } from "./safety-guards.ts";
+import { lookupBbbReputation } from "./bbb-reputation.ts";
+import { isExactDomainMatch } from "./domain-evidence.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,7 +11,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-storefront-safety-v12';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-bbb-review-candidates-v14';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
@@ -2124,14 +2126,11 @@ Deno.serve(async (req) => {
           return { inThreatFeed: false, threats: [] };
         }
         
-        // Check if the domain matches any threat feed entry
+        // Only an exact hostname match is evidence. Partial matching lets a report
+        // for walmart.com-security-alert.ru unfairly penalize walmart.com.
         const matchingThreats = data.filter((entry: any) => {
           if (!entry.domains || !Array.isArray(entry.domains)) return false;
-          return entry.domains.some((d: string) => 
-            d.toLowerCase() === domainToCheck.toLowerCase() ||
-            domainToCheck.toLowerCase().includes(d.toLowerCase()) ||
-            d.toLowerCase().includes(domainToCheck.toLowerCase())
-          );
+          return entry.domains.some((d: string) => isExactDomainMatch(d, domainToCheck));
         }).map((entry: any) => ({
           source: entry.source,
           threatType: entry.threat_type,
@@ -2149,18 +2148,28 @@ Deno.serve(async (req) => {
       }
     }
     
-    // Run external API checks in parallel (including community reports and threat feeds)
+    // Run external API checks in parallel (including community reports, threat feeds,
+    // and exact-domain BBB Scam Tracker / review evidence).
     console.log('Running external security checks...');
-    const [virusTotalResult, whoisResult, httpsSecurityCheck, communityReports, threatFeedCheck] = await Promise.all([
+    const [virusTotalResult, whoisResult, httpsSecurityCheck, communityReports, threatFeedCheck, bbbReputation] = await Promise.all([
       checkVirusTotal(domain),
       lookupWhois(domain),
       checkHttpsSecurity(domain),
       checkCommunityReports(domain),
       checkThreatFeeds(domain),
+      lookupBbbReputation(domain, firecrawlApiKey),
     ]);
-    
+
+    // BBB search candidates are intentionally not merged into threat feeds. BBB's
+    // approved API is required to verify reports before they can affect scoring.
     console.log('Community reports:', communityReports);
     console.log('Threat feed check:', threatFeedCheck);
+    console.log('BBB evidence:', {
+      checked: bbbReputation.checked,
+      scamCandidates: bbbReputation.scamCandidates.length,
+      reviewMentions: bbbReputation.reviewMentions.length,
+      error: bbbReputation.error,
+    });
     
     console.log('Urgency tactics:', urgencyAnalysis);
     console.log('Contact info:', contactAnalysis);
@@ -2293,6 +2302,14 @@ ${threatFeedCheck.inThreatFeed
 - Matching Threats: ${threatFeedCheck.threats.map(t => `${t.source}: ${t.title} (${t.severity})`).join('; ')}
 - THIS DOMAIN IS FLAGGED BY SECURITY RESEARCHERS - HEAVILY PENALIZE TRUST SCORE`
   : '- Not found in any threat intelligence feeds'}
+
+BBB REPUTATION LOOKUP (exact-domain candidates, not verified findings):
+- Search completed: ${bbbReputation.checked ? 'Yes' : 'No'}
+- Unverified Scam Tracker candidates naming this exact domain: ${bbbReputation.scamCandidates.length}
+${bbbReputation.scamCandidates.length > 0 ? bbbReputation.scamCandidates.map(r => `- ${r.title}: ${r.url}`).join('\n') : '- No indexed exact-domain Scam Tracker candidates found; this does not prove none exist'}
+- BBB review/profile mentions: ${bbbReputation.reviewMentions.length}
+${bbbReputation.reviewMentions.length > 0 ? bbbReputation.reviewMentions.map(r => `- ${r.title}${r.scamRelated ? ' (contains scam-related complaint language)' : ''}`).join('\n') : '- No exact-domain BBB review/profile mentions found'}
+- IMPORTANT: Search snippets, BBB ratings, negative reviews, and complaints are context only. They are NOT verified proof of fraud and MUST NOT change the score or verdict by themselves. Do not describe a candidate as a confirmed BBB scam report.
 `;
 
     console.log('Analyzing with AI...');
@@ -3679,6 +3696,7 @@ Return ONLY valid JSON in this exact format:
         inThreatFeed: threatFeedCheck.inThreatFeed,
         threats: threatFeedCheck.threats,
       },
+      bbbReputation,
     };
 
     // Add VirusTotal red flags (already factored into score, just add to display)

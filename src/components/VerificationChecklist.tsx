@@ -17,12 +17,14 @@ interface ChecklistItem {
     name: string;
     status: 'pass' | 'fail' | 'warning' | 'not_checked';
     details?: string;
+    url?: string;
   }[];
 }
 
 export function VerificationChecklist({ result }: VerificationChecklistProps) {
   const buildChecklist = (): ChecklistItem[] => {
     const { details, proFeatures } = result;
+    const bbb = proFeatures?.bbbReputation;
 
     return [
       {
@@ -113,9 +115,19 @@ export function VerificationChecklist({ result }: VerificationChecklistProps) {
             details: 'Checked for Trustpilot links',
           },
           {
-            name: 'BBB (Better Business Bureau)',
-            status: details.socialProof.externalReviewPlatforms ? 'pass' : 'warning',
-            details: 'Checked for BBB accreditation',
+            name: 'BBB Scam Tracker search',
+            status: bbb?.checked ? (bbb.scamCandidates.length > 0 ? 'not_checked' : 'pass') : 'not_checked',
+            details: bbb?.checked
+              ? `${bbb.scamCandidates.length} unverified exact-domain candidate${bbb.scamCandidates.length === 1 ? '' : 's'}; may involve a third party or impersonation — verify directly with BBB`
+              : 'BBB search unavailable; no conclusion drawn',
+            url: bbb?.lookupUrl,
+          },
+          {
+            name: 'BBB reviews & complaints context',
+            status: bbb?.checked ? 'pass' : 'not_checked',
+            details: bbb?.checked
+              ? `${bbb.reviewMentions.length} exact-domain mention${bbb.reviewMentions.length === 1 ? '' : 's'}; negative reviews never change the score alone`
+              : 'BBB review lookup unavailable',
           },
           {
             name: 'Social media links (Facebook/Reddit)',
@@ -373,7 +385,17 @@ export function VerificationChecklist({ result }: VerificationChecklistProps) {
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{item.name}</p>
                     {item.details && (
-                      <p className="text-xs text-muted-foreground truncate">{item.details}</p>
+                      <p className="text-xs text-muted-foreground">{item.details}</p>
+                    )}
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      >
+                        <Link2 className="h-3 w-3" /> Verify on BBB
+                      </a>
                     )}
                   </div>
                 </div>
@@ -386,8 +408,8 @@ export function VerificationChecklist({ result }: VerificationChecklistProps) {
       {/* Note about external checks */}
       <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border/50">
         <p className="text-xs text-muted-foreground">
-          <strong>Note:</strong> Some checks require external API integrations (ScamAdviser, phone carrier lookup, business registry verification) which are not currently included. 
-          Items marked as "N/A" were not available for this analysis.
+          <strong>Note:</strong> Some checks require external API integrations (approved BBB API, ScamAdviser, phone carrier lookup, business registry verification) which are not currently included.
+          BBB search candidates are unverified until opened on BBB. Items marked as "N/A" were not available for this analysis.
         </p>
       </div>
     </motion.div>

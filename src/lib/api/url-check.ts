@@ -36,6 +36,24 @@ export interface PriceComparisonData {
   redFlags: string[];
 }
 
+export interface BbbEvidenceItem {
+  title: string;
+  url: string;
+  description: string;
+}
+
+export interface BbbReviewMention extends BbbEvidenceItem {
+  scamRelated: boolean;
+}
+
+export interface BbbReputationData {
+  lookupUrl: string;
+  checked: boolean;
+  scamCandidates: BbbEvidenceItem[];
+  reviewMentions: BbbReviewMention[];
+  error?: string;
+}
+
 export interface ConfidenceData {
   level: 'high' | 'medium' | 'low';
   message: string;
@@ -106,6 +124,7 @@ export interface AnalysisResult {
     virusTotal: VirusTotalData;
     whois: WhoisData;
     priceComparison: PriceComparisonData;
+    bbbReputation?: BbbReputationData;
   };
   scamIndicators?: {
     government: {
