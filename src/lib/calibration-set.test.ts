@@ -18,7 +18,7 @@ Deno.test('calibration expectations become due only after 30 days', () => {
 Deno.test('score tolerances agree with their expected verdict bands', () => {
   for (const entry of CALIBRATION_ENTRIES) {
     if (entry.expected === 'safe' && entry.expectedScoreMin !== undefined) {
-      assertEquals(entry.expectedScoreMin >= 85 || entry.expectedScoreMin >= 75, true, entry.id);
+      assertEquals(entry.expectedScoreMin >= 75, true, entry.id);
     }
     if (entry.expected === 'danger' && entry.expectedScoreMax !== undefined) {
       assertEquals(entry.expectedScoreMax < 60, true, entry.id);
