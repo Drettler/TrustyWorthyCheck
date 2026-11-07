@@ -121,6 +121,88 @@ export function applyStorefrontSafetyGuard(input: StorefrontSafetyInput): Storef
   };
 }
 
+const ACTIVE_PURCHASE_PATTERNS = [
+  /\badd\s+to\s+(?:cart|bag|basket)\b/i,
+  /\b(?:secure\s+)?check\s*out\b/i,
+  /\b(?:buy|pay|order)\s+now\b/i,
+  /\bplace\s+(?:an\s+)?order\b/i,
+  /\bcomplete\s+(?:your\s+)?purchase\b/i,
+];
+
+const DORMANT_STOREFRONT_PATTERNS = [
+  /\bstay\s+tuned\b/i,
+  /\b(?:our\s+)?(?:online\s+)?(?:store|shop)\s+(?:is\s+)?coming\s+soon\b/i,
+  /\bno\s+longer\s+(?:supporting|accepting|processing)\s+online\s+orders\b/i,
+  /\bnot\s+(?:currently\s+)?(?:accepting|processing)\s+online\s+orders\b/i,
+  /\bonline\s+ordering\s+(?:is\s+)?(?:currently\s+)?(?:unavailable|paused|closed)\b/i,
+];
+
+export function detectDormantStorefront(
+  title?: string,
+  description?: string,
+  markdown?: string,
+  links: string[] = [],
+): boolean {
+  const pageText = [title, description, markdown].filter(Boolean).join('\n');
+  if (!DORMANT_STOREFRONT_PATTERNS.some((pattern) => pattern.test(pageText))) return false;
+
+  // Empty-cart and account-login boilerplate do not prove that a shopper can buy.
+  const purchaseText = [pageText, ...links].join('\n');
+  return !ACTIVE_PURCHASE_PATTERNS.some((pattern) => pattern.test(purchaseText));
+}
+
+export interface DormantStorefrontInput {
+  trustScore: number;
+  verdict: Verdict;
+  summary?: string;
+  redFlags?: string[];
+  dormantStorefront: boolean;
+  hasCleanIndependentReputation: boolean;
+  hasFirstPartyBusinessSignals: boolean;
+  hasCriticalSecurityOrImpersonationIssue: boolean;
+}
+
+export function applyDormantStorefrontGuard(input: DormantStorefrontInput) {
+  const redFlags = [...(input.redFlags || [])];
+  const eligible = input.dormantStorefront &&
+    input.hasCleanIndependentReputation &&
+    input.hasFirstPartyBusinessSignals &&
+    !input.hasCriticalSecurityOrImpersonationIssue;
+
+  if (!eligible) {
+    return {
+      trustScore: input.trustScore,
+      verdict: input.verdict,
+      summary: input.summary,
+      redFlags,
+      dormantStorefront: input.dormantStorefront,
+      applied: false,
+    };
+  }
+
+  // A dormant official storefront is not an active scam checkout, but it is not a
+  // safe place to shop either. Keep it in the caution band and never override
+  // independent malware, impersonation, threat-feed, or connection evidence.
+  const relevantFlags = redFlags.filter((flag) => {
+    const f = flag.toLowerCase();
+    return !f.includes('shipping information') &&
+      !f.includes('refund/return policy') &&
+      !f.includes('cryptocurrency payments') &&
+      !f.includes('cloned/templated');
+  });
+  const warning = 'Online ordering is not currently available — do not use lookalike sites claiming to sell for this brand';
+  if (!relevantFlags.includes(warning)) relevantFlags.unshift(warning);
+
+  return {
+    trustScore: Math.max(60, Math.min(input.trustScore, 75)),
+    verdict: 'caution' as Verdict,
+    summary: 'Use Caution: This brand website does not currently provide an active purchase path. Do not place an order here or through lookalike sites; verify any future ordering directly from this domain.',
+    redFlags: relevantFlags,
+    dormantStorefront: true,
+    applied: true,
+  };
+}
+
 export function applyLowConfidenceSafeGuard(
   trustScore: number,
   verdict: Verdict,

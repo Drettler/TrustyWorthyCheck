@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
-import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
-import { lookupBbbReputation } from "./bbb-reputation.ts";
+import { applyDormantStorefrontGuard, applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, detectDormantStorefront, hasBrandImpersonationFinding, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
+import { lookupBbbReputation, removeUnverifiedBbbRedFlags, sanitizeUnverifiedBbbSummary } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
 import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
 import { assessGovernmentImpersonation, isGovernmentLookalikeDomain } from "./government-evidence.ts";
@@ -14,7 +14,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-tld-risk-v17';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-dormant-storefront-v18';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
@@ -2513,10 +2513,11 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.domain.mimickingBrand = typosquattingCheck.mimicking || null;
         }
         
-        // Initialize red flags array
-        if (!analysisResult.details.redFlags) {
-          analysisResult.details.redFlags = [];
-        }
+        // Initialize red flags array. BBB search snippets are contextual until
+        // approved BBB access verifies them; never let the AI turn them into findings.
+        analysisResult.details.redFlags = removeUnverifiedBbbRedFlags(
+          analysisResult.details.redFlags || [],
+        );
         if (!analysisResult.details.positiveSignals) {
           analysisResult.details.positiveSignals = [];
         }
@@ -3631,6 +3632,61 @@ Return ONLY valid JSON in this exact format:
       }
     }
 
+    // A dormant brand site with no active purchase path needs an ordering warning,
+    // not the same scam verdict as an impersonator. This caution-band guard requires
+    // first-party business signals and clean independent security evidence, and it
+    // never overrides substantive malware, impersonation, or connection findings.
+    const dormantStorefront = detectDormantStorefront(
+      metadata.title,
+      metadata.description,
+      markdown,
+      links,
+    );
+    const hasCleanIndependentReputation =
+      !virusTotalResult.error &&
+      virusTotalResult.totalEngines >= 50 &&
+      virusTotalResult.maliciousCount === 0 &&
+      virusTotalResult.suspiciousCount === 0 &&
+      !threatFeedCheck.inThreatFeed &&
+      !communityReports.reported &&
+      httpsSecurityCheck.hasHttps &&
+      httpsSecurityCheck.tlsOk &&
+      !typosquattingCheck.isSuspicious &&
+      !suspiciousTLD;
+    const hasFirstPartyBusinessSignals = Boolean(
+      analysisResult.details.business?.hasPrivacyPolicy ||
+      analysisResult.details.business?.hasTerms ||
+      analysisResult.details.business?.hasAboutPage ||
+      contactAnalysis.hasProfessionalEmail ||
+      linkAnalysis.hasSocialLinks,
+    );
+    const hasCriticalSecurityOrImpersonationIssue =
+      governmentScamAnalysis.isLikelyGovScam ||
+      subscriptionScamAnalysis.isLikelySubscriptionScam ||
+      typosquattingCheck.isSuspicious ||
+      virusTotalResult.isMalicious ||
+      !httpsSecurityCheck.hasHttps ||
+      !httpsSecurityCheck.tlsOk ||
+      hasBrandImpersonationFinding(
+        analysisResult.details.redFlags,
+        analysisResult.details.domain?.mimickingBrand,
+      );
+    const dormantStorefrontGuard = applyDormantStorefrontGuard({
+      trustScore: analysisResult.trustScore,
+      verdict: analysisResult.verdict,
+      summary: analysisResult.summary,
+      redFlags: analysisResult.details.redFlags,
+      dormantStorefront,
+      hasCleanIndependentReputation,
+      hasFirstPartyBusinessSignals,
+      hasCriticalSecurityOrImpersonationIssue,
+    });
+    analysisResult.trustScore = dormantStorefrontGuard.trustScore;
+    analysisResult.verdict = dormantStorefrontGuard.verdict;
+    analysisResult.summary = dormantStorefrontGuard.summary;
+    analysisResult.details.redFlags = dormantStorefrontGuard.redFlags;
+    if (dormantStorefrontGuard.applied) analysisResult.siteType = 'dormant_storefront';
+
     // Final invariant: no score floor, site-type bonus, or post-processing rule may
     // classify an explicitly unavailable storefront as safe for shopping.
     const storefrontSafetyGuard = applyStorefrontSafetyGuard({
@@ -3647,6 +3703,10 @@ Return ONLY valid JSON in this exact format:
     analysisResult.verdict = storefrontSafetyGuard.verdict;
     analysisResult.summary = storefrontSafetyGuard.summary;
     analysisResult.details.redFlags = storefrontSafetyGuard.redFlags;
+    analysisResult.summary = sanitizeUnverifiedBbbSummary(
+      analysisResult.summary,
+      analysisResult.trustScore,
+    );
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
 

@@ -1,7 +1,9 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 import {
+  applyDormantStorefrontGuard,
   applyLowConfidenceSafeGuard,
   applyStorefrontSafetyGuard,
+  detectDormantStorefront,
   detectUnavailableStorefront,
   hasThinExtraction,
   verdictForScore,
@@ -93,4 +95,70 @@ Deno.test('new unavailable-store wording is caught without confusing normal busi
   assertEquals(detectUnavailableStorefront('Store unavailable'), true);
   assertEquals(detectUnavailableStorefront('Our store is temporarily closed'), true);
   assertEquals(detectUnavailableStorefront('Our store is closed on Sundays'), false);
+});
+
+Deno.test('detects a dormant brand site without mistaking empty-cart boilerplate for checkout', () => {
+  assertEquals(detectDormantStorefront(
+    'Sundance Living ~ Previously Sundance Catalog',
+    'Founded in 1989.',
+    'Stay Tuned, Beautiful Things are on the Horizon. Your cart is currently empty. Privacy Policy.',
+    ['https://www.sundanceliving.com/pages/privacy-policy'],
+  ), true);
+});
+
+Deno.test('an active purchase path prevents dormant-store classification', () => {
+  assertEquals(detectDormantStorefront(
+    'Qualified Store',
+    'Stay tuned for new products',
+    'Add to cart. Secure checkout. Return policy.',
+  ), false);
+});
+
+Deno.test('a clean dormant storefront receives an ordering warning rather than a scam verdict', () => {
+  const result = applyDormantStorefrontGuard({
+    trustScore: 0,
+    verdict: 'danger',
+    redFlags: ['No shipping information found', 'Accepts cryptocurrency payments - limited buyer protection'],
+    dormantStorefront: true,
+    hasCleanIndependentReputation: true,
+    hasFirstPartyBusinessSignals: true,
+    hasCriticalSecurityOrImpersonationIssue: false,
+  });
+
+  assertEquals(result.trustScore, 60);
+  assertEquals(result.verdict, 'caution');
+  assertEquals(result.applied, true);
+  assertEquals(result.redFlags.some((flag) => flag.includes('Online ordering is not currently available')), true);
+  assertEquals(result.redFlags.some((flag) => flag.includes('shipping information')), false);
+});
+
+Deno.test('dormant wording never overrides critical impersonation or security evidence', () => {
+  const result = applyDormantStorefrontGuard({
+    trustScore: 20,
+    verdict: 'danger',
+    dormantStorefront: true,
+    hasCleanIndependentReputation: true,
+    hasFirstPartyBusinessSignals: true,
+    hasCriticalSecurityOrImpersonationIssue: true,
+  });
+
+  assertEquals(result.trustScore, 20);
+  assertEquals(result.verdict, 'danger');
+  assertEquals(result.applied, false);
+});
+
+Deno.test('the dormant-store guard leaves qualified active stores unchanged', () => {
+  const result = applyDormantStorefrontGuard({
+    trustScore: 100,
+    verdict: 'safe',
+    summary: 'Qualified active retailer.',
+    dormantStorefront: false,
+    hasCleanIndependentReputation: true,
+    hasFirstPartyBusinessSignals: true,
+    hasCriticalSecurityOrImpersonationIssue: false,
+  });
+
+  assertEquals(result.trustScore, 100);
+  assertEquals(result.verdict, 'safe');
+  assertEquals(result.summary, 'Qualified active retailer.');
 });

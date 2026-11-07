@@ -26,6 +26,25 @@ export interface BbbReputationResult {
 }
 
 const SCAM_COMPLAINT_PATTERN = /\b(?:scam|fraud|counterfeit|impersonat\w*|phishing|stolen|never received|did not receive|took (?:my |their )?money|unauthori[sz]ed charge)\b/i;
+const BBB_CLAIM_PATTERN = /\bBBB\b|Better Business Bureau/i;
+
+export function removeUnverifiedBbbRedFlags(redFlags: string[] = []): string[] {
+  return redFlags.filter((flag) => !BBB_CLAIM_PATTERN.test(flag || ''));
+}
+
+export function sanitizeUnverifiedBbbSummary(
+  summary: string | undefined,
+  trustScore: number,
+): string | undefined {
+  if (!summary || !BBB_CLAIM_PATTERN.test(summary)) return summary;
+  if (trustScore < 60) {
+    return 'High Risk: This site could not be verified as safe for shopping based on its observable security, identity, and business signals. Avoid entering payment or personal information until those details are independently verified.';
+  }
+  if (trustScore < 85) {
+    return 'Use Caution: Some security, identity, or business details could not be fully verified. Confirm the seller and purchase terms through independent official channels before paying.';
+  }
+  return 'Likely Legit: Independent security and business signals did not identify a critical shopping risk. Normal purchase precautions still apply.';
+}
 
 function isBbbUrl(rawUrl: string): boolean {
   try {
