@@ -4,6 +4,7 @@ import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, hasThinExtract
 import { lookupBbbReputation } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
 import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
+import { assessGovernmentImpersonation, isGovernmentLookalikeDomain } from "./government-evidence.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +13,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-calibration-protocols-v15';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-government-suffixes-v16';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
@@ -866,21 +867,10 @@ function detectGovernmentScam(content: string, html: string, domain: string): Go
     ]
   };
   
-  // Check for government-like domain patterns
-  const govDomainPatterns = [
-    /gov[^a-z]/i, /\.gov\./i, /-gov-/i, /government/i,
-    /federal/i, /official/i, /department-of/i
-  ];
-  
   let claimsGovAffiliation = false;
-  let usesGovLookalikeTerms = false;
-  
-  // Check domain for gov-like terms (suspicious if not actual .gov)
-  for (const pattern of govDomainPatterns) {
-    if (pattern.test(domainLower) && !domainLower.endsWith('.gov')) {
-      usesGovLookalikeTerms = true;
-      suspiciousPatterns.push('Domain contains government-like terms but is not official');
-    }
+  const usesGovLookalikeTerms = isGovernmentLookalikeDomain(domainLower);
+  if (usesGovLookalikeTerms) {
+    suspiciousPatterns.push('Domain contains government-like terms but is not an official government suffix');
   }
   
   // Check content for agency mentions using proper word boundary matching
@@ -930,9 +920,11 @@ function detectGovernmentScam(content: string, html: string, domain: string): Go
     }
   }
   
-  const isLikelyGovScam = 
-    (claimsGovAffiliation && (suspiciousPatterns.length >= 2 || usesGovLookalikeTerms)) ||
-    (usesGovLookalikeTerms && suspiciousPatterns.length >= 1);
+  const isLikelyGovScam = assessGovernmentImpersonation(
+    claimsGovAffiliation,
+    suspiciousPatterns.length,
+    usesGovLookalikeTerms,
+  );
   
   return {
     claimsGovAffiliation,
