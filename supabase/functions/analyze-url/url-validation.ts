@@ -85,3 +85,11 @@ export function validateUrl(input: string): UrlValidationResult {
 
   return { valid: true, normalized: parsed.toString() };
 }
+
+export function validateRedirectTarget(location: string, baseUrl: string): UrlValidationResult {
+  try {
+    return validateUrl(new URL(location, baseUrl).toString());
+  } catch {
+    return { valid: false, error: 'Invalid redirect target' };
+  }
+}

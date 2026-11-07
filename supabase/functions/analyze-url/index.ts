@@ -3,7 +3,7 @@ import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
 import { lookupBbbReputation } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
-import { validateUrl } from "./url-validation.ts";
+import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -271,13 +271,14 @@ async function checkHttpsSecurity(domain: string): Promise<HttpsSecurityCheck> {
         // Check if it redirects to HTTPS
         const location = httpResponse.headers.get('location');
         if (httpResponse.status >= 300 && httpResponse.status < 400 && location) {
-          if (location.startsWith('https://')) {
+          const redirectTarget = validateRedirectTarget(location, httpUrl);
+          if (redirectTarget.valid && redirectTarget.normalized?.startsWith('https://')) {
             result.httpRedirectsToHttps = true;
             result.hasHttps = true;
             
-            // Now verify the HTTPS endpoint works
+            // Now verify the public HTTPS endpoint works. Never follow into private networks.
             try {
-              const redirectedResponse = await fetch(location, {
+              const redirectedResponse = await fetch(redirectTarget.normalized, {
                 method: 'HEAD',
                 redirect: 'manual',
               });

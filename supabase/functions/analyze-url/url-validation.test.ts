@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { validateUrl } from './url-validation.ts';
+import { validateRedirectTarget, validateUrl } from './url-validation.ts';
 
 Deno.test('accepts bare domains, HTTP, public IPs, ports, paths, and queries', () => {
   assertEquals(validateUrl('example.com').normalized, 'https://example.com/');
@@ -39,6 +39,22 @@ Deno.test('blocks localhost, private networks, metadata, and internal DNS names'
     '169.254.169.254', '100.64.0.1', '198.18.0.1', 'http://[::1]', 'http://[fd00::1]',
   ];
   for (const input of blocked) assertEquals(validateUrl(input).valid, false, input);
+});
+
+Deno.test('supports relative and protocol-relative HTTPS redirects', () => {
+  assertEquals(
+    validateRedirectTarget('/account/login', 'http://example.com/old').normalized,
+    'http://example.com/account/login',
+  );
+  assertEquals(
+    validateRedirectTarget('//secure.example.com/login', 'http://example.com').normalized,
+    'https://secure.example.com/login',
+  );
+});
+
+Deno.test('revalidates redirect destinations and blocks private-network redirects', () => {
+  assertEquals(validateRedirectTarget('https://127.0.0.1/admin', 'http://example.com').valid, false);
+  assertEquals(validateRedirectTarget('https://metadata.google.internal/latest', 'http://example.com').valid, false);
 });
 
 Deno.test('rejects malformed, blank, whitespace-containing, and oversized URLs', () => {
