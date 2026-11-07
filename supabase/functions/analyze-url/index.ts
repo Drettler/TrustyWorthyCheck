@@ -5,6 +5,7 @@ import { lookupBbbReputation } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
 import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
 import { assessGovernmentImpersonation, isGovernmentLookalikeDomain } from "./government-evidence.ts";
+import { checkSuspiciousTLD } from "./tld-risk.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +14,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-government-suffixes-v16';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-tld-risk-v17';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
@@ -653,12 +654,6 @@ const scamPatterns = {
     /was\s*\$\d+.*now\s*\$\d+/i,
     /free\s*shipping/i,
   ],
-  suspiciousTLDs: [
-    '.xyz', '.top', '.work', '.click', '.link', '.info', '.biz', 
-    '.online', '.site', '.club', '.vip', '.win', '.review',
-    // Country-code TLDs commonly abused to impersonate .com domains
-    '.com.co', '.com.br', '.com.cn', '.co', '.cc', '.ws', '.tk', '.ml', '.ga', '.cf', '.gq'
-  ],
   suspiciousEmails: [
     /@gmail\.com$/i, /@yahoo\.com$/i, /@hotmail\.com$/i, 
     /@outlook\.com$/i, /@aol\.com$/i
@@ -726,11 +721,6 @@ function checkTyposquatting(domain: string): { isSuspicious: boolean; mimicking?
     }
   }
   return { isSuspicious: false };
-}
-
-// Check for suspicious TLD
-function checkSuspiciousTLD(domain: string): boolean {
-  return scamPatterns.suspiciousTLDs.some(tld => domain.toLowerCase().endsWith(tld));
 }
 
 // Known legitimate cashback/rebate/coupon sites - should not be flagged for scam patterns
