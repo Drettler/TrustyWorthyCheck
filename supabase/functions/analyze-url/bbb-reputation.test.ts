@@ -1,7 +1,7 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 import { classifyBbbResults } from './bbb-reputation.ts';
 
-Deno.test('an exact-domain BBB Scam Tracker result becomes scam evidence', () => {
+Deno.test('an exact-domain BBB Scam Tracker result becomes an unverified candidate', () => {
   const result = classifyBbbResults('usasimplemodern.com', [{
     url: 'https://www.bbb.org/scamtracker/us/123456',
     title: 'Online Purchase Scam reported to BBB',

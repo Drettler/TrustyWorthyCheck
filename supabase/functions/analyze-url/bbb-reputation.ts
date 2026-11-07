@@ -18,6 +18,7 @@ export interface BbbReviewMention extends BbbEvidenceItem {
 }
 
 export interface BbbReputationResult {
+  lookupUrl: string;
   checked: boolean;
   scamCandidates: BbbEvidenceItem[];
   reviewMentions: BbbReviewMention[];
@@ -55,8 +56,9 @@ export function classifyBbbResults(
     const url = result.url?.trim() || '';
     if (!url || seenUrls.has(url) || !isBbbUrl(url)) continue;
 
-    // Search snippets are evidence only when they explicitly contain the checked
-    // domain. A BBB result for a similar business name is not a domain match.
+    // Search snippets become review candidates only when they explicitly contain
+    // the checked domain. They remain unverified until approved BBB access confirms
+    // the report and its role; a similar business name is never enough.
     const evidenceText = [result.title, result.description, result.markdown]
       .filter(Boolean)
       .join('\n');
@@ -89,8 +91,10 @@ export async function lookupBbbReputation(
   domain: string,
   firecrawlApiKey: string,
 ): Promise<BbbReputationResult> {
+  const lookupUrl = `https://www.bbb.org/scamtracker/lookupscam?from=0&q=${encodeURIComponent(`all=${domain}`)}`;
+
   if (!firecrawlApiKey) {
-    return { checked: false, scamCandidates: [], reviewMentions: [], error: 'Search unavailable' };
+    return { lookupUrl, checked: false, scamCandidates: [], reviewMentions: [], error: 'Search unavailable' };
   }
 
   const controller = new AbortController();
@@ -114,18 +118,19 @@ export async function lookupBbbReputation(
 
     if (!response.ok) {
       console.error('BBB search returned status:', response.status);
-      return { checked: false, scamCandidates: [], reviewMentions: [], error: 'BBB search failed' };
+      return { lookupUrl, checked: false, scamCandidates: [], reviewMentions: [], error: 'BBB search failed' };
     }
 
     const payload = await response.json();
     const results: BbbSearchResult[] = Array.isArray(payload?.data?.web) ? payload.data.web : [];
     return {
+      lookupUrl,
       checked: true,
       ...classifyBbbResults(domain, results),
     };
   } catch (error) {
     console.error('BBB search failed:', error instanceof Error ? error.name : 'Unknown error');
-    return { checked: false, scamCandidates: [], reviewMentions: [], error: 'BBB search unavailable' };
+    return { lookupUrl, checked: false, scamCandidates: [], reviewMentions: [], error: 'BBB search unavailable' };
   } finally {
     clearTimeout(timeout);
   }

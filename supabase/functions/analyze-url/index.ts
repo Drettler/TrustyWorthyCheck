@@ -2160,16 +2160,8 @@ Deno.serve(async (req) => {
       lookupBbbReputation(domain, firecrawlApiKey),
     ]);
 
-    if (bbbReputation.scamCandidates.length > 0) {
-      threatFeedCheck.inThreatFeed = true;
-      threatFeedCheck.threats.push(...bbbReputation.scamCandidates.map((report) => ({
-        source: 'BBB Scam Tracker',
-        threatType: 'scam',
-        severity: 'high',
-        title: report.title,
-      })));
-    }
-    
+    // BBB search candidates are intentionally not merged into threat feeds. BBB's
+    // approved API is required to verify reports before they can affect scoring.
     console.log('Community reports:', communityReports);
     console.log('Threat feed check:', threatFeedCheck);
     console.log('BBB evidence:', {
@@ -2311,13 +2303,13 @@ ${threatFeedCheck.inThreatFeed
 - THIS DOMAIN IS FLAGGED BY SECURITY RESEARCHERS - HEAVILY PENALIZE TRUST SCORE`
   : '- Not found in any threat intelligence feeds'}
 
-BBB REPUTATION EVIDENCE (exact-domain matching only):
+BBB REPUTATION LOOKUP (exact-domain candidates, not verified findings):
 - Search completed: ${bbbReputation.checked ? 'Yes' : 'No'}
-- Scam Tracker reports naming this exact domain: ${bbbReputation.scamCandidates.length}
-${bbbReputation.scamCandidates.length > 0 ? bbbReputation.scamCandidates.map(r => `- ${r.title}: ${r.url}`).join('\n') : '- No verified exact-domain Scam Tracker reports found'}
+- Unverified Scam Tracker candidates naming this exact domain: ${bbbReputation.scamCandidates.length}
+${bbbReputation.scamCandidates.length > 0 ? bbbReputation.scamCandidates.map(r => `- ${r.title}: ${r.url}`).join('\n') : '- No indexed exact-domain Scam Tracker candidates found; this does not prove none exist'}
 - BBB review/profile mentions: ${bbbReputation.reviewMentions.length}
 ${bbbReputation.reviewMentions.length > 0 ? bbbReputation.reviewMentions.map(r => `- ${r.title}${r.scamRelated ? ' (contains scam-related complaint language)' : ''}`).join('\n') : '- No exact-domain BBB review/profile mentions found'}
-- IMPORTANT: BBB ratings, negative reviews, and complaints are context only. They are NOT proof of fraud and MUST NOT lower the score by themselves. Only exact-domain BBB Scam Tracker reports are threat evidence.
+- IMPORTANT: Search snippets, BBB ratings, negative reviews, and complaints are context only. They are NOT verified proof of fraud and MUST NOT change the score or verdict by themselves. Do not describe a candidate as a confirmed BBB scam report.
 `;
 
     console.log('Analyzing with AI...');
