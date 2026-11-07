@@ -2812,12 +2812,11 @@ Return ONLY valid JSON in this exact format:
           const filtered = analysisResult.details.redFlags.filter((flag: string) => {
             const f = (flag || '').toLowerCase();
 
-            // Professional corporate/brand sites often have JS-rendered contact details,
-            // geo-specific subdomains, and temporary shop/catalog notices. Those are not
-            // scam indicators when independent reputation checks are clean.
+            // Professional corporate/brand sites often have JS-rendered contact details
+            // and geo-specific subdomains. Those are not scam indicators when independent
+            // reputation checks are clean. Storefront-unavailable warnings are always kept.
             if (isCorporateBrand || isCredibleBrandSite) {
               if (f.includes('country mismatch') || f.includes('location mismatch')) return false;
-              if (f.includes('online shop currently unavailable')) return false;
               if (f.includes('physical address') || f.includes('no address')) return false;
               if (f.includes('phone number') || f.includes('no phone')) return false;
               if (f.includes('unknown domain age') || f.includes('domain age could not be verified')) return false;
@@ -3491,10 +3490,16 @@ Return ONLY valid JSON in this exact format:
           confidenceMessage = 'Limited data found — results may be less certain.';
         }
         
-        // IMPORTANT: If confidence is low, avoid "safe" unless score is extremely high (95+)
-        if (confidenceLevel === 'low' && verdict === 'safe' && trustScore < 95) {
-          analysisResult.verdict = 'caution';
-        }
+        // Low confidence can only remain "safe" when independent domain-age, TLS,
+        // and reputation signals establish legitimacy. A clean scan alone is not enough.
+        const lowConfidenceGuard = applyLowConfidenceSafeGuard(
+          trustScore,
+          verdict,
+          confidenceLevel,
+          isEstablishedLegitimateSite || isHighlyEstablishedSite,
+        );
+        analysisResult.trustScore = lowConfidenceGuard.trustScore;
+        analysisResult.verdict = lowConfidenceGuard.verdict;
         
         // Store confidence in result
         analysisResult.confidence = {
@@ -3716,6 +3721,23 @@ Return ONLY valid JSON in this exact format:
         analysisResult.details.redFlags.push(flag);
       }
     }
+
+    // Final invariant: no score floor, site-type bonus, or post-processing rule may
+    // classify an explicitly unavailable storefront as safe for shopping.
+    const storefrontSafetyGuard = applyStorefrontSafetyGuard({
+      trustScore: analysisResult.trustScore,
+      verdict: analysisResult.verdict,
+      summary: analysisResult.summary,
+      redFlags: analysisResult.details.redFlags,
+      title: metadata.title,
+      description: metadata.description,
+      markdown,
+      mimickingBrand: analysisResult.details.domain?.mimickingBrand,
+    });
+    analysisResult.trustScore = storefrontSafetyGuard.trustScore;
+    analysisResult.verdict = storefrontSafetyGuard.verdict;
+    analysisResult.summary = storefrontSafetyGuard.summary;
+    analysisResult.details.redFlags = storefrontSafetyGuard.redFlags;
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
 
