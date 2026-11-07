@@ -179,7 +179,11 @@ export function UrlChecker() {
     if (!trimmed || trimmed.length > 2048) return false;
     if (/\s/.test(trimmed)) return false;
 
-    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const scheme = trimmed.match(/^([a-z][a-z\d+.-]*):/i)?.[1]?.toLowerCase();
+    const hostWithPort = /^[^/?#]+:\d+(?:[/?#]|$)/.test(trimmed);
+    if (scheme && scheme !== 'http' && scheme !== 'https' && !hostWithPort) return false;
+
+    const withProto = /^https?:/i.test(trimmed) ? trimmed : `https://${trimmed}`;
     let parsed: URL;
     try {
       parsed = new URL(withProto);

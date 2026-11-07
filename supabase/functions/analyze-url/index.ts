@@ -3,6 +3,7 @@ import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard } from "./safety-guards.ts";
 import { lookupBbbReputation } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
+import { validateUrl } from "./url-validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
