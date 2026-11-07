@@ -116,9 +116,9 @@ export function VerificationChecklist({ result }: VerificationChecklistProps) {
           },
           {
             name: 'BBB Scam Tracker search',
-            status: bbb?.checked ? (bbb.scamCandidates.length > 0 ? 'warning' : 'pass') : 'not_checked',
+            status: bbb?.checked ? (bbb.scamCandidates.length > 0 ? 'not_checked' : 'pass') : 'not_checked',
             details: bbb?.checked
-              ? `${bbb.scamCandidates.length} unverified exact-domain candidate${bbb.scamCandidates.length === 1 ? '' : 's'} — verify directly with BBB`
+              ? `${bbb.scamCandidates.length} unverified exact-domain candidate${bbb.scamCandidates.length === 1 ? '' : 's'}; may involve a third party or impersonation — verify directly with BBB`
               : 'BBB search unavailable; no conclusion drawn',
             url: bbb?.lookupUrl,
           },

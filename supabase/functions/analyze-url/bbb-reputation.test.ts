@@ -35,6 +35,17 @@ Deno.test('a BBB report about a lookalike domain does not match the qualified st
   assertEquals(result.reviewMentions.length, 0);
 });
 
+Deno.test('general BBB studies are not mislabeled as store reviews', () => {
+  const result = classifyBbbResults('walmart.com', [{
+    url: 'https://www.bbb.org/all/scamstudies/jobscams/jobscamsfullstudy',
+    title: 'BBB Job Scams Study',
+    description: 'A scammer impersonated an employer using a walmart.com email address.',
+  }]);
+
+  assertEquals(result.scamCandidates.length, 0);
+  assertEquals(result.reviewMentions.length, 0);
+});
+
 Deno.test('a non-BBB search result cannot become BBB evidence', () => {
   const result = classifyBbbResults('usasimplemodern.com', [{
     url: 'https://unaffiliated.example/scamtracker/us/123456',

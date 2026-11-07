@@ -44,6 +44,16 @@ function isScamTrackerUrl(rawUrl: string): boolean {
   }
 }
 
+function isReviewOrProfileUrl(rawUrl: string): boolean {
+  try {
+    const path = new URL(rawUrl).pathname.toLowerCase();
+    return path.includes('/profile/') || path.includes('/customer-reviews') ||
+      path.includes('/complaints') || path.includes('/reviews');
+  } catch {
+    return false;
+  }
+}
+
 export function classifyBbbResults(
   domain: string,
   results: BbbSearchResult[],
@@ -73,7 +83,7 @@ export function classifyBbbResults(
 
     if (isScamTrackerUrl(url)) {
       scamCandidates.push(item);
-    } else {
+    } else if (isReviewOrProfileUrl(url)) {
       reviewMentions.push({
         ...item,
         scamRelated: SCAM_COMPLAINT_PATTERN.test(evidenceText),
