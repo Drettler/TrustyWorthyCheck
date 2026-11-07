@@ -8,7 +8,7 @@ Deno.test('an exact-domain BBB Scam Tracker result becomes scam evidence', () =>
     description: 'The reporter identified usasimplemodern.com as the website used.',
   }]);
 
-  assertEquals(result.scamReports.length, 1);
+  assertEquals(result.scamCandidates.length, 1);
   assertEquals(result.reviewMentions.length, 0);
 });
 
@@ -19,7 +19,7 @@ Deno.test('negative BBB reviews alone never become Scam Tracker evidence', () =>
     description: 'A reviewer called qualified-store.example a scam after a delivery dispute.',
   }]);
 
-  assertEquals(result.scamReports.length, 0);
+  assertEquals(result.scamCandidates.length, 0);
   assertEquals(result.reviewMentions.length, 1);
   assertEquals(result.reviewMentions[0].scamRelated, true);
 });
@@ -31,7 +31,7 @@ Deno.test('a BBB report about a lookalike domain does not match the qualified st
     description: 'The reported website was walmart.com-security-alert.ru, not the qualified retailer.',
   }]);
 
-  assertEquals(result.scamReports.length, 0);
+  assertEquals(result.scamCandidates.length, 0);
   assertEquals(result.reviewMentions.length, 0);
 });
 
@@ -42,5 +42,5 @@ Deno.test('a non-BBB search result cannot become BBB evidence', () => {
     description: 'Mentions usasimplemodern.com without linking to BBB.',
   }]);
 
-  assertEquals(result.scamReports.length, 0);
+  assertEquals(result.scamCandidates.length, 0);
 });

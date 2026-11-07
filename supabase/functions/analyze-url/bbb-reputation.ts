@@ -19,7 +19,7 @@ export interface BbbReviewMention extends BbbEvidenceItem {
 
 export interface BbbReputationResult {
   checked: boolean;
-  scamReports: BbbEvidenceItem[];
+  scamCandidates: BbbEvidenceItem[];
   reviewMentions: BbbReviewMention[];
   error?: string;
 }
@@ -46,8 +46,8 @@ function isScamTrackerUrl(rawUrl: string): boolean {
 export function classifyBbbResults(
   domain: string,
   results: BbbSearchResult[],
-): Pick<BbbReputationResult, 'scamReports' | 'reviewMentions'> {
-  const scamReports: BbbEvidenceItem[] = [];
+): Pick<BbbReputationResult, 'scamCandidates' | 'reviewMentions'> {
+  const scamCandidates: BbbEvidenceItem[] = [];
   const reviewMentions: BbbReviewMention[] = [];
   const seenUrls = new Set<string>();
 
@@ -70,7 +70,7 @@ export function classifyBbbResults(
     };
 
     if (isScamTrackerUrl(url)) {
-      scamReports.push(item);
+      scamCandidates.push(item);
     } else {
       reviewMentions.push({
         ...item,
@@ -80,7 +80,7 @@ export function classifyBbbResults(
   }
 
   return {
-    scamReports: scamReports.slice(0, 5),
+    scamCandidates: scamCandidates.slice(0, 5),
     reviewMentions: reviewMentions.slice(0, 5),
   };
 }
@@ -90,7 +90,7 @@ export async function lookupBbbReputation(
   firecrawlApiKey: string,
 ): Promise<BbbReputationResult> {
   if (!firecrawlApiKey) {
-    return { checked: false, scamReports: [], reviewMentions: [], error: 'Search unavailable' };
+    return { checked: false, scamCandidates: [], reviewMentions: [], error: 'Search unavailable' };
   }
 
   const controller = new AbortController();
@@ -114,7 +114,7 @@ export async function lookupBbbReputation(
 
     if (!response.ok) {
       console.error('BBB search returned status:', response.status);
-      return { checked: false, scamReports: [], reviewMentions: [], error: 'BBB search failed' };
+      return { checked: false, scamCandidates: [], reviewMentions: [], error: 'BBB search failed' };
     }
 
     const payload = await response.json();
@@ -125,7 +125,7 @@ export async function lookupBbbReputation(
     };
   } catch (error) {
     console.error('BBB search failed:', error instanceof Error ? error.name : 'Unknown error');
-    return { checked: false, scamReports: [], reviewMentions: [], error: 'BBB search unavailable' };
+    return { checked: false, scamCandidates: [], reviewMentions: [], error: 'BBB search unavailable' };
   } finally {
     clearTimeout(timeout);
   }

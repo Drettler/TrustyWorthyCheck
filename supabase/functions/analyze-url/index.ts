@@ -2160,9 +2160,9 @@ Deno.serve(async (req) => {
       lookupBbbReputation(domain, firecrawlApiKey),
     ]);
 
-    if (bbbReputation.scamReports.length > 0) {
+    if (bbbReputation.scamCandidates.length > 0) {
       threatFeedCheck.inThreatFeed = true;
-      threatFeedCheck.threats.push(...bbbReputation.scamReports.map((report) => ({
+      threatFeedCheck.threats.push(...bbbReputation.scamCandidates.map((report) => ({
         source: 'BBB Scam Tracker',
         threatType: 'scam',
         severity: 'high',
@@ -2174,7 +2174,7 @@ Deno.serve(async (req) => {
     console.log('Threat feed check:', threatFeedCheck);
     console.log('BBB evidence:', {
       checked: bbbReputation.checked,
-      scamReports: bbbReputation.scamReports.length,
+      scamCandidates: bbbReputation.scamCandidates.length,
       reviewMentions: bbbReputation.reviewMentions.length,
       error: bbbReputation.error,
     });
@@ -2313,8 +2313,8 @@ ${threatFeedCheck.inThreatFeed
 
 BBB REPUTATION EVIDENCE (exact-domain matching only):
 - Search completed: ${bbbReputation.checked ? 'Yes' : 'No'}
-- Scam Tracker reports naming this exact domain: ${bbbReputation.scamReports.length}
-${bbbReputation.scamReports.length > 0 ? bbbReputation.scamReports.map(r => `- ${r.title}: ${r.url}`).join('\n') : '- No verified exact-domain Scam Tracker reports found'}
+- Scam Tracker reports naming this exact domain: ${bbbReputation.scamCandidates.length}
+${bbbReputation.scamCandidates.length > 0 ? bbbReputation.scamCandidates.map(r => `- ${r.title}: ${r.url}`).join('\n') : '- No verified exact-domain Scam Tracker reports found'}
 - BBB review/profile mentions: ${bbbReputation.reviewMentions.length}
 ${bbbReputation.reviewMentions.length > 0 ? bbbReputation.reviewMentions.map(r => `- ${r.title}${r.scamRelated ? ' (contains scam-related complaint language)' : ''}`).join('\n') : '- No exact-domain BBB review/profile mentions found'}
 - IMPORTANT: BBB ratings, negative reviews, and complaints are context only. They are NOT proof of fraud and MUST NOT lower the score by themselves. Only exact-domain BBB Scam Tracker reports are threat evidence.
