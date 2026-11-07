@@ -28,6 +28,7 @@ export const KNOWN_GOOD: CalibrationEntry[] = [
 ];
 
 export const KNOWN_BAD: CalibrationEntry[] = [
+  { domain: 'usasimplemodern.com', expected: 'danger', expectedScoreMax: 45, notes: 'Unavailable storefront with brand-impersonation findings; reported to BBB Scam Tracker' },
   { domain: 'amazon-prime-renewal.net', expected: 'danger', expectedScoreMax: 40, notes: 'Brand impersonation' },
   { domain: 'paypal-secure-login.com', expected: 'danger', expectedScoreMax: 40, notes: 'Phishing pattern' },
   { domain: 'usps-tracking-alert.com', expected: 'danger', expectedScoreMax: 40, notes: 'Package scam' },
