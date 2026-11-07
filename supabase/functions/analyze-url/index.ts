@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
-import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
-import { lookupBbbReputation } from "./bbb-reputation.ts";
+import { applyDormantStorefrontGuard, applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, detectDormantStorefront, hasBrandImpersonationFinding, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
+import { lookupBbbReputation, removeUnverifiedBbbRedFlags, sanitizeUnverifiedBbbSummary } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
 import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
 import { assessGovernmentImpersonation, isGovernmentLookalikeDomain } from "./government-evidence.ts";
@@ -14,7 +14,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-tld-risk-v17';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-dormant-storefront-v18';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {

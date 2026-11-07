@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { classifyBbbResults } from './bbb-reputation.ts';
+import { classifyBbbResults, removeUnverifiedBbbRedFlags, sanitizeUnverifiedBbbSummary } from './bbb-reputation.ts';
 
 Deno.test('an exact-domain BBB Scam Tracker result becomes an unverified candidate', () => {
   const result = classifyBbbResults('usasimplemodern.com', [{
@@ -54,4 +54,18 @@ Deno.test('a non-BBB search result cannot become BBB evidence', () => {
   }]);
 
   assertEquals(result.scamCandidates.length, 0);
+});
+
+Deno.test('unverified BBB snippets cannot become AI scam findings or summary claims', () => {
+  assertEquals(removeUnverifiedBbbRedFlags([
+    'Associated with an unverified BBB Scam Tracker submission',
+    'No HTTPS - connection is not secure',
+  ]), ['No HTTPS - connection is not secure']);
+
+  const summary = sanitizeUnverifiedBbbSummary(
+    'High risk because multiple BBB Scam Tracker reports confirm fraud.',
+    45,
+  );
+  assertEquals(summary?.includes('BBB'), false);
+  assertEquals(summary?.startsWith('High Risk:'), true);
 });
