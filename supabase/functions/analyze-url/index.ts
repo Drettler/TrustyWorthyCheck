@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
-import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard } from "./safety-guards.ts";
+import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
 import { lookupBbbReputation } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
 import { validateUrl } from "./url-validation.ts";
@@ -2977,7 +2977,7 @@ Return ONLY valid JSON in this exact format:
           complianceAnalysis.complianceScore > 0,
           Boolean(analysisResult.details?.business?.hasPrivacyPolicy || analysisResult.details?.business?.hasTerms),
         ].filter(Boolean).length;
-        const hasThinExtraction = (markdown || '').length < 2500 || extractionSignals <= 1;
+        const thinExtraction = hasThinExtraction((markdown || '').length, extractionSignals);
 
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
@@ -3351,14 +3351,7 @@ Return ONLY valid JSON in this exact format:
         // 85-100: Likely Legit (safe)
         // 60-84: Use Caution (caution)
         // 0-59: High Risk (danger)
-        let verdict: 'safe' | 'caution' | 'danger';
-        if (trustScore >= 85) {
-          verdict = 'safe';
-        } else if (trustScore >= 60) {
-          verdict = 'caution';
-        } else {
-          verdict = 'danger';
-        }
+        const verdict = verdictForScore(trustScore);
         
         // Apply the deterministic score and verdict
         analysisResult.trustScore = trustScore;
@@ -3634,9 +3627,7 @@ Return ONLY valid JSON in this exact format:
         const penalty = virusTotalResult.suspiciousCount >= 2 ? 40 : 20;
         analysisResult.trustScore = Math.max(0, analysisResult.trustScore - penalty);
         // Recalculate verdict
-        if (analysisResult.trustScore >= 85) analysisResult.verdict = 'safe';
-        else if (analysisResult.trustScore >= 60) analysisResult.verdict = 'caution';
-        else analysisResult.verdict = 'danger';
+        analysisResult.verdict = verdictForScore(analysisResult.trustScore);
       }
     }
 
