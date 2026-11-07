@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard } from "./safety-guards.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +9,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-08-10-extraction-quality-v11';
+const ANALYSIS_CACHE_VERSION = '2026-11-07-storefront-safety-v12';
 
 // Validate URL for security (SSRF prevention)
 interface UrlValidationResult {
