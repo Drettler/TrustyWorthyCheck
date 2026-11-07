@@ -1,9 +1,9 @@
 # Roadmap
 
 - [x] Run a broad live calibration matrix across varied site types and URL forms.
-- [ ] Test Etsy and multiple dropshipping platforms without treating dropshipping alone as fraud.
-- [ ] Investigate the gov.uk false positive and any scoring failures without adding site-specific exceptions.
-- [ ] Report live pass/fail/error results and remaining coverage limits.
+- [x] Test Etsy and multiple dropshipping platforms without treating dropshipping alone as fraud.
+- [x] Investigate the gov.uk false positive and any scoring failures without adding site-specific exceptions.
+- [x] Report live pass/fail/error results and remaining coverage limits.
 - [x] Expand calibration with versioned live-site and synthetic edge-case coverage.
 - [x] Add protocol, IDN, redirect, storefront, marketplace, and legitimacy regression tests.
 - [x] Make calibration results resilient to stale cache, rate limits, and changing third-party sites.
