@@ -41,13 +41,17 @@ Deno.test('blocks localhost, private networks, metadata, and internal DNS names'
   for (const input of blocked) assertEquals(validateUrl(input).valid, false, input);
 });
 
-Deno.test('supports relative and protocol-relative HTTPS redirects', () => {
+Deno.test('supports relative redirects and preserves the protocol-relative base scheme', () => {
   assertEquals(
     validateRedirectTarget('/account/login', 'http://example.com/old').normalized,
     'http://example.com/account/login',
   );
   assertEquals(
     validateRedirectTarget('//secure.example.com/login', 'http://example.com').normalized,
+    'http://secure.example.com/login',
+  );
+  assertEquals(
+    validateRedirectTarget('//secure.example.com/login', 'https://example.com').normalized,
     'https://secure.example.com/login',
   );
 });
