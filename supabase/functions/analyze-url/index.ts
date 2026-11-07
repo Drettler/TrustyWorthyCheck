@@ -3389,7 +3389,7 @@ Return ONLY valid JSON in this exact format:
         // Only substantive red flags block the floor — "not found" style flags come from
         // failed extraction, not from observed bad behavior.
         const substantiveRedFlags = Array.from(
-          new Set((analysisResult.details?.redFlags || []).map((f: string) => (f || '').toLowerCase().trim()))
+          new Set<string>((analysisResult.details?.redFlags || []).map((f: string) => (f || '').toLowerCase().trim()))
         ).filter((t: string) => {
           if (t.includes('could not') || t.includes('unknown')) return false;
           // Flags the analyzer itself annotates as normal marketing behavior
