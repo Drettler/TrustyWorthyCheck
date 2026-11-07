@@ -2982,10 +2982,10 @@ Return ONLY valid JSON in this exact format:
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite || hasThinExtraction;
+        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite || thinExtraction;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedLegitimateSite;
 
-        if (hasThinExtraction) {
+        if (thinExtraction) {
           analysisResult.details.positiveSignals = analysisResult.details.positiveSignals || [];
           analysisResult.details.redFlags = (analysisResult.details.redFlags || []).filter((f: string) => {
             const t = (f || '').toLowerCase();
@@ -3341,7 +3341,7 @@ Return ONLY valid JSON in this exact format:
 
         // If the page blocked inspection AND external reputation is not strongly clean,
         // stay in "caution" rather than claiming safety we cannot substantiate.
-        if (hasThinExtraction && !hasStrongCleanReputation && trustScore > 75) {
+        if (thinExtraction && !hasStrongCleanReputation && trustScore > 75) {
           trustScore = 75;
           analysisResult.details.redFlags.push('Website blocked automated inspection — limited verification possible');
         }
