@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Reproduce Sundance Living official and impersonator scores and identify the shared penalty path.
+- [ ] Distinguish official stores that no longer accept online orders from impersonating storefronts without whitelisting domains.
+- [ ] Add regression and live calibration coverage, then deploy and verify both verdicts.
 - [x] Run a broad live calibration matrix across varied site types and URL forms.
 - [x] Test Etsy and multiple dropshipping platforms without treating dropshipping alone as fraud.
 - [x] Investigate the gov.uk false positive and any scoring failures without adding site-specific exceptions.
