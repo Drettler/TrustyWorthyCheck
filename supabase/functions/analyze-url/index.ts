@@ -2513,10 +2513,11 @@ Return ONLY valid JSON in this exact format:
           analysisResult.details.domain.mimickingBrand = typosquattingCheck.mimicking || null;
         }
         
-        // Initialize red flags array
-        if (!analysisResult.details.redFlags) {
-          analysisResult.details.redFlags = [];
-        }
+        // Initialize red flags array. BBB search snippets are contextual until
+        // approved BBB access verifies them; never let the AI turn them into findings.
+        analysisResult.details.redFlags = removeUnverifiedBbbRedFlags(
+          analysisResult.details.redFlags || [],
+        );
         if (!analysisResult.details.positiveSignals) {
           analysisResult.details.positiveSignals = [];
         }
@@ -3630,6 +3631,61 @@ Return ONLY valid JSON in this exact format:
         analysisResult.details.redFlags.push(flag);
       }
     }
+
+    // A dormant brand site with no active purchase path needs an ordering warning,
+    // not the same scam verdict as an impersonator. This caution-band guard requires
+    // first-party business signals and clean independent security evidence, and it
+    // never overrides substantive malware, impersonation, or connection findings.
+    const dormantStorefront = detectDormantStorefront(
+      metadata.title,
+      metadata.description,
+      markdown,
+      links,
+    );
+    const hasCleanIndependentReputation =
+      !virusTotalResult.error &&
+      virusTotalResult.totalEngines >= 50 &&
+      virusTotalResult.maliciousCount === 0 &&
+      virusTotalResult.suspiciousCount === 0 &&
+      !threatFeedCheck.inThreatFeed &&
+      !communityReports.reported &&
+      httpsSecurityCheck.hasHttps &&
+      httpsSecurityCheck.tlsOk &&
+      !typosquattingCheck.isSuspicious &&
+      !suspiciousTLD;
+    const hasFirstPartyBusinessSignals = Boolean(
+      analysisResult.details.business?.hasPrivacyPolicy ||
+      analysisResult.details.business?.hasTerms ||
+      analysisResult.details.business?.hasAboutPage ||
+      contactAnalysis.hasProfessionalEmail ||
+      linkAnalysis.hasSocialLinks,
+    );
+    const hasCriticalSecurityOrImpersonationIssue =
+      governmentScamAnalysis.isLikelyGovScam ||
+      subscriptionScamAnalysis.isLikelySubscriptionScam ||
+      typosquattingCheck.isSuspicious ||
+      virusTotalResult.isMalicious ||
+      !httpsSecurityCheck.hasHttps ||
+      !httpsSecurityCheck.tlsOk ||
+      hasBrandImpersonationFinding(
+        analysisResult.details.redFlags,
+        analysisResult.details.domain?.mimickingBrand,
+      );
+    const dormantStorefrontGuard = applyDormantStorefrontGuard({
+      trustScore: analysisResult.trustScore,
+      verdict: analysisResult.verdict,
+      summary: analysisResult.summary,
+      redFlags: analysisResult.details.redFlags,
+      dormantStorefront,
+      hasCleanIndependentReputation,
+      hasFirstPartyBusinessSignals,
+      hasCriticalSecurityOrImpersonationIssue,
+    });
+    analysisResult.trustScore = dormantStorefrontGuard.trustScore;
+    analysisResult.verdict = dormantStorefrontGuard.verdict;
+    analysisResult.summary = dormantStorefrontGuard.summary;
+    analysisResult.details.redFlags = dormantStorefrontGuard.redFlags;
+    if (dormantStorefrontGuard.applied) analysisResult.siteType = 'dormant_storefront';
 
     // Final invariant: no score floor, site-type bonus, or post-processing rule may
     // classify an explicitly unavailable storefront as safe for shopping.
