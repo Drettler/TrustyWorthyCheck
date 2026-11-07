@@ -1,8 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
-import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard } from "./safety-guards.ts";
+import { applyLowConfidenceSafeGuard, applyStorefrontSafetyGuard, hasThinExtraction, verdictForScore } from "./safety-guards.ts";
 import { lookupBbbReputation } from "./bbb-reputation.ts";
 import { isExactDomainMatch } from "./domain-evidence.ts";
+import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,91 +12,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-bbb-review-candidates-v14';
-
-// Validate URL for security (SSRF prevention)
-interface UrlValidationResult {
-  valid: boolean;
-  error?: string;
-  normalized?: string;
-}
-
-function validateUrl(url: string): UrlValidationResult {
-  // Length check - prevent excessively long URLs
-  if (url.length > 2048) {
-    return { valid: false, error: 'URL too long (max 2048 characters)' };
-  }
-
-  // Basic format check
-  let normalized = url.toLowerCase().trim();
-  if (!normalized) {
-    return { valid: false, error: 'URL is required' };
-  }
-
-  // Add https if no protocol
-  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-    normalized = `https://${normalized}`;
-  }
-
-  // Parse URL
-  let parsed: URL;
-  try {
-    parsed = new URL(normalized);
-  } catch (e) {
-    return { valid: false, error: 'Invalid URL format' };
-  }
-
-  // Protocol check - only allow http/https
-  if (!['http:', 'https:'].includes(parsed.protocol)) {
-    return { valid: false, error: 'Only HTTP/HTTPS protocols allowed' };
-  }
-
-  // Block private/internal IP ranges and localhost (SSRF protection)
-  const hostname = parsed.hostname.toLowerCase();
-
-  const blockedPatterns = [
-    /^localhost$/i,
-    /^127\.\d+\.\d+\.\d+$/,           // Loopback IPv4
-    /^10\.\d+\.\d+\.\d+$/,            // Private Class A
-    /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, // Private Class B
-    /^192\.168\.\d+\.\d+$/,           // Private Class C
-    /^169\.254\.\d+\.\d+$/,           // Link-local
-    /^0\.\d+\.\d+\.\d+$/,             // Invalid/reserved
-    /^::1?$/,                          // IPv6 loopback
-    /^\[::1?\]$/,                      // IPv6 loopback in brackets
-    /^fe80:/i,                         // IPv6 link-local
-    /^\[fe80:/i,                       // IPv6 link-local in brackets
-  ];
-
-  for (const pattern of blockedPatterns) {
-    if (pattern.test(hostname)) {
-      return { valid: false, error: 'Internal/private addresses not allowed' };
-    }
-  }
-
-  // Block cloud metadata endpoints
-  const blockedHostnames = [
-    '169.254.169.254',           // AWS/GCP metadata
-    'metadata.google.internal',  // GCP metadata
-    'metadata',                  // Azure metadata
-  ];
-
-  if (blockedHostnames.includes(hostname)) {
-    return { valid: false, error: 'Cloud metadata endpoints not allowed' };
-  }
-
-  // Block file:// and other dangerous schemes that might slip through
-  if (parsed.protocol === 'file:') {
-    return { valid: false, error: 'File protocol not allowed' };
-  }
-
-  // Remove www. from hostname for consistent caching
-  if (parsed.hostname.startsWith('www.')) {
-    parsed.hostname = parsed.hostname.slice(4);
-  }
-
-  return { valid: true, normalized: parsed.toString() };
-}
+const ANALYSIS_CACHE_VERSION = '2026-11-07-calibration-protocols-v15';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
@@ -354,13 +271,14 @@ async function checkHttpsSecurity(domain: string): Promise<HttpsSecurityCheck> {
         // Check if it redirects to HTTPS
         const location = httpResponse.headers.get('location');
         if (httpResponse.status >= 300 && httpResponse.status < 400 && location) {
-          if (location.startsWith('https://')) {
+          const redirectTarget = validateRedirectTarget(location, httpUrl);
+          if (redirectTarget.valid && redirectTarget.normalized?.startsWith('https://')) {
             result.httpRedirectsToHttps = true;
             result.hasHttps = true;
             
-            // Now verify the HTTPS endpoint works
+            // Now verify the public HTTPS endpoint works. Never follow into private networks.
             try {
-              const redirectedResponse = await fetch(location, {
+              const redirectedResponse = await fetch(redirectTarget.normalized, {
                 method: 'HEAD',
                 redirect: 'manual',
               });
@@ -3060,15 +2978,15 @@ Return ONLY valid JSON in this exact format:
           complianceAnalysis.complianceScore > 0,
           Boolean(analysisResult.details?.business?.hasPrivacyPolicy || analysisResult.details?.business?.hasTerms),
         ].filter(Boolean).length;
-        const hasThinExtraction = (markdown || '').length < 2500 || extractionSignals <= 1;
+        const thinExtraction = hasThinExtraction((markdown || '').length, extractionSignals);
 
         // === BUSINESS TRANSPARENCY ===
         // GENERAL penalties apply to ALL non-well-known, non-established sites
         // E-commerce-specific penalties (shipping, refund, pricing) only for commerce sites
-        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite || hasThinExtraction;
+        const skipAllPenalties = isEstablishedLegitimateSite || isCredibleBrandSite || thinExtraction;
         const isCommerceForPenalties = !isNonCommerceSite && !isEstablishedLegitimateSite;
 
-        if (hasThinExtraction) {
+        if (thinExtraction) {
           analysisResult.details.positiveSignals = analysisResult.details.positiveSignals || [];
           analysisResult.details.redFlags = (analysisResult.details.redFlags || []).filter((f: string) => {
             const t = (f || '').toLowerCase();
@@ -3424,7 +3342,7 @@ Return ONLY valid JSON in this exact format:
 
         // If the page blocked inspection AND external reputation is not strongly clean,
         // stay in "caution" rather than claiming safety we cannot substantiate.
-        if (hasThinExtraction && !hasStrongCleanReputation && trustScore > 75) {
+        if (thinExtraction && !hasStrongCleanReputation && trustScore > 75) {
           trustScore = 75;
           analysisResult.details.redFlags.push('Website blocked automated inspection — limited verification possible');
         }
@@ -3434,14 +3352,7 @@ Return ONLY valid JSON in this exact format:
         // 85-100: Likely Legit (safe)
         // 60-84: Use Caution (caution)
         // 0-59: High Risk (danger)
-        let verdict: 'safe' | 'caution' | 'danger';
-        if (trustScore >= 85) {
-          verdict = 'safe';
-        } else if (trustScore >= 60) {
-          verdict = 'caution';
-        } else {
-          verdict = 'danger';
-        }
+        const verdict = verdictForScore(trustScore);
         
         // Apply the deterministic score and verdict
         analysisResult.trustScore = trustScore;
@@ -3717,9 +3628,7 @@ Return ONLY valid JSON in this exact format:
         const penalty = virusTotalResult.suspiciousCount >= 2 ? 40 : 20;
         analysisResult.trustScore = Math.max(0, analysisResult.trustScore - penalty);
         // Recalculate verdict
-        if (analysisResult.trustScore >= 85) analysisResult.verdict = 'safe';
-        else if (analysisResult.trustScore >= 60) analysisResult.verdict = 'caution';
-        else analysisResult.verdict = 'danger';
+        analysisResult.verdict = verdictForScore(analysisResult.trustScore);
       }
     }
 

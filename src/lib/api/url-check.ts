@@ -161,7 +161,12 @@ export interface ScrapeError {
 
 export type AnalysisError = RateLimitError | SslError | ScrapeError;
 
-export async function analyzeUrl(url: string): Promise<AnalysisResult> {
+export interface AnalysisRun {
+  result: AnalysisResult;
+  cached: boolean;
+}
+
+export async function analyzeUrlWithMetadata(url: string): Promise<AnalysisRun> {
   const { data, error, response } = await supabase.functions.invoke('analyze-url', {
     body: { url },
     headers: {
@@ -241,7 +246,7 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   // Some deployed/cached responses may contain a valid result without the newer
   // `success: true` wrapper. Treat those as successful so the UI can render.
   if (data?.result && data.success !== false) {
-    return data.result;
+    return { result: data.result, cached: Boolean(data.cached) };
   }
 
   // Handle rate limit response (if backend returns 200 with an error payload)
@@ -278,5 +283,9 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     throw new Error(data.message || data.error || 'Analysis failed');
   }
 
-  return data.result;
+  return { result: data.result, cached: Boolean(data.cached) };
+}
+
+export async function analyzeUrl(url: string): Promise<AnalysisResult> {
+  return (await analyzeUrlWithMetadata(url)).result;
 }

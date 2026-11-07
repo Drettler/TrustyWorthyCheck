@@ -3,6 +3,8 @@ import {
   applyLowConfidenceSafeGuard,
   applyStorefrontSafetyGuard,
   detectUnavailableStorefront,
+  hasThinExtraction,
+  verdictForScore,
 } from './safety-guards.ts';
 
 Deno.test('detects the exact unavailable-store title from the reported result', () => {
@@ -67,4 +69,28 @@ Deno.test('low confidence does not override independently established legitimacy
     trustScore: 95,
     verdict: 'safe',
   });
+});
+
+Deno.test('verdict boundaries remain consistent at 85 and 60', () => {
+  assertEquals([100, 85, 84, 60, 59, 0].map(verdictForScore), [
+    'safe', 'safe', 'caution', 'caution', 'danger', 'danger',
+  ]);
+});
+
+Deno.test('thin extraction covers blocked pages without reclassifying rich multi-signal pages', () => {
+  assertEquals(hasThinExtraction(0, 0), true);
+  assertEquals(hasThinExtraction(5000, 1), true);
+  assertEquals(hasThinExtraction(5000, 2), false);
+});
+
+Deno.test('medium and high confidence do not trigger the low-confidence cap', () => {
+  assertEquals(applyLowConfidenceSafeGuard(90, 'safe', 'medium', false), { trustScore: 90, verdict: 'safe' });
+  assertEquals(applyLowConfidenceSafeGuard(90, 'safe', 'high', false), { trustScore: 90, verdict: 'safe' });
+});
+
+Deno.test('new unavailable-store wording is caught without confusing normal business hours', () => {
+  assertEquals(detectUnavailableStorefront('Sorry, this shop is currently unavailable'), true);
+  assertEquals(detectUnavailableStorefront('Store unavailable'), true);
+  assertEquals(detectUnavailableStorefront('Our store is temporarily closed'), true);
+  assertEquals(detectUnavailableStorefront('Our store is closed on Sundays'), false);
 });

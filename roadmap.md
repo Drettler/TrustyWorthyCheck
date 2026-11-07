@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Expand calibration with versioned live-site and synthetic edge-case coverage.
+- [x] Add protocol, IDN, redirect, storefront, marketplace, and legitimacy regression tests.
+- [x] Make calibration results resilient to stale cache, rate limits, and changing third-party sites.
+- [x] Validate and deploy the tuned scoring and calibration workflow.
 - [x] Add BBB Scam Tracker and review lookup using exact-domain candidates.
 - [x] Replace partial threat-feed domain matching and add regression tests.
 - [x] Verify negative reviews and lookalike domains do not change qualified-store scores.

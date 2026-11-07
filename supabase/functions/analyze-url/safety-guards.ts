@@ -1,5 +1,15 @@
 export type Verdict = 'safe' | 'caution' | 'danger';
 
+export function verdictForScore(trustScore: number): Verdict {
+  if (trustScore >= 85) return 'safe';
+  if (trustScore >= 60) return 'caution';
+  return 'danger';
+}
+
+export function hasThinExtraction(markdownLength: number, extractionSignals: number): boolean {
+  return markdownLength < 2500 || extractionSignals <= 1;
+}
+
 export interface StorefrontSafetyInput {
   trustScore: number;
   verdict: Verdict;
@@ -24,6 +34,8 @@ const UNAVAILABLE_STOREFRONT_PATTERNS = [
   /\b(?:this|the|our)\s+(?:online\s+)?(?:store|shop)\s+(?:is\s+|was\s+)?(?:currently\s+|temporarily\s+|permanently\s+)?unavailable\b/i,
   /\bonline\s+(?:store|shop)\s+(?:is\s+)?(?:currently\s+|temporarily\s+|permanently\s+)?unavailable\b/i,
   /\b(?:this|the|our)\s+(?:online\s+)?(?:store|shop)\s+(?:is\s+)?no\s+longer\s+available\b/i,
+  /\b(?:this|the|our)\s+(?:online\s+)?(?:store|shop)\s+(?:is\s+|was\s+)?(?:currently|temporarily|permanently)\s+closed\b/i,
+  /^\s*(?:sorry[,!]?\s*)?(?:this\s+)?(?:online\s+)?(?:store|shop)\s+unavailable\s*$/i,
 ];
 
 const BRAND_IMPERSONATION_PATTERN = /\b(?:impersonat(?:e|es|ed|ing|ion)|mimic(?:s|king)?|typosquat(?:s|ting)?|trademark\s+infringement|unauthori[sz]ed\s+(?:storefront|seller|retailer)|counterfeit\s+(?:store|shop|seller))\b/i;
@@ -83,7 +95,7 @@ export function applyStorefrontSafetyGuard(input: StorefrontSafetyInput): Storef
   // evidence alongside a taken-down storefront is a compound high-risk signal.
   const scoreCap = impersonationDetected ? 45 : 75;
   const trustScore = Math.min(input.trustScore, scoreCap);
-  const verdict: Verdict = trustScore >= 85 ? 'safe' : trustScore >= 60 ? 'caution' : 'danger';
+  const verdict = verdictForScore(trustScore);
   const warning = impersonationDetected
     ? '🚨 UNAVAILABLE IMPERSONATING STOREFRONT: The store is unavailable and brand-impersonation indicators were found'
     : 'Store reports that it is unavailable — an active, trustworthy checkout could not be verified';
