@@ -3703,6 +3703,10 @@ Return ONLY valid JSON in this exact format:
     analysisResult.verdict = storefrontSafetyGuard.verdict;
     analysisResult.summary = storefrontSafetyGuard.summary;
     analysisResult.details.redFlags = storefrontSafetyGuard.redFlags;
+    analysisResult.summary = sanitizeUnverifiedBbbSummary(
+      analysisResult.summary,
+      analysisResult.trustScore,
+    );
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
 
