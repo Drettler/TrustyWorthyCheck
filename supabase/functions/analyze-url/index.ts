@@ -6,6 +6,8 @@ import { isExactDomainMatch } from "./domain-evidence.ts";
 import { validateRedirectTarget, validateUrl } from "./url-validation.ts";
 import { assessGovernmentImpersonation, isGovernmentLookalikeDomain } from "./government-evidence.ts";
 import { checkSuspiciousTLD } from "./tld-risk.ts";
+import { checkHostnameExistence } from "./website-existence.ts";
+import { createWebsiteNotFoundResult, hasIndependentlyVerifiedThreat, LIMITED_INFORMATION_MESSAGE, shouldReturnWebsiteNotFound, shouldShowLimitedInformation } from "./result-outcomes.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,7 +16,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-07-dormant-storefront-v18';
+const ANALYSIS_CACHE_VERSION = '2026-11-08-result-outcomes-v19';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
