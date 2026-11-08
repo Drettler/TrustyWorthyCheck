@@ -16,3 +16,7 @@
 - [x] Verify negative reviews and lookalike domains do not change qualified-store scores.
 - [x] Deploy and validate the reported scam domain plus a known-good retailer.
 - [ ] Allow verified BBB Scam Tracker reports to affect scoring — blocked pending approved official BBB API access and permission for derived public scores.
+- [ ] Inspect the current scan, result-card, and share-text flow and record regression coverage for the November 8 test table.
+- [ ] Distinguish confirmed nonexistent addresses and information-limited results without changing threat, merchant, or dormant-store behavior.
+- [ ] Generate every share option from the completed visible result and clear stale results on each new submission.
+- [ ] Run analyzer tests and all requested live cases through the normal preview form, including the sequential Target/phishing check; leave changes unpublished.
