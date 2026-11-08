@@ -63,6 +63,7 @@ export interface ConfidenceData {
 }
 
 export interface AnalysisResult {
+  outcome?: 'not_found' | 'limited_information';
   trustScore: number;
   verdict: 'safe' | 'caution' | 'danger';
   summary: string;
