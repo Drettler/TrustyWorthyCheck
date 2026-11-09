@@ -20,6 +20,7 @@ import { useUrlHistory } from '@/hooks/use-url-history';
 import { useDailyChecks } from '@/hooks/use-daily-checks';
 import { supabase } from '@/integrations/supabase/client';
 import { buildResultShareText } from '@/lib/check-result';
+import { createSubmissionTracker } from '@/lib/scan-submission';
 
 export function UrlChecker() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,9 +43,9 @@ export function UrlChecker() {
   const [showFullReport, setShowFullReport] = useState(false);
   const [submittedUrl, setSubmittedUrl] = useState('');
   const [scanError, setScanError] = useState<string | null>(null);
-  const latestSubmission = useRef(0);
+  const latestSubmission = useRef(createSubmissionTracker());
   const shareText = result ? buildResultShareText(result, window.location.origin, submittedUrl) : '';
-  useEffect(() => () => { latestSubmission.current += 1; }, []);
+  useEffect(() => () => { latestSubmission.current.invalidate(); }, []);
   
   // Focus and highlight input when navigating to #checker
   useEffect(() => {
@@ -109,7 +110,7 @@ export function UrlChecker() {
   }, [isLimitReached]);
 
   const handleAutoSubmit = async (urlToCheck: string) => {
-    const submission = ++latestSubmission.current;
+    const submission = latestSubmission.current.begin();
     setSubmittedUrl(urlToCheck);
     setIsLoading(true);
     setScanStage(0);
@@ -124,17 +125,17 @@ export function UrlChecker() {
     }
     try {
       const analysisResult = await analyzeUrl(urlToCheck);
-      if (submission !== latestSubmission.current) return;
+      if (!latestSubmission.current.isCurrent(submission)) return;
       setResult(analysisResult);
       addToHistory(urlToCheck, analysisResult);
     } catch (error) {
-      if (submission !== latestSubmission.current) return;
+      if (!latestSubmission.current.isCurrent(submission)) return;
       const message = error && typeof error === 'object' && 'message' in error
         ? String(error.message) : 'Could not analyze this URL. Please try again.';
       setScanError(message);
       handleAnalysisError(error);
     } finally {
-      if (submission === latestSubmission.current) {
+      if (latestSubmission.current.isCurrent(submission)) {
         setIsLoading(false);
         setScanStage(0);
       }
@@ -267,7 +268,7 @@ export function UrlChecker() {
   };
 
   const handleNewCheck = () => {
-    latestSubmission.current += 1;
+    latestSubmission.current.invalidate();
     setIsLoading(false);
     setScanError(null);
     setShowReportDialog(false);

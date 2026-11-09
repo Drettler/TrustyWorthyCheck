@@ -3758,7 +3758,10 @@ Return ONLY valid JSON in this exact format:
         virusTotalSuspiciousCount: virusTotalResult.suspiciousCount,
         communityReported: communityReports.reported,
         threatFeedMatched: threatFeedCheck.inThreatFeed,
-      }) || hasCriticalSecurityOrImpersonationIssue || analysisResult.verdict === 'danger',
+      }) || governmentScamAnalysis.isLikelyGovScam ||
+        subscriptionScamAnalysis.isLikelySubscriptionScam || typosquattingCheck.isSuspicious ||
+        paymentAnalysis.onlyAcceptsUnusualMethods ||
+        hasBrandImpersonationFinding(analysisResult.details.redFlags, analysisResult.details.domain?.mimickingBrand),
       hasPositiveMerchantEvidence: businessVerification.hasVATNumber ||
         businessVerification.hasCompanyRegNumber || businessVerification.hasDUNS ||
         businessVerification.hasPhysicalStore ||
