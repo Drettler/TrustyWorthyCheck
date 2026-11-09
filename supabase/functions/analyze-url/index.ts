@@ -16,7 +16,7 @@ const corsHeaders = {
 
 // Bump this value whenever analysis/scoring logic changes in a way that should invalidate
 // previously cached results (cache TTL is 24h).
-const ANALYSIS_CACHE_VERSION = '2026-11-08-result-outcomes-v19';
+const ANALYSIS_CACHE_VERSION = '2026-11-09-result-outcomes-v20';
 
 // Normalize URL for consistent caching (uses validated URL)
 function normalizeUrl(url: string): string {
@@ -1765,7 +1765,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const formattedUrl = validation.normalized!;
+    const formattedUrl = validation.normalized;
+    if (!formattedUrl) throw new Error('URL could not be normalized');
 
     console.log('Analyzing URL:', formattedUrl);
 
@@ -1817,122 +1818,6 @@ Deno.serve(async (req) => {
     console.log('Typosquatting check:', typosquattingCheck);
     console.log('Suspicious TLD:', suspiciousTLD);
 
-    // Step 1: Scrape the website with Firecrawl - using all available formats
-    const waitTime = platformInfo.isSocialMedia ? 5000 : 3000;
-
-    async function callFirecrawl(body: Record<string, unknown>) {
-      return await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${firecrawlApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-    }
-
-    console.log('Scraping website with Firecrawl (all formats)...');
-    let scrapeResponse = await callFirecrawl({
-      url: formattedUrl,
-      formats: ['markdown', 'html', 'links', 'screenshot', 'rawHtml'],
-      onlyMainContent: false,
-      waitFor: waitTime,
-      timeout: 45000,
-    });
-    let scrapeData = await scrapeResponse.json();
-    console.log('Scrape response status:', scrapeResponse.status);
-
-    // Retry with lighter payload if Firecrawl timed out
-    const timedOut = !scrapeResponse.ok &&
-      typeof scrapeData?.error === 'string' &&
-      /timed out|timeout/i.test(scrapeData.error);
-    if (timedOut) {
-      console.log('Firecrawl timed out — retrying with lighter scrape...');
-      scrapeResponse = await callFirecrawl({
-        url: formattedUrl,
-        formats: ['markdown', 'links'],
-        onlyMainContent: true,
-        waitFor: 1500,
-        timeout: 60000,
-      });
-      scrapeData = await scrapeResponse.json();
-      console.log('Retry scrape response status:', scrapeResponse.status);
-    }
-
-    // Handle Firecrawl failure with fallback for known platforms
-    let scrapedContent: ScrapedData;
-    let usedFallback = false;
-    
-    if (!scrapeResponse.ok) {
-      console.error('Firecrawl error:', scrapeData);
-      
-      // For known social media platforms, provide a fallback analysis
-      if (platformInfo.isSocialMedia && platformInfo.platform) {
-        console.log('Using fallback analysis for', platformInfo.platform);
-        usedFallback = true;
-        scrapedContent = {
-          markdown: '',
-          html: '',
-          links: [],
-          metadata: {
-            title: `${platformInfo.platform} Profile/Page`,
-            description: `Analysis of ${platformInfo.platform} URL`,
-            sourceURL: formattedUrl,
-          },
-        };
-      } else {
-        // Check if it's an SSL/TLS error - provide a more helpful message
-        const errorMessage = scrapeData.error || 'Unknown error';
-        const isSslError = errorMessage.toLowerCase().includes('ssl') || 
-                          errorMessage.toLowerCase().includes('tls') ||
-                          errorMessage.toLowerCase().includes('certificate');
-        
-        if (isSslError) {
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: 'ssl_error',
-              message: 'This website has SSL/security configuration issues. This can be a red flag - legitimate businesses typically have proper SSL certificates. Proceed with caution if you decide to visit this site.'
-            }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'scrape_failed',
-            message: `Could not access website: ${errorMessage}. The site may be down, blocking automated checks, or have configuration issues.`
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } else {
-      scrapedContent = scrapeData.data || scrapeData;
-    }
-    
-    const markdown = scrapedContent.markdown || '';
-    const html = scrapedContent.html || '';
-    const links = scrapedContent.links || [];
-    const metadata = scrapedContent.metadata || {};
-    const screenshot = scrapedContent.screenshot;
-
-    // Run content analysis checks
-    console.log('Running content analysis checks...');
-    
-    const urgencyAnalysis = analyzeUrgencyTactics(markdown);
-    const contactAnalysis = analyzeContactInfo(markdown, links);
-    const paymentAnalysis = analyzePaymentMethods(markdown, html);
-    const scamPatternAnalysis = detectScamPatterns(markdown, html);
-    const linkAnalysis = analyzeLinks(links, domain);
-    const priceComparison = analyzePriceComparison(markdown, html);
-    
-    // New enhanced analysis
-    const governmentScamAnalysis = detectGovernmentScam(markdown, html, domain);
-    const subscriptionScamAnalysis = detectSubscriptionScam(markdown, html, domain);
-    const businessVerification = analyzeBusinessVerification(markdown, html);
-    const complianceAnalysis = analyzeComplianceIndicators(markdown, html);
-    
 // Extract base domain name without TLD variations for fuzzy matching
     // e.g., "peaceinwar.com.co" -> "peaceinwar", "example.shop" -> "example"
     function extractBaseDomainName(domain: string): string {
@@ -2050,15 +1935,169 @@ Deno.serve(async (req) => {
       }
     }
     
+    const existence = await checkHostnameExistence(domain);
+    const independentChecks = Promise.all([
+      checkVirusTotal(domain), checkCommunityReports(domain), checkThreatFeeds(domain),
+    ]);
+    if (existence === 'nonexistent') {
+      const [virusTotal, community, threats] = await independentChecks;
+      const verifiedThreat = hasIndependentlyVerifiedThreat({
+        virusTotalMalicious: virusTotal.isMalicious,
+        virusTotalSuspiciousCount: virusTotal.suspiciousCount,
+        communityReported: community.reported,
+        threatFeedMatched: threats.inThreatFeed,
+      });
+      const missingResult = createWebsiteNotFoundResult(domain);
+      const result: any = {
+        ...missingResult,
+        confidence: {
+          level: 'low', message: 'No website content was available to verify.',
+          checksVerified: !virusTotal.error && virusTotal.totalEngines > 0 ? 1 : 0,
+          totalPossibleChecks: 6,
+          verifiedSources: !virusTotal.error && virusTotal.totalEngines > 0 ? ['VirusTotal scan'] : [],
+        },
+      };
+      if (!shouldReturnWebsiteNotFound(existence, verifiedThreat)) {
+        delete result.outcome;
+        result.trustScore = 45;
+        result.verdict = 'danger';
+        result.summary = 'This address is currently nonexistent, but independent threat evidence was found. Avoid transactions.';
+        result.details.redFlags = [
+          ...(virusTotal.isMalicious ? ['Security vendors identified malicious activity'] : []),
+          ...(virusTotal.suspiciousCount > 2 ? ['Security vendors identified suspicious activity'] : []),
+          ...(community.reported ? community.reasons : []),
+          ...(threats.inThreatFeed ? threats.threats.map(t => t.title) : []),
+        ];
+      }
+      await cacheResult(urlHash, formattedUrl, result);
+      return new Response(JSON.stringify({ success: true, result, cached: false }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Step 1: Scrape the website with Firecrawl - using all available formats
+    const waitTime = platformInfo.isSocialMedia ? 5000 : 3000;
+
+    async function callFirecrawl(body: Record<string, unknown>) {
+      return await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+    }
+
+    console.log('Scraping website with Firecrawl (all formats)...');
+    let scrapeResponse = await callFirecrawl({
+      url: formattedUrl,
+      formats: ['markdown', 'html', 'links', 'screenshot', 'rawHtml'],
+      onlyMainContent: false,
+      waitFor: waitTime,
+      timeout: 45000,
+    });
+    let scrapeData = await scrapeResponse.json();
+    console.log('Scrape response status:', scrapeResponse.status);
+
+    // Retry with lighter payload if Firecrawl timed out
+    const timedOut = !scrapeResponse.ok &&
+      typeof scrapeData?.error === 'string' &&
+      /timed out|timeout/i.test(scrapeData.error);
+    if (timedOut) {
+      console.log('Firecrawl timed out — retrying with lighter scrape...');
+      scrapeResponse = await callFirecrawl({
+        url: formattedUrl,
+        formats: ['markdown', 'links'],
+        onlyMainContent: true,
+        waitFor: 1500,
+        timeout: 60000,
+      });
+      scrapeData = await scrapeResponse.json();
+      console.log('Retry scrape response status:', scrapeResponse.status);
+    }
+
+    // Handle Firecrawl failure with fallback for known platforms
+    let scrapedContent: ScrapedData;
+    let usedFallback = false;
+    
+    if (!scrapeResponse.ok) {
+      console.error('Firecrawl error:', scrapeData);
+      
+      // For known social media platforms, provide a fallback analysis
+      if (platformInfo.isSocialMedia && platformInfo.platform) {
+        console.log('Using fallback analysis for', platformInfo.platform);
+        usedFallback = true;
+        scrapedContent = {
+          markdown: '',
+          html: '',
+          links: [],
+          metadata: {
+            title: `${platformInfo.platform} Profile/Page`,
+            description: `Analysis of ${platformInfo.platform} URL`,
+            sourceURL: formattedUrl,
+          },
+        };
+      } else {
+        // Check if it's an SSL/TLS error - provide a more helpful message
+        const errorMessage = scrapeData.error || 'Unknown error';
+        const isSslError = errorMessage.toLowerCase().includes('ssl') || 
+                          errorMessage.toLowerCase().includes('tls') ||
+                          errorMessage.toLowerCase().includes('certificate');
+        
+        if (isSslError) {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'ssl_error',
+              message: 'This website has SSL/security configuration issues. This can be a red flag - legitimate businesses typically have proper SSL certificates. Proceed with caution if you decide to visit this site.'
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'scrape_failed',
+            message: `Could not access website: ${errorMessage}. The site may be down, blocking automated checks, or have configuration issues.`
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      scrapedContent = scrapeData.data || scrapeData;
+    }
+    
+    const markdown = scrapedContent.markdown || '';
+    const html = scrapedContent.html || '';
+    const links = scrapedContent.links || [];
+    const metadata = scrapedContent.metadata || {};
+    const screenshot = scrapedContent.screenshot;
+
+    // Run content analysis checks
+    console.log('Running content analysis checks...');
+    
+    const urgencyAnalysis = analyzeUrgencyTactics(markdown);
+    const contactAnalysis = analyzeContactInfo(markdown, links);
+    const paymentAnalysis = analyzePaymentMethods(markdown, html);
+    const scamPatternAnalysis = detectScamPatterns(markdown, html);
+    const linkAnalysis = analyzeLinks(links, domain);
+    const priceComparison = analyzePriceComparison(markdown, html);
+    
+    // New enhanced analysis
+    const governmentScamAnalysis = detectGovernmentScam(markdown, html, domain);
+    const subscriptionScamAnalysis = detectSubscriptionScam(markdown, html, domain);
+    const businessVerification = analyzeBusinessVerification(markdown, html);
+    const complianceAnalysis = analyzeComplianceIndicators(markdown, html);
+    
     // Run external API checks in parallel (including community reports, threat feeds,
     // and exact-domain BBB Scam Tracker / review evidence).
     console.log('Running external security checks...');
-    const [virusTotalResult, whoisResult, httpsSecurityCheck, communityReports, threatFeedCheck, bbbReputation] = await Promise.all([
-      checkVirusTotal(domain),
+    const [[virusTotalResult, communityReports, threatFeedCheck], whoisResult, httpsSecurityCheck, bbbReputation] = await Promise.all([
+      independentChecks,
       lookupWhois(domain),
       checkHttpsSecurity(domain),
-      checkCommunityReports(domain),
-      checkThreatFeeds(domain),
       lookupBbbReputation(domain, firecrawlApiKey),
     ]);
 
@@ -3709,6 +3748,25 @@ Return ONLY valid JSON in this exact format:
       analysisResult.summary,
       analysisResult.trustScore,
     );
+
+    if (shouldShowLimitedInformation({
+      verifiedSources: analysisResult.confidence?.verifiedSources || [],
+      cleanReputationScan: !virusTotalResult.error && virusTotalResult.totalEngines > 0 &&
+        virusTotalResult.maliciousCount === 0 && virusTotalResult.suspiciousCount === 0,
+      hasVerifiedThreat: hasIndependentlyVerifiedThreat({
+        virusTotalMalicious: virusTotalResult.isMalicious,
+        virusTotalSuspiciousCount: virusTotalResult.suspiciousCount,
+        communityReported: communityReports.reported,
+        threatFeedMatched: threatFeedCheck.inThreatFeed,
+      }) || hasCriticalSecurityOrImpersonationIssue || analysisResult.verdict === 'danger',
+      hasPositiveMerchantEvidence: businessVerification.hasVATNumber ||
+        businessVerification.hasCompanyRegNumber || businessVerification.hasDUNS ||
+        businessVerification.hasPhysicalStore ||
+        (paymentAnalysis.paymentStatus === 'likely_safe' && hasFirstPartyBusinessSignals),
+    })) {
+      analysisResult.outcome = 'limited_information';
+      analysisResult.summary = LIMITED_INFORMATION_MESSAGE;
+    }
 
     console.log('Analysis complete, trust score:', analysisResult.trustScore);
 
