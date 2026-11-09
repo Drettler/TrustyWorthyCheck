@@ -4,7 +4,7 @@ import {
   displaysNumericScore,
   resultHeading,
   verdictLabel,
-} from './check-result.ts';
+} from '../../../src/lib/check-result.ts';
 
 const confidence = { level: 'low' as const, checksVerified: 1, totalPossibleChecks: 6 };
 
