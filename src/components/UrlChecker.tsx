@@ -503,7 +503,7 @@ export function UrlChecker() {
         <p role="alert" className="mb-4 text-danger break-words">{submittedUrl}: {scanError}</p>
       )}
       {/* Loading State */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence key={isLoading ? 'active-scan' : 'completed-scan'} mode="wait">
         {isLoading && (
           <motion.div
             key="loading"
