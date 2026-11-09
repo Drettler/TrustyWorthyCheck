@@ -53,9 +53,9 @@ export function confidenceLabel(confidence?: ResultConfidence): string | null {
   return `${level} confidence (${confidence.checksVerified}/${confidence.totalPossibleChecks} checks)`;
 }
 
-export function buildResultShareText(result: PresentableResult, origin: string): string {
+export function buildResultShareText(result: PresentableResult, origin: string, checkedUrl = result.details.domain.name): string {
   const parts = [
-    `I just checked ${result.details.domain.name} on TrustworthyCheck — ${resultHeading(result)}.`,
+    `I just checked ${checkedUrl} on TrustWorthyCheck — ${resultHeading(result)}.`,
   ];
 
   if (result.outcome) parts.push(resultDescription(result));

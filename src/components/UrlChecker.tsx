@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUrlHistory } from '@/hooks/use-url-history';
 import { useDailyChecks } from '@/hooks/use-daily-checks';
 import { supabase } from '@/integrations/supabase/client';
+import { buildResultShareText } from '@/lib/check-result';
 
 export function UrlChecker() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,6 +40,11 @@ export function UrlChecker() {
   const [inputHighlight, setInputHighlight] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFullReport, setShowFullReport] = useState(false);
+  const [submittedUrl, setSubmittedUrl] = useState('');
+  const [scanError, setScanError] = useState<string | null>(null);
+  const latestSubmission = useRef(0);
+  const shareText = result ? buildResultShareText(result, window.location.origin, submittedUrl) : '';
+  useEffect(() => () => { latestSubmission.current += 1; }, []);
   
   // Focus and highlight input when navigating to #checker
   useEffect(() => {
@@ -67,11 +73,7 @@ export function UrlChecker() {
     setShowFullReport(false);
     document.getElementById('checker')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    setTimeout(() => {
-      if (isValidUrl(trimmed) && !isLimitReached) {
-        handleAutoSubmit(trimmed);
-      }
-    }, 100);
+    if (isValidUrl(trimmed) && !isLimitReached) handleAutoSubmit(trimmed);
   };
 
   // Handle ?check= URL parameter from Chrome extension, hero input, SEO pages, or popular checks
@@ -107,28 +109,35 @@ export function UrlChecker() {
   }, [isLimitReached]);
 
   const handleAutoSubmit = async (urlToCheck: string) => {
-    // Flip into loading state first so the UI never swaps to the limit screen mid-check
+    const submission = ++latestSubmission.current;
+    setSubmittedUrl(urlToCheck);
     setIsLoading(true);
     setScanStage(0);
     setResult(null);
-
-    // Check daily limit (consume one check)
+    setScanError(null);
+    setShowDetails(false);
+    setShowFullReport(false);
+    setShowReportDialog(false);
     if (!useCheck()) {
       setIsLoading(false);
-      setScanStage(0);
       return;
     }
-
     try {
       const analysisResult = await analyzeUrl(urlToCheck);
+      if (submission !== latestSubmission.current) return;
       setResult(analysisResult);
       addToHistory(urlToCheck, analysisResult);
     } catch (error) {
-      console.error('Analysis error:', error);
+      if (submission !== latestSubmission.current) return;
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message) : 'Could not analyze this URL. Please try again.';
+      setScanError(message);
       handleAnalysisError(error);
     } finally {
-      setIsLoading(false);
-      setScanStage(0);
+      if (submission === latestSubmission.current) {
+        setIsLoading(false);
+        setScanStage(0);
+      }
     }
   };
 
@@ -220,29 +229,7 @@ export function UrlChecker() {
       return;
     }
 
-    // Flip into loading state first so the UI never swaps to the limit screen mid-check
-    setIsLoading(true);
-    setScanStage(0);
-    setResult(null);
-
-    // Check daily limit (consume one check)
-    if (!useCheck()) {
-      setIsLoading(false);
-      setScanStage(0);
-      return;
-    }
-
-    try {
-      const analysisResult = await analyzeUrl(url);
-      setResult(analysisResult);
-      addToHistory(url, analysisResult);
-    } catch (error) {
-      console.error('Analysis error:', error);
-      handleAnalysisError(error);
-    } finally {
-      setIsLoading(false);
-      setScanStage(0);
-    }
+    await handleAutoSubmit(url.trim());
   };
 
   const handleAnalysisError = (error: unknown) => {
@@ -280,6 +267,11 @@ export function UrlChecker() {
   };
 
   const handleNewCheck = () => {
+    latestSubmission.current += 1;
+    setIsLoading(false);
+    setScanError(null);
+    setShowReportDialog(false);
+    setShowFullReport(false);
     setResult(null);
     setUrl('');
     setShowDetails(false);
@@ -507,6 +499,9 @@ export function UrlChecker() {
           </div>
         </div>
       </motion.div>
+      {scanError && !isLoading && (
+        <p role="alert" className="mb-4 text-danger break-words">{submittedUrl}: {scanError}</p>
+      )}
       {/* Loading State */}
       <AnimatePresence mode="wait">
         {isLoading && (
@@ -516,6 +511,7 @@ export function UrlChecker() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
+            <p className="text-center text-muted-foreground break-all mb-3" role="status">Checking {submittedUrl}</p>
             <ScanningAnimation currentStage={scanStage} />
           </motion.div>
         )}
@@ -527,20 +523,20 @@ export function UrlChecker() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="space-y-4"
+            className="space-y-4" data-testid="check-result"
           >
             {/* Scam-Specific Warning Banners */}
-            {result.scamIndicators && (
+            {!result.outcome && result.scamIndicators && (
               <ScamWarningBanner scamIndicators={result.scamIndicators} />
             )}
 
             {/* Dropshipper Warning Banner */}
-            {result.details?.dropshipperIndicators && (
+            {!result.outcome && result.details?.dropshipperIndicators && (
               <DropshipperWarningBanner dropshipperIndicators={result.details.dropshipperIndicators} />
             )}
 
             {/* Warning Banner for Danger/Caution (only show if no scam-specific banner) */}
-            {(result.verdict === 'danger' || result.verdict === 'caution') && 
+            {!result.outcome && (result.verdict === 'danger' || result.verdict === 'caution') && 
              !result.scamIndicators?.government?.isLikelyScam && 
              !result.scamIndicators?.subscription?.isLikelyScam && (
               <motion.div
@@ -589,7 +585,7 @@ export function UrlChecker() {
                         {result.scrapedData?.title || result.details.domain.name}
                       </h2>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="truncate">{result.details.domain.name}</span>
+                        <span className="truncate">{submittedUrl}</span>
                         {result.details.domain.ssl && (
                           <span className="flex items-center gap-1 text-success text-xs font-medium bg-success/10 px-2 py-0.5 rounded-full">
                             <Shield className="w-3 h-3" />
@@ -605,6 +601,7 @@ export function UrlChecker() {
               {/* Trust Score Section */}
               <div className="p-8 flex flex-col items-center">
                 <TrustScoreGauge 
+                  outcome={result.outcome}
                   score={result.trustScore} 
                   verdict={result.verdict} 
                   redFlagsCount={result.details.redFlags?.length || 0}
@@ -623,7 +620,7 @@ export function UrlChecker() {
               className="flex flex-wrap justify-center gap-3"
             >
               {/* Report to FTC - show for suspicious sites */}
-              {(result.verdict === 'danger' || result.verdict === 'caution') && (
+              {!result.outcome && (result.verdict === 'danger' || result.verdict === 'caution') && (
                 <Button
                   variant="outline"
                   className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-warning/5 hover:border-warning/40 group"
@@ -642,7 +639,7 @@ export function UrlChecker() {
               )}
 
               {/* Activate Cashback - show for safe/caution sites */}
-              {(result.verdict === 'safe' || result.verdict === 'caution') && (
+              {!result.outcome && (result.verdict === 'safe' || result.verdict === 'caution') && (
                 <Button
                   variant="outline"
                   className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-success/5 hover:border-success/40 group"
@@ -683,7 +680,7 @@ export function UrlChecker() {
               >
                 <a
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                    `I just checked ${result.details?.domain?.name || url} on TrustworthyCheck - ${result.verdict === 'safe' ? '✅ Safe' : result.verdict === 'caution' ? '⚠️ Use Caution' : '🚨 High Risk'} (Trust Score: ${result.trustScore}/100). Check any website before you buy:`
+                    shareText
                   )}&url=${encodeURIComponent(window.location.origin)}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -708,7 +705,7 @@ export function UrlChecker() {
               >
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(
-                    `I just checked ${result.details?.domain?.name || url} on TrustworthyCheck - ${result.verdict === 'safe' ? '✅ Safe' : result.verdict === 'caution' ? '⚠️ Use Caution' : '🚨 High Risk'} (Trust Score: ${result.trustScore}/100)`
+                    shareText
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -733,7 +730,7 @@ export function UrlChecker() {
               >
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(
-                    `I just checked ${result.details?.domain?.name || url} on TrustworthyCheck - ${result.verdict === 'safe' ? '✅ Safe' : result.verdict === 'caution' ? '⚠️ Use Caution' : '🚨 High Risk'} (Trust Score: ${result.trustScore}/100). Check any website before you buy: ${window.location.origin}`
+                    shareText
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -755,7 +752,6 @@ export function UrlChecker() {
                 variant="outline"
                 className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-[#000000]/5 hover:border-[#000000]/40 group"
                 onClick={() => {
-                  const shareText = `I just checked ${result.details?.domain?.name || url} on TrustworthyCheck - ${result.verdict === 'safe' ? '✅ Safe' : result.verdict === 'caution' ? '⚠️ Use Caution' : '🚨 High Risk'} (Trust Score: ${result.trustScore}/100). Check any website before you buy: ${window.location.origin}`;
                   navigator.clipboard.writeText(shareText);
                   toast({
                     title: 'Copied for TikTok!',
@@ -779,7 +775,6 @@ export function UrlChecker() {
                 variant="outline"
                 className="h-auto py-3 px-4 flex items-center gap-3 justify-start bg-card hover:bg-[#E4405F]/5 hover:border-[#E4405F]/40 group"
                 onClick={() => {
-                  const shareText = `I just checked ${result.details?.domain?.name || url} on TrustworthyCheck - ${result.verdict === 'safe' ? '✅ Safe' : result.verdict === 'caution' ? '⚠️ Use Caution' : '🚨 High Risk'} (Trust Score: ${result.trustScore}/100). Check any website before you buy: ${window.location.origin}`;
                   navigator.clipboard.writeText(shareText);
                   toast({
                     title: 'Copied for Instagram!',
@@ -812,6 +807,7 @@ export function UrlChecker() {
               <Button 
                 variant="secondary" 
                 size="lg" 
+                disabled={Boolean(result.outcome)}
                 onClick={() => setShowDetails(!showDetails)}
               >
                 {showDetails ? (
@@ -827,8 +823,8 @@ export function UrlChecker() {
                 )}
               </Button>
 
-              <Button variant="glass" size="lg" asChild>
-                <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noopener noreferrer">
+              <Button variant="glass" size="lg" disabled={result.outcome === 'not_found'} asChild>
+                <a href={submittedUrl.startsWith('http') ? submittedUrl : `https://${submittedUrl}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4" />
                   Visit Website
                 </a>
@@ -889,8 +885,8 @@ export function UrlChecker() {
       <ReportSiteDialog
         open={showReportDialog}
         onOpenChange={setShowReportDialog}
-        url={url}
-        trustScore={result?.trustScore}
+        url={submittedUrl}
+        trustScore={result?.outcome ? undefined : result?.trustScore}
         verdict={result?.verdict}
       />
     </div>

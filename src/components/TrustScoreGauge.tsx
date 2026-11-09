@@ -1,19 +1,21 @@
 import { motion } from 'framer-motion';
 import { ShieldCheck, ShieldAlert, ShieldX, Check, Octagon, Info } from 'lucide-react';
+import { confidenceLabel, displaysNumericScore, resultDescription, resultHeading, type ResultOutcome } from '@/lib/check-result';
 import type { ConfidenceData } from '@/lib/api/url-check';
 
 interface TrustScoreGaugeProps {
   score: number;
+  outcome?: ResultOutcome;
   verdict: 'safe' | 'caution' | 'danger';
   redFlagsCount?: number;
   confidence?: ConfidenceData;
 }
 
-export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence }: TrustScoreGaugeProps) {
+export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence, outcome }: TrustScoreGaugeProps) {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-  const isTrustworthy = score >= 85; // Updated threshold: 85-100 = Likely Legit
-  const isHighRisk = verdict === 'danger';
+  const isTrustworthy = !outcome && verdict === 'safe'; // Updated threshold: 85-100 = Likely Legit
+  const isHighRisk = !outcome && verdict === 'danger';
   
   const getConfidenceColor = () => {
     if (!confidence) return '';
@@ -73,7 +75,7 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence 
     >
       {/* Score Circle */}
       <div className="relative">
-        {isTrustworthy ? (
+        {outcome ? <Info className="w-24 h-24 text-muted-foreground" /> : isTrustworthy ? (
           /* Green checkmark circle for trustworthy sites (75+) */
           <motion.div
             className="w-36 h-36 rounded-full bg-success flex items-center justify-center"
@@ -109,7 +111,7 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence 
               </div>
             </motion.div>
           </motion.div>
-        ) : (
+        ) : displaysNumericScore({ outcome, verdict }) ? (
           /* Regular gauge for caution scores */
           <>
             <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
@@ -155,7 +157,7 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence 
               </span>
             </div>
           </>
-        )}
+        ) : null}
       </div>
       
       {/* Verdict Section */}
@@ -168,24 +170,24 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence 
         {/* Verdict Badge */}
         <div
           className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
-            verdict === 'safe' 
+            outcome ? 'bg-muted text-muted-foreground border border-border' : verdict === 'safe' 
               ? 'bg-success/15 text-success border border-success/25' 
               : verdict === 'caution' 
               ? 'bg-warning/15 text-warning border border-warning/25' 
               : 'bg-danger/15 text-danger border border-danger/30'
           }`}
         >
-          {getVerdictIcon()}
-          <span>{getVerdictLabel()}</span>
+          {outcome ? <Info className="w-5 h-5" /> : getVerdictIcon()}
+          <span>{resultHeading({ outcome, verdict })}</span>
         </div>
 
         {/* Description */}
         <p className="text-sm text-muted-foreground text-center max-w-xs mt-1">
-          {getVerdictDescription()}
+          {resultDescription({ outcome, verdict })}
         </p>
 
         {/* Issues count - hide for "Likely Legit" results */}
-        {redFlagsCount > 0 && verdict !== 'safe' && (
+        {!outcome && redFlagsCount > 0 && verdict !== 'safe' && (
           <motion.div
             className={`text-xs font-medium px-3 py-1 rounded-full mt-1 ${
               verdict === 'danger' 
@@ -210,11 +212,15 @@ export function TrustScoreGauge({ score, verdict, redFlagsCount = 0, confidence 
             title={`Verified: ${confidence.verifiedSources.join(', ')}`}
           >
             <Info className="w-3 h-3" />
-            <span className="capitalize">{confidence.level} confidence</span>
-            <span className="opacity-60">({confidence.checksVerified}/{confidence.totalPossibleChecks})</span>
+            <span>{confidenceLabel(confidence)}</span>
           </motion.div>
         )}
 
+        {outcome === 'limited_information' && confidence && (
+          <p className="text-sm text-muted-foreground text-center mt-2">
+            Completed checks: {confidence.verifiedSources.join(', ') || 'None'}
+          </p>
+        )}
         {/* Low confidence message */}
         {confidence && confidence.level === 'low' && (
           <motion.p
