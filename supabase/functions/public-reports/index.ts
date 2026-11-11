@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       id: report.id,
       domain: report.url_domain,
       reasons: report.reasons,
-      trustScore: report.trust_score,
+      trustScore: null,
       reportCount: report.report_count,
       firstReportedAt: report.first_reported_at,
       lastReportedAt: report.last_reported_at,

@@ -1,0 +1,1 @@
+UPDATE public.site_reports SET trust_score = NULL WHERE trust_score IS NOT NULL;
