@@ -2497,8 +2497,8 @@ Return ONLY valid JSON in this exact format:
       const errorData = await aiResponse.json();
       console.error('AI gateway error:', errorData);
       return new Response(
-        JSON.stringify({ success: false, error: 'AI analysis failed' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'service_unavailable', message: 'Our safety checker is temporarily unavailable. Please try again later.' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
