@@ -1851,7 +1851,7 @@ Deno.serve(async (req) => {
             reported: true,
             reportCount: exactMatch.report_count || 0,
             reasons: exactMatch.reasons || [],
-            avgTrustScore: exactMatch.trust_score,
+            avgTrustScore: null,
             matchedDomain: exactMatch.url_domain,
           };
         }
@@ -1882,7 +1882,7 @@ Deno.serve(async (req) => {
               reported: true,
               reportCount: totalReports,
               reasons: allReasons,
-              avgTrustScore: bestMatch.trust_score,
+              avgTrustScore: null,
               matchedDomain: bestMatch.url_domain,
             };
           }
